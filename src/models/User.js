@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -15,14 +15,18 @@ const userSchema = new mongoose.Schema(
     image: String,
     role: {
       type: String,
-      enum: ['owner', 'operator'],
-      default: 'owner',
+      enum: ["owner", "operator"],
+      default: "owner",
     },
     googleId: String,
+    isFirstLogin: {
+      type: Boolean,
+      default: true,
+    },
     vehicleReg: String,
     batteryCapacity: Number,
   },
   { timestamps: true }
 );
 
-export default mongoose.models.User || mongoose.model('User', userSchema);
+export default mongoose.models.User || mongoose.model("User", userSchema);

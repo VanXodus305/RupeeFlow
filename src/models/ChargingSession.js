@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const chargingSessionSchema = new mongoose.Schema(
   {
@@ -9,12 +9,12 @@ const chargingSessionSchema = new mongoose.Schema(
     },
     evOwnerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     operatorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Operator',
+      ref: "Operator",
       required: true,
     },
     vehicleReg: String,
@@ -37,8 +37,8 @@ const chargingSessionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'completed', 'settled'],
-      default: 'active',
+      enum: ["active", "completed", "settled"],
+      default: "active",
     },
     transactionHash: String,
     ratePerKwh: {
@@ -50,4 +50,4 @@ const chargingSessionSchema = new mongoose.Schema(
 );
 
 export default mongoose.models.ChargingSession ||
-  mongoose.model('ChargingSession', chargingSessionSchema);
+  mongoose.model("ChargingSession", chargingSessionSchema);

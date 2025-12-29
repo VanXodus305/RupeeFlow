@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const operatorSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     stationName: {
@@ -31,11 +31,12 @@ const operatorSchema = new mongoose.Schema(
     chargingSessions: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'ChargingSession',
+        ref: "ChargingSession",
       },
     ],
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Operator || mongoose.model('Operator', operatorSchema);
+export default mongoose.models.Operator ||
+  mongoose.model("Operator", operatorSchema);
