@@ -114,6 +114,9 @@ io.on("connection", (socket) => {
         chargePercentage: parseFloat(chargePercentage.toFixed(1)),
       });
 
+      // Remove session from active sessions
+      activeChargingSessions.delete(data.sessionId);
+
       console.log(`[Socket] Charging stopped: ${data.sessionId}`);
     }
   });
