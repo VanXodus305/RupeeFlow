@@ -16,8 +16,7 @@ export default function Home() {
     <>
       <GlobalNavbar />
       <div className="flex flex-col min-h-screen w-full">
-        {/* <Hero /> */}
-        <div></div>
+        <Hero />
       </div>
       <GlobalFooter />
     </>
