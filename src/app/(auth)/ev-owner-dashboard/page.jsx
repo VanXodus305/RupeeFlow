@@ -15,6 +15,7 @@ export default function EVOwnerDashboard() {
     isCharging,
     startCharging,
     stopCharging,
+    resumeCharging,
     sessionId,
     operatorId: savedOperatorId,
     saveSession,
@@ -25,6 +26,7 @@ export default function EVOwnerDashboard() {
   const [initialBatteryPercent, setInitialBatteryPercent] = useState(20);
   const [showSettlement, setShowSettlement] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [sessionSettled, setSessionSettled] = useState(false);
   const [operatorId, setOperatorId] = useState(null);
   const [ratePerKwh, setRatePerKwh] = useState(12);
   const [availableOperators, setAvailableOperators] = useState([]);
@@ -98,24 +100,21 @@ export default function EVOwnerDashboard() {
   const handleStopCharging = async () => {
     await stopCharging();
     setShowSettlement(true);
+    setSessionSettled(false);
   };
 
   const handleContinueCharging = async () => {
-    // Reset settlement view and continue charging
+    // Resume charging on the same charging session
+    resumeCharging();
     setShowSettlement(false);
-    await startCharging(
-      session.user.id,
-      vehicleReg,
-      batteryCapacity,
-      ratePerKwh,
-      7.4,
-      operatorId
-    );
+    setSessionSettled(false);
   };
 
   const handleBackToDashboard = () => {
     setShowSettlement(false);
     setShowHistory(false);
+    setSessionSettled(false);
+    // Reset charging state for next session
   };
 
   return (
@@ -284,6 +283,7 @@ export default function EVOwnerDashboard() {
             batteryCapacity={batteryCapacity}
             ratePerKwh={ratePerKwh}
             saveSession={saveSession}
+            onSettled={() => setSessionSettled(true)}
           />
           <div
             style={{
@@ -293,40 +293,44 @@ export default function EVOwnerDashboard() {
               flexWrap: "wrap",
             }}
           >
-            <button
-              onClick={handleContinueCharging}
-              style={{
-                flex: 1,
-                minWidth: "150px",
-                padding: "10px",
-                backgroundColor: "#4CAF50",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "bold",
-              }}
-            >
-              Continue Charging ⚡
-            </button>
-            <button
-              onClick={handleBackToDashboard}
-              style={{
-                flex: 1,
-                minWidth: "150px",
-                padding: "10px",
-                backgroundColor: "#2196F3",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "bold",
-              }}
-            >
-              Back to Dashboard
-            </button>
+            {!sessionSettled && (
+              <button
+                onClick={handleContinueCharging}
+                style={{
+                  flex: 1,
+                  minWidth: "150px",
+                  padding: "10px",
+                  backgroundColor: "#4CAF50",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                }}
+              >
+                Continue Charging ⚡
+              </button>
+            )}
+            {sessionSettled && (
+              <button
+                onClick={handleBackToDashboard}
+                style={{
+                  flex: 1,
+                  minWidth: "150px",
+                  padding: "10px",
+                  backgroundColor: "#2196F3",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                }}
+              >
+                Back to Dashboard
+              </button>
+            )}
           </div>
         </div>
       )}

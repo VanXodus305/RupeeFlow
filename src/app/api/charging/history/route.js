@@ -52,25 +52,16 @@ export async function GET(req) {
       totalRevenue = sessions.reduce((sum, s) => sum + (s.totalCost || 0), 0);
     } else {
       // EV Owner: Get their own charging sessions
-      if (session.user.isDemo) {
-        // Demo users have no sessions
+      if (!mongoose.Types.ObjectId.isValid(session.user.id)) {
         sessions = [];
       } else {
-        // Validate ObjectId for real users
-        if (!mongoose.Types.ObjectId.isValid(session.user.id)) {
-          sessions = [];
-        } else {
-          sessions = await ChargingSession.find({
-            evOwnerId: session.user.id,
-          }).sort({ createdAt: -1 });
+        sessions = await ChargingSession.find({
+          evOwnerId: session.user.id,
+        }).sort({ createdAt: -1 });
 
-          // Calculate totals from sessions
-          totalKwh = sessions.reduce((sum, s) => sum + (s.totalKwh || 0), 0);
-          totalRevenue = sessions.reduce(
-            (sum, s) => sum + (s.totalCost || 0),
-            0
-          );
-        }
+        // Calculate totals from sessions
+        totalKwh = sessions.reduce((sum, s) => sum + (s.totalKwh || 0), 0);
+        totalRevenue = sessions.reduce((sum, s) => sum + (s.totalCost || 0), 0);
       }
     }
 

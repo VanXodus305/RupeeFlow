@@ -14,6 +14,7 @@ export default function ChargingSettlement({
   batteryCapacity,
   ratePerKwh,
   saveSession,
+  onSettled,
 }) {
   const [isSettling, setIsSettling] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -82,6 +83,11 @@ export default function ChargingSettlement({
         totalCost,
         txHash: data.transactionHash,
       });
+
+      // Notify parent that settlement is complete
+      if (onSettled) {
+        onSettled();
+      }
     } catch (err) {
       setError(err.message);
     } finally {
