@@ -1,24 +1,40 @@
-"use client";
+import { auth } from "@/auth";
+import Link from "next/link";
 
-import localFont from "next/font/local";
-import Hero from "@/components/Hero";
-import GlobalNavbar from "@/components/Navbar";
-import GlobalFooter from "@/components/Footer";
+export default async function Home() {
+  const session = await auth();
 
-const Conthrax = localFont({
-  src: "../../public/fonts/Conthrax-SemiBold.otf",
-  variable: "--font-conthrax",
-  display: "swap",
-});
-
-export default function Home() {
-  return (
-    <>
-      <GlobalNavbar />
-      <div className="flex flex-col min-h-screen w-full">
-        <Hero />
+  if (!session) {
+    return (
+      <div style={{ padding: "20px" }}>
+        <h1>RupeeFlow - EV Charging Payment</h1>
+        <p>Real-time pay-as-you-use charging with blockchain settlement</p>
+        <Link href="/login">
+          <button style={{ padding: "10px 20px", fontSize: "16px" }}>
+            Login
+          </button>
+        </Link>
       </div>
-      <GlobalFooter />
-    </>
+    );
+  }
+
+  if (session.user.role === "operator") {
+    return (
+      <div style={{ padding: "20px" }}>
+        <h1>Station Dashboard</h1>
+        <Link href="/station-dashboard">
+          <button style={{ padding: "10px 20px" }}>Go to Dashboard</button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h1>EV Owner Dashboard</h1>
+      <Link href="/ev-owner-dashboard">
+        <button style={{ padding: "10px 20px" }}>Go to Dashboard</button>
+      </Link>
+    </div>
   );
 }

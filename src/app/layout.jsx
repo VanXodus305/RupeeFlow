@@ -1,25 +1,26 @@
-import { Geist } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/auth";
 import "./globals.css";
-import Provider from "@/contexts/Provider";
-
-const geistSans = Geist({
-  subsets: ["latin"],
-});
 
 export const metadata = {
-  title: "RupeeFlow",
-  description: "",
+  title: "RupeeFlow - EV Charging Payment",
+  description:
+    "Real-time pay-as-you-use EV charging with blockchain settlement",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const session = await auth();
+
   return (
     <html lang="en">
       <body
-        className={`${geistSans.className} bg-gradient-to-b from-background-200 to-background-100 min-h-screen dark flex flex-col`}
+        style={{
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          margin: 0,
+          padding: 0,
+        }}
       >
-        <Provider>
-          <main className="flex-1">{children}</main>
-        </Provider>
+        <SessionProvider session={session}>{children}</SessionProvider>
       </body>
     </html>
   );
