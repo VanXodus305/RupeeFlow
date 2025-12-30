@@ -2,14 +2,17 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import io from "socket.io-client";
 
 export default function StationDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const socketRef = useRef(null);
   const [operatorData, setOperatorData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [settlements, setSettlements] = useState([]);
+  const [ongoingSessions, setOngoingSessions] = useState([]);
   const [totalKwh, setTotalKwh] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
 
@@ -59,6 +62,47 @@ export default function StationDashboard() {
         }
 
         setIsLoading(false);
+
+        // Setup WebSocket for live updates
+        if (!socketRef.current) {
+          socketRef.current = io("http://localhost:3001", {
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            reconnectionAttempts: 5,
+          });
+
+          socketRef.current.on("meter-reading", (meterData) => {
+            // Update ongoing sessions with live meter data
+            setOngoingSessions((prev) => {
+              const updated = prev.map((session) => {
+                if (session.sessionId === meterData.sessionId) {
+                  return {
+                    ...session,
+                    totalKwh: meterData.totalKwh,
+                    totalCost: meterData.totalCost,
+                    duration: meterData.secondsElapsed,
+                    chargePercentage: meterData.chargePercentage,
+                    currentPower: meterData.currentPower,
+                  };
+                }
+                return session;
+              });
+              return updated;
+            });
+          });
+
+          socketRef.current.on("session-completed", (completedSession) => {
+            // Move completed session from ongoing to settlements
+            setOngoingSessions((prev) =>
+              prev.filter((s) => s.sessionId !== completedSession.sessionId)
+            );
+            setSettlements((prev) => [
+              { ...completedSession, status: "completed" },
+              ...prev,
+            ]);
+          });
+        }
       } catch (error) {
         console.error("Error fetching operator profile:", error);
         // On error, redirect to onboarding to be safe
@@ -67,6 +111,13 @@ export default function StationDashboard() {
     };
 
     fetchOperatorProfile();
+
+    // Cleanup WebSocket on unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
   }, [session, status, router]);
 
   if (isLoading) {
@@ -176,7 +227,95 @@ export default function StationDashboard() {
         </div>
       </div>
 
-      <h2>Charging History</h2>
+      <h2>Ongoing Charging Sessions (Live Updates)</h2>
+      {ongoingSessions.length === 0 ? (
+        <div
+          style={{
+            padding: "20px",
+            textAlign: "center",
+            backgroundColor: "#f9f9f9",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            color: "#666",
+            marginBottom: "30px",
+          }}
+        >
+          <p>No active charging sessions</p>
+        </div>
+      ) : (
+        <div
+          style={{
+            marginBottom: "30px",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: "15px",
+          }}
+        >
+          {ongoingSessions.map((session) => (
+            <div
+              key={session.sessionId}
+              style={{
+                border: "2px solid #4CAF50",
+                padding: "15px",
+                borderRadius: "8px",
+                backgroundColor: "#f1f8f4",
+              }}
+            >
+              <h4 style={{ margin: "0 0 10px 0" }}>
+                {session.vehicleReg || "Unknown Vehicle"}
+              </h4>
+              <div style={{ fontSize: "13px" }}>
+                <p style={{ margin: "5px 0" }}>
+                  <strong>Duration:</strong>{" "}
+                  {Math.floor((session.duration || 0) / 60)}m{" "}
+                  {(session.duration || 0) % 60}s
+                </p>
+                <p style={{ margin: "5px 0" }}>
+                  <strong>Energy:</strong> {(session.totalKwh || 0).toFixed(2)}{" "}
+                  kWh
+                </p>
+                <p style={{ margin: "5px 0" }}>
+                  <strong>Cost:</strong> ₹{(session.totalCost || 0).toFixed(2)}
+                </p>
+                <p style={{ margin: "5px 0" }}>
+                  <strong>Power:</strong>{" "}
+                  {(session.currentPower || 0).toFixed(1)} kW
+                </p>
+                <div
+                  style={{
+                    marginTop: "10px",
+                    width: "100%",
+                    height: "20px",
+                    backgroundColor: "#e0e0e0",
+                    borderRadius: "4px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${session.chargePercentage || 0}%`,
+                      height: "100%",
+                      backgroundColor: "#4CAF50",
+                      transition: "width 0.3s ease",
+                    }}
+                  />
+                </div>
+                <p
+                  style={{
+                    margin: "5px 0",
+                    fontSize: "12px",
+                    color: "#666",
+                  }}
+                >
+                  {(session.chargePercentage || 0).toFixed(0)}% charged
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <h2>Previous Charging Sessions</h2>
       {settlements.length === 0 ? (
         <div
           style={{

@@ -6,9 +6,14 @@ export default function ChargingTimer({
   totalCost,
   currentPower,
   chargePercentage,
+  initialBatteryPercent = 0,
 }) {
   const minutes = Math.floor(secondsUsed / 60);
   const seconds = secondsUsed % 60;
+
+  // Calculate progress from initial percentage to current (max 100%)
+  const progressPercentage = initialBatteryPercent + (chargePercentage || 0);
+  const displayPercentage = Math.min(100, progressPercentage);
 
   return (
     <div
@@ -85,7 +90,7 @@ export default function ChargingTimer({
         >
           <div
             style={{
-              width: `${chargePercentage}%`,
+              width: `${displayPercentage}%`,
               height: "100%",
               backgroundColor: "#4CAF50",
               display: "flex",
@@ -96,7 +101,7 @@ export default function ChargingTimer({
               fontWeight: "bold",
             }}
           >
-            {chargePercentage > 10 && `${chargePercentage.toFixed(0)}%`}
+            {displayPercentage > 10 && `${displayPercentage.toFixed(0)}%`}
           </div>
         </div>
       </div>

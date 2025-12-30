@@ -22,6 +22,7 @@ export default function EVOwnerDashboard() {
   } = useCharging();
   const [vehicleReg, setVehicleReg] = useState("MH-01-AB-1234");
   const [batteryCapacity, setBatteryCapacity] = useState(60);
+  const [initialBatteryPercent, setInitialBatteryPercent] = useState(20);
   const [showSettlement, setShowSettlement] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [operatorId, setOperatorId] = useState(null);
@@ -219,6 +220,30 @@ export default function EVOwnerDashboard() {
             />
           </div>
 
+          <div style={{ marginBottom: "15px" }}>
+            <label>Current Battery Percentage (%):</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={initialBatteryPercent}
+              onChange={(e) =>
+                setInitialBatteryPercent(
+                  Math.min(100, Math.max(0, parseFloat(e.target.value)))
+                )
+              }
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "8px",
+                marginTop: "5px",
+              }}
+            />
+            <p style={{ margin: "5px 0", fontSize: "12px", color: "#666" }}>
+              Progress will be shown from {initialBatteryPercent}% to 100%
+            </p>
+          </div>
+
           <button
             onClick={handleStartCharging}
             style={{ width: "100%", padding: "10px", fontSize: "16px" }}
@@ -230,7 +255,10 @@ export default function EVOwnerDashboard() {
 
       {isCharging && !showSettlement && (
         <div>
-          <ChargingTimer {...chargingData} />
+          <ChargingTimer
+            {...chargingData}
+            initialBatteryPercent={initialBatteryPercent}
+          />
           <button
             onClick={handleStopCharging}
             style={{
