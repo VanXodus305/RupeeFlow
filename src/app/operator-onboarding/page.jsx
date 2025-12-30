@@ -82,7 +82,6 @@ export default function OperatorOnboardingPage() {
       }
 
       const data = await response.json();
-      console.log("Operator profile created:", data);
 
       // Redirect to station dashboard
       router.push("/station-dashboard");

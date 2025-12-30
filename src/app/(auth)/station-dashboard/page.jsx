@@ -266,9 +266,16 @@ export default function StationDashboard() {
                   {Math.floor((settlement.duration || 0) / 60)}
                 </td>
                 <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                  {settlement.date
-                    ? new Date(settlement.date).toLocaleString()
-                    : settlement.date}
+                  {settlement.createdAt
+                    ? new Date(settlement.createdAt).toLocaleString("en-IN", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })
+                    : "N/A"}
                 </td>
                 <td style={{ padding: "10px", border: "1px solid #ddd" }}>
                   <span

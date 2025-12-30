@@ -30,8 +30,6 @@ export default function RoleSelectionPage() {
     setIsLoading(true);
 
     try {
-      console.log("Step 1: Starting role selection for:", selectedRole);
-
       // Update user role in database
       const response = await fetch("/api/user/profile", {
         method: "PUT",
@@ -45,29 +43,27 @@ export default function RoleSelectionPage() {
       }
 
       const updatedUser = await response.json();
-      console.log("Step 2: Role updated in database:", updatedUser);
 
       // Update the session with the fresh user data from the API response
       // This triggers jwt callback with trigger="update"
-      console.log("Step 3: Calling update() with new role...");
       const updateResult = await update({
         user: {
           ...session?.user,
           role: updatedUser.role,
         },
       });
-      console.log("Step 4: Session update result:", updateResult);
 
       // Small wait to ensure session is fully updated
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Redirect to appropriate dashboard or onboarding
-      const redirectPath =
-        selectedRole === "operator"
-          ? "/operator-onboarding"
-          : "/ev-owner-dashboard";
-      console.log("Step 5: Redirecting to:", redirectPath);
-      router.replace(redirectPath);
+      if (updateResult?.ok) {
+        const redirectPath =
+          selectedRole === "operator"
+            ? "/operator-onboarding"
+            : "/ev-owner-dashboard";
+        router.replace(redirectPath);
+      }
     } catch (error) {
       console.error("Error in role selection:", error);
       setIsLoading(false);

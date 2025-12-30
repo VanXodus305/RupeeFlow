@@ -22,7 +22,7 @@ export async function POST(req) {
     const { stationName, stationAddress, chargerPower, ratePerKwh } = body;
 
     // Demo users cannot create profiles via API
-    if (session.user.id.startsWith("demo-")) {
+    if (session.user.isDemo) {
       return Response.json(
         {
           error:

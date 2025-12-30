@@ -23,7 +23,7 @@ export async function GET(req) {
       let operator;
 
       // For demo operator, try to find the seeded operator profile
-      if (session.user.id.startsWith("demo-")) {
+      if (session.user.isDemo) {
         operator = await Operator.findOne({
           stationName: "Demo Charging Station",
         });
@@ -52,7 +52,7 @@ export async function GET(req) {
       totalRevenue = sessions.reduce((sum, s) => sum + (s.totalCost || 0), 0);
     } else {
       // EV Owner: Get their own charging sessions
-      if (session.user.id.startsWith("demo-")) {
+      if (session.user.isDemo) {
         // Demo users have no sessions
         sessions = [];
       } else {

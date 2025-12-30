@@ -23,7 +23,8 @@ export default function LoginPage() {
         redirect: false,
       });
 
-      if (!result?.ok) {
+      // Check if login was successful
+      if (result?.error || !result?.ok) {
         setError("Invalid credentials");
         setIsLoading(false);
         return;
@@ -36,7 +37,8 @@ export default function LoginPage() {
           : "/ev-owner-dashboard"
       );
     } catch (err) {
-      setError("Login failed");
+      console.error("Login error:", err);
+      setError("Invalid credentials");
       setIsLoading(false);
     }
   };

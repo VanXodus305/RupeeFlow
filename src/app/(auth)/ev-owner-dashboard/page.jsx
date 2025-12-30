@@ -23,9 +23,11 @@ export default function EVOwnerDashboard() {
   const [vehicleReg, setVehicleReg] = useState("MH-01-AB-1234");
   const [batteryCapacity, setBatteryCapacity] = useState(60);
   const [showSettlement, setShowSettlement] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [operatorId, setOperatorId] = useState(null);
   const [ratePerKwh, setRatePerKwh] = useState(12);
   const [availableOperators, setAvailableOperators] = useState([]);
+  const [chargingHistory, setChargingHistory] = useState([]);
 
   // Redirect operators to station dashboard
   useEffect(() => {
@@ -53,8 +55,29 @@ export default function EVOwnerDashboard() {
       }
     };
 
-    fetchOperators();
-  }, []);
+    if (session) {
+      fetchOperators();
+    }
+  }, [session]);
+
+  // Fetch charging history
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch("/api/charging/history");
+        if (res.ok) {
+          const data = await res.json();
+          setChargingHistory(data.sessions || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch charging history:", err);
+      }
+    };
+
+    if (session) {
+      fetchHistory();
+    }
+  }, [session]);
 
   const handleStartCharging = async () => {
     if (!operatorId) {
@@ -74,6 +97,24 @@ export default function EVOwnerDashboard() {
   const handleStopCharging = async () => {
     await stopCharging();
     setShowSettlement(true);
+  };
+
+  const handleContinueCharging = async () => {
+    // Reset settlement view and continue charging
+    setShowSettlement(false);
+    await startCharging(
+      session.user.id,
+      vehicleReg,
+      batteryCapacity,
+      ratePerKwh,
+      7.4,
+      operatorId
+    );
+  };
+
+  const handleBackToDashboard = () => {
+    setShowSettlement(false);
+    setShowHistory(false);
   };
 
   return (
@@ -206,15 +247,196 @@ export default function EVOwnerDashboard() {
       )}
 
       {showSettlement && (
-        <ChargingSettlement
-          {...chargingData}
-          sessionId={sessionId}
-          operatorId={savedOperatorId || operatorId}
-          vehicleReg={vehicleReg}
-          batteryCapacity={batteryCapacity}
-          ratePerKwh={ratePerKwh}
-          saveSession={saveSession}
-        />
+        <div>
+          <ChargingSettlement
+            {...chargingData}
+            sessionId={sessionId}
+            operatorId={savedOperatorId || operatorId}
+            vehicleReg={vehicleReg}
+            batteryCapacity={batteryCapacity}
+            ratePerKwh={ratePerKwh}
+            saveSession={saveSession}
+          />
+          <div
+            style={{
+              marginTop: "20px",
+              display: "flex",
+              gap: "10px",
+              flexWrap: "wrap",
+            }}
+          >
+            <button
+              onClick={handleContinueCharging}
+              style={{
+                flex: 1,
+                minWidth: "150px",
+                padding: "10px",
+                backgroundColor: "#4CAF50",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "bold",
+              }}
+            >
+              Continue Charging ⚡
+            </button>
+            <button
+              onClick={handleBackToDashboard}
+              style={{
+                flex: 1,
+                minWidth: "150px",
+                padding: "10px",
+                backgroundColor: "#2196F3",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "bold",
+              }}
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isCharging && !showSettlement && (
+        <div style={{ marginTop: "40px" }}>
+          <h2>Charging History</h2>
+          {chargingHistory.length === 0 ? (
+            <div
+              style={{
+                padding: "20px",
+                textAlign: "center",
+                backgroundColor: "#f9f9f9",
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                color: "#666",
+              }}
+            >
+              <p>No charging sessions yet</p>
+            </div>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ backgroundColor: "#f5f5f5" }}>
+                  <th
+                    style={{
+                      padding: "10px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Vehicle Reg
+                  </th>
+                  <th
+                    style={{
+                      padding: "10px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Energy (kWh)
+                  </th>
+                  <th
+                    style={{
+                      padding: "10px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Amount (₹)
+                  </th>
+                  <th
+                    style={{
+                      padding: "10px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Duration (min)
+                  </th>
+                  <th
+                    style={{
+                      padding: "10px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Date & Time
+                  </th>
+                  <th
+                    style={{
+                      padding: "10px",
+                      border: "1px solid #ddd",
+                      textAlign: "left",
+                    }}
+                  >
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {chargingHistory.map((session) => (
+                  <tr key={session.id}>
+                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                      {session.vehicleReg}
+                    </td>
+                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                      {session.totalKwh}
+                    </td>
+                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                      ₹{session.totalCost.toFixed(2)}
+                    </td>
+                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                      {Math.floor((session.duration || 0) / 60)}
+                    </td>
+                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                      {session.createdAt
+                        ? new Date(session.createdAt).toLocaleString("en-IN", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          })
+                        : "N/A"}
+                    </td>
+                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "4px 8px",
+                          borderRadius: "4px",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          backgroundColor:
+                            session.status === "completed"
+                              ? "#d4edda"
+                              : session.status === "settled"
+                              ? "#cfe2ff"
+                              : "#fff3cd",
+                          color:
+                            session.status === "completed"
+                              ? "#155724"
+                              : session.status === "settled"
+                              ? "#084298"
+                              : "#856404",
+                        }}
+                      >
+                        {session.status || "pending"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       )}
 
       {chargingData.error && (

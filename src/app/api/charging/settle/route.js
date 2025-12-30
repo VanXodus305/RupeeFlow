@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { Contract, JsonRpcProvider } from "ethers";
+import { Contract, JsonRpcProvider, Wallet } from "ethers";
 
 const POLYGON_RPC =
   process.env.POLYGON_RPC_URL || "https://rpc-amoy.polygon.technology";
@@ -42,22 +42,22 @@ export async function POST(req) {
       );
     }
 
-    // For demo/testing, just return a fake transaction hash if no private key is set
+    // Require PRIVATE_KEY for blockchain settlement
     if (!PRIVATE_KEY) {
-      console.log(
-        "[Settle] Demo mode - no PRIVATE_KEY set. Returning fake tx hash."
+      return Response.json(
+        { error: "Blockchain settlement not configured - missing PRIVATE_KEY" },
+        { status: 500 }
       );
-      return Response.json({
-        transactionHash: "0xdemo_" + sessionId.substring(0, 40),
-        message:
-          "Demo mode - set PRIVATE_KEY and contract address to enable real blockchain settlements",
-      });
     }
 
-    // Submit real transaction to blockchain
+    // Submit transaction to blockchain
     const provider = new JsonRpcProvider(POLYGON_RPC);
-    const wallet = provider.getSigner(PRIVATE_KEY);
+    const wallet = new Wallet(PRIVATE_KEY, provider);
     const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, wallet);
+
+    // Use ObjectId as hex address (MongoDB ObjectIds are 24 hex chars, pad to 40)
+    const evOwnerAddress = "0x" + session.user.id.padEnd(40, "0");
+    const stationAddress = "0x0000000000000000000000000000000000000000";
 
     // Convert values to appropriate format for blockchain
     const energyKwhWei = BigInt(Math.floor(totalKwh * 1000)); // Store with 3 decimal places
@@ -66,8 +66,8 @@ export async function POST(req) {
 
     // Call settlement function
     const tx = await contract.settleCharging(
-      session.user.id, // EV owner address (using user ID as placeholder)
-      "0x0000000000000000000000000000000000000000", // Station address (placeholder)
+      evOwnerAddress,
+      stationAddress,
       energyKwhWei,
       amountPaidWei,
       durationSeconds

@@ -52,11 +52,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (demoUser) {
+          // Fetch the real MongoDB user to get their actual ObjectId
+          try {
+            const UserModel = getUser();
+            const connectDB = getDB();
+            await connectDB();
+
+            const dbUser = await UserModel.findOne({ email: demoUser.email });
+            if (dbUser) {
+              return {
+                id: dbUser._id.toString(), // Use real MongoDB ObjectId
+                email: dbUser.email,
+                name: dbUser.name,
+                role: dbUser.role,
+                isDemo: true, // Mark as demo user
+              };
+            }
+          } catch (error) {
+            console.error("Error fetching demo user from DB:", error);
+          }
+
+          // Fallback to hardcoded user if DB fetch fails
           return {
             id: demoUser.id,
             email: demoUser.email,
             name: demoUser.name,
             role: demoUser.role,
+            isDemo: true, // Mark as demo user
           };
         }
         return null;
@@ -112,6 +134,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.email = user.email;
         token.role = user.role;
         token.googleId = user.googleId;
+        token.isDemo = user.isDemo || false;
       }
 
       // Handle update trigger from client-side update() call
@@ -128,10 +151,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.email = token.email;
       session.user.role = token.role;
       session.user.googleId = token.googleId;
+      session.user.isDemo = token.isDemo || false;
 
       // Try to fetch additional fields from database (vehicleReg, batteryCapacity)
       // but don't fail if it doesn't work
-      if (!token.id?.startsWith("demo-")) {
+      if (!token.isDemo) {
         try {
           const UserModel = getUser();
           const connectDB = getDB();

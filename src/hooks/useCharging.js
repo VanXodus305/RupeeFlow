@@ -82,28 +82,6 @@ export function useCharging() {
 
       // Remove any existing meter-reading listeners
       socketRef.current.off("meter-reading");
-
-      // Listen for meter readings
-      const meterHandler = (meterData) => {
-        setSecondsUsed(meterData.secondsElapsed);
-        setTotalKwh(parseFloat(meterData.totalKwh));
-        setTotalCost(parseFloat(meterData.totalCost));
-        setCurrentPower(meterData.currentPower);
-        setChargePercentage(parseFloat(meterData.chargePercentage));
-      };
-
-      socketRef.current.on("meter-reading", meterHandler);
-
-      // Emit via WebSocket
-      socketRef.current.emit("start-charging", {
-        userId,
-        vehicleReg,
-        batteryCapacity,
-        ratePerKwh,
-        chargerPower,
-      });
-
-      console.log("[Hook] Charging started:", sid);
     } catch (err) {
       console.error("[Hook] Error:", err);
       setError(err.message);
