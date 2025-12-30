@@ -1,8 +1,8 @@
 import { Geist } from "next/font/google";
 import "./globals.css";
 import Provider from "@/contexts/Provider";
-// import GlobalNavbar from "@/components/Navbar";
-// import GlobalFooter from "@/components/Footer";
+import GlobalNavbar from "@/components/Navbar";
+import GlobalFooter from "@/components/Footer";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -21,9 +21,9 @@ export default function RootLayout({ children }) {
         className={`${geistSans.className} bg-gradient-to-b from-background-200 to-background-100 min-h-screen dark flex flex-col`}
       >
         <Provider>
-          {/* <GlobalNavbar /> */}
+          <GlobalNavbar />
           <main className="flex-1">{children}</main>
-          {/* <GlobalFooter /> */}
+          <GlobalFooter />
         </Provider>
       </body>
     </html>
