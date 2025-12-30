@@ -56,11 +56,6 @@ export async function middleware(request) {
     return NextResponse.redirect(new URL("/station-dashboard", request.url));
   }
 
-  // Operators cannot access operator-onboarding after initial setup
-  if (session.user.role === "operator" && pathname === "/operator-onboarding") {
-    return NextResponse.redirect(new URL("/station-dashboard", request.url));
-  }
-
   return NextResponse.next();
 }
 

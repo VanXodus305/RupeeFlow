@@ -1,6 +1,5 @@
 import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
-import User from "@/models/User";
 import Operator from "@/models/Operator";
 
 export async function POST(req) {
@@ -11,9 +10,9 @@ export async function POST(req) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (session.user.role !== "owner") {
+    if (session.user.role !== "operator") {
       return Response.json(
-        { error: "Only owners can create operator profiles" },
+        { error: "Only operators can create operator profiles" },
         { status: 403 }
       );
     }
@@ -23,8 +22,17 @@ export async function POST(req) {
 
     await connectDB();
 
-    // Update user role to operator
-    await User.findByIdAndUpdate(session.user.id, { role: "operator" });
+    // Check if operator profile already exists
+    const existingOperator = await Operator.findOne({
+      userId: session.user.id,
+    });
+
+    if (existingOperator) {
+      return Response.json(
+        { error: "Operator profile already exists" },
+        { status: 400 }
+      );
+    }
 
     // Create operator profile
     const operator = await Operator.create({

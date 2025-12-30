@@ -5,38 +5,85 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function StationDashboard() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
-  const [settlements, setSettlements] = useState([]);
+  const [operatorData, setOperatorData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [settlements] = useState([
+    {
+      id: 1,
+      vehicleReg: "MH-01-AB-1234",
+      kwh: 3.7,
+      amount: 44.4,
+      duration: 1800,
+      date: "2025-12-29 10:30",
+    },
+    {
+      id: 2,
+      vehicleReg: "MH-01-CD-5678",
+      kwh: 5.55,
+      amount: 66.6,
+      duration: 2700,
+      date: "2025-12-29 11:15",
+    },
+  ]);
 
-  // Redirect owners to EV owner dashboard
   useEffect(() => {
-    if (session && session.user?.role === "owner") {
-      router.push("/ev-owner-dashboard");
+    // Wait for session to load
+    if (status === "loading") {
+      return;
     }
-  }, [session, router]);
 
-  // Simulated settlements data
-  useEffect(() => {
-    setSettlements([
-      {
-        id: 1,
-        vehicleReg: "MH-01-AB-1234",
-        kwh: 3.7,
-        amount: 44.4,
-        duration: 1800,
-        date: "2025-12-29 10:30",
-      },
-      {
-        id: 2,
-        vehicleReg: "MH-01-CD-5678",
-        kwh: 5.55,
-        amount: 66.6,
-        duration: 2700,
-        date: "2025-12-29 11:15",
-      },
-    ]);
-  }, []);
+    // Not authenticated
+    if (!session) {
+      router.push("/login");
+      setIsLoading(false);
+      return;
+    }
+
+    // Owner should not be here
+    if (session.user?.role === "owner") {
+      router.push("/ev-owner-dashboard");
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch operator profile
+    const fetchOperatorProfile = async () => {
+      try {
+        const response = await fetch("/api/operator/check");
+        const data = await response.json();
+
+        if (!data.exists) {
+          // No operator profile, redirect to onboarding
+          router.push("/operator-onboarding");
+          return;
+        }
+
+        // Operator exists, display dashboard
+        setOperatorData(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching operator profile:", error);
+        // On error, redirect to onboarding to be safe
+        router.push("/operator-onboarding");
+      }
+    };
+
+    fetchOperatorProfile();
+  }, [session, status, router]);
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: "40px", textAlign: "center" }}>
+        <p>Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  if (!operatorData) {
+    return null;
+  }
 
   const totalKwh = settlements.reduce((sum, s) => sum + s.kwh, 0);
   const totalRevenue = settlements.reduce((sum, s) => sum + s.amount, 0);
@@ -61,6 +108,43 @@ export default function StationDashboard() {
       </div>
 
       <p>Welcome, {session?.user?.name}</p>
+
+      <div
+        style={{
+          border: "1px solid #ddd",
+          padding: "20px",
+          borderRadius: "8px",
+          backgroundColor: "#f9f9f9",
+          marginBottom: "30px",
+        }}
+      >
+        <h2>Station Details</h2>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "20px",
+          }}
+        >
+          <div>
+            <p>
+              <strong>Station Name:</strong> {operatorData.stationName}
+            </p>
+            <p>
+              <strong>Address:</strong>{" "}
+              {operatorData.stationAddress || "Not provided"}
+            </p>
+          </div>
+          <div>
+            <p>
+              <strong>Charger Power:</strong> {operatorData.chargerPower} kW
+            </p>
+            <p>
+              <strong>Rate per kWh:</strong> ₹{operatorData.ratePerKwh}
+            </p>
+          </div>
+        </div>
+      </div>
 
       <div
         style={{

@@ -61,10 +61,10 @@ export default function RoleSelectionPage() {
       // Small wait to ensure session is fully updated
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      // Redirect to appropriate dashboard
+      // Redirect to appropriate dashboard or onboarding
       const redirectPath =
         selectedRole === "operator"
-          ? "/station-dashboard"
+          ? "/operator-onboarding"
           : "/ev-owner-dashboard";
       console.log("Step 5: Redirecting to:", redirectPath);
       router.replace(redirectPath);
