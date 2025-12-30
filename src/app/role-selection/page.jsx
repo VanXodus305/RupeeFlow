@@ -1,148 +1,129 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 export default function RoleSelectionPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const { data: session, status, update } = useSession();
   const [isLoading, setIsLoading] = useState(false);
 
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
+  // Redirect if user already has a role or is not authenticated
+  useEffect(() => {
+    if (status === "loading") return;
 
-  if (!session) {
-    router.push("/login");
-    return null;
-  }
+    if (!session) {
+      router.push("/login");
+      return;
+    }
 
-  const handleRoleSelect = async (role) => {
+    // If user already has a role, redirect to their dashboard
+    if (session.user?.role === "owner") {
+      router.push("/ev-owner-dashboard");
+    } else if (session.user?.role === "operator") {
+      router.push("/station-dashboard");
+    }
+  }, [session, status, router]);
+
+  const handleRoleSelect = async (selectedRole) => {
     setIsLoading(true);
-    try {
-      console.log("Selecting role:", role);
 
-      // Make direct API call to update role in database
+    try {
+      console.log("Step 1: Starting role selection for:", selectedRole);
+
+      // Update user role in database
       const response = await fetch("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role }),
+        body: JSON.stringify({ role: selectedRole }),
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to update role");
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update role");
       }
 
-      console.log("Role updated successfully in DB");
+      const updatedUser = await response.json();
+      console.log("Step 2: Role updated in database:", updatedUser);
 
-      // Wait a moment for database sync
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Update the session with the fresh user data from the API response
+      // This triggers jwt callback with trigger="update"
+      console.log("Step 3: Calling update() with new role...");
+      const updateResult = await update({
+        user: {
+          ...session?.user,
+          role: updatedUser.role,
+        },
+      });
+      console.log("Step 4: Session update result:", updateResult);
 
-      // Navigate to the appropriate dashboard
-      // The middleware will check the updated JWT which will have fresh DB data
-      if (role === "owner") {
-        router.push("/ev-owner-dashboard");
-      } else {
-        router.push("/operator-onboarding");
-      }
+      // Small wait to ensure session is fully updated
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Redirect to appropriate dashboard
+      const redirectPath =
+        selectedRole === "operator"
+          ? "/station-dashboard"
+          : "/ev-owner-dashboard";
+      console.log("Step 5: Redirecting to:", redirectPath);
+      router.replace(redirectPath);
     } catch (error) {
-      console.error("Role selection error:", error);
-      alert("Error updating role: " + error.message);
+      console.error("Error in role selection:", error);
       setIsLoading(false);
+      alert("Failed to update role: " + error.message);
     }
   };
 
-  return (
-    <div
-      style={{
-        maxWidth: "600px",
-        margin: "100px auto",
-        padding: "20px",
-        textAlign: "center",
-      }}
-    >
-      <h1>Welcome to RupeeFlow</h1>
-      <p>Hi {session.user.name}, what would you like to do?</p>
+  if (status === "loading") {
+    return <div className="p-8 text-center">Loading...</div>;
+  }
 
-      <div
-        style={{
-          display: "flex",
-          gap: "20px",
-          marginTop: "40px",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-            maxWidth: "250px",
-            padding: "30px",
-            border: "2px solid #007bff",
-            borderRadius: "8px",
-            transition: "all 0.3s",
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = "#f0f0f0")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = "white")
-          }
-        >
-          <h2>⚡ EV Owner</h2>
-          <p>Charge your electric vehicle at nearby stations</p>
+  if (!session || session.user?.role !== null) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
+        <h1 className="text-4xl font-bold text-center mb-2 text-gray-800">
+          Welcome to RupeeFlow
+        </h1>
+        <p className="text-center text-gray-600 mb-10">
+          Hi {session.user?.name}, choose how you want to use RupeeFlow
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* EV Owner Option */}
           <button
             onClick={() => handleRoleSelect("owner")}
             disabled={isLoading}
-            style={{
-              marginTop: "20px",
-              padding: "10px 20px",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: isLoading ? "not-allowed" : "pointer",
-              opacity: isLoading ? 0.6 : 1,
-            }}
+            className="group relative p-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg text-white hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Loading..." : "Continue"}
+            <div className="text-3xl mb-3">🔌</div>
+            <h2 className="text-2xl font-bold mb-2">EV Owner</h2>
+            <p className="text-blue-100 text-sm">
+              Find and pay for EV charging at nearby stations
+            </p>
+            <div className="mt-4 pt-4 border-t border-blue-400 text-sm font-semibold">
+              {isLoading ? "Setting up..." : "Get Started"}
+            </div>
           </button>
-        </div>
 
-        <div
-          style={{
-            flex: 1,
-            maxWidth: "250px",
-            padding: "30px",
-            border: "2px solid #28a745",
-            borderRadius: "8px",
-            transition: "all 0.3s",
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = "#f0f0f0")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = "white")
-          }
-        >
-          <h2>🔋 Station Operator</h2>
-          <p>Manage your charging station and earn revenue</p>
+          {/* Station Operator Option */}
           <button
             onClick={() => handleRoleSelect("operator")}
             disabled={isLoading}
-            style={{
-              marginTop: "20px",
-              padding: "10px 20px",
-              backgroundColor: "#28a745",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: isLoading ? "not-allowed" : "pointer",
-              opacity: isLoading ? 0.6 : 1,
-            }}
+            className="group relative p-6 bg-gradient-to-br from-green-500 to-green-600 rounded-lg text-white hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Loading..." : "Continue"}
+            <div className="text-3xl mb-3">⚡</div>
+            <h2 className="text-2xl font-bold mb-2">Station Operator</h2>
+            <p className="text-green-100 text-sm">
+              Manage your charging station and track earnings
+            </p>
+            <div className="mt-4 pt-4 border-t border-green-400 text-sm font-semibold">
+              {isLoading ? "Setting up..." : "Get Started"}
+            </div>
           </button>
         </div>
       </div>

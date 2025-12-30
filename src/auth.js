@@ -1,35 +1,33 @@
+export const runtime = "nodejs";
+
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import connectDB from "@/lib/mongodb";
 
-// Import User model at the top level but wrapped to avoid issues
-let User = null;
-
-async function getUser() {
-  if (!User) {
-    User = (await import("./models/User.js")).default;
-  }
-  return User;
-}
-
-// Temporary user database for credentials provider demo
+// Demo users for credentials provider
 const demoUsers = [
   {
-    id: "demo-1",
+    id: "demo-owner",
     email: "owner@example.com",
     password: "password123",
     name: "EV Owner",
     role: "owner",
   },
   {
-    id: "demo-2",
+    id: "demo-operator",
     email: "operator@example.com",
     password: "password123",
     name: "Station Operator",
     role: "operator",
   },
 ];
+
+// Lazy load User model
+async function getUser() {
+  const { default: User } = await import("./models/User.js");
+  return User;
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -39,34 +37,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
     CredentialsProvider({
       async authorize(credentials) {
-        try {
-          // Only accept demo credentials
-          const demoUser = demoUsers.find(
-            (u) =>
-              u.email === credentials.email &&
-              u.password === credentials.password
-          );
+        const demoUser = demoUsers.find(
+          (u) =>
+            u.email === credentials.email && u.password === credentials.password
+        );
 
-          if (demoUser) {
-            return {
-              id: demoUser.id,
-              email: demoUser.email,
-              name: demoUser.name,
-              role: demoUser.role,
-            };
-          }
-
-          return null;
-        } catch (error) {
-          console.error("Auth error:", error);
-          return null;
+        if (demoUser) {
+          return {
+            id: demoUser.id,
+            email: demoUser.email,
+            name: demoUser.name,
+            role: demoUser.role,
+          };
         }
+        return null;
       },
     }),
   ],
+
   pages: {
     signIn: "/login",
   },
+
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
@@ -75,19 +67,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           await connectDB();
 
           let dbUser = await UserModel.findOne({ email: user.email });
-          let isNewUser = false;
 
           if (!dbUser) {
-            // First-time Google login - create new user with isFirstLogin = true
+            // New Google user - create with role: null
             dbUser = await UserModel.create({
               email: user.email,
               name: user.name,
               image: user.image,
               googleId: profile?.sub,
-              role: "owner",
-              isFirstLogin: true,
+              role: null, // No role selected yet
             });
-            isNewUser = true;
           } else if (!dbUser.googleId) {
             // Existing user linking Google account
             dbUser.googleId = profile?.sub;
@@ -97,9 +86,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.id = dbUser._id.toString();
           user.role = dbUser.role;
           user.googleId = dbUser.googleId;
-          user.isFirstLogin = isNewUser || dbUser.isFirstLogin;
         } catch (error) {
-          console.error("Google sign in error:", error);
+          console.error("Google signIn error:", error);
           return false;
         }
       }
@@ -107,76 +95,60 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
 
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
+        // Initial sign in
         token.id = user.id;
+        token.email = user.email;
         token.role = user.role;
         token.googleId = user.googleId;
-        token.isFirstLogin = user.isFirstLogin;
-      } else {
-        // On subsequent calls (not initial sign in), fetch fresh data from DB
-        if (token.id && !token.id.startsWith("demo-")) {
-          try {
-            const UserModel = await getUser();
-            await connectDB();
-            const dbUser = await UserModel.findById(token.id).lean();
-
-            if (dbUser) {
-              token.role = dbUser.role;
-              token.isFirstLogin = dbUser.isFirstLogin;
-              token.googleId = dbUser.googleId;
-            }
-          } catch (error) {
-            console.warn("JWT callback DB fetch failed:", error.message);
-            // Use existing token values on error
-          }
-        }
       }
+
+      // Handle update trigger from client-side update() call
+      if (trigger === "update" && session?.user?.role) {
+        token.role = session.user.role;
+      }
+
       return token;
     },
 
     async session({ session, token }) {
-      try {
-        // Fallback for demo users
-        if (token.id?.startsWith("demo-")) {
-          session.user.id = token.id;
-          session.user.role = token.role;
-          session.user.isFirstLogin = false;
-          return session;
-        }
+      // Use token data for session
+      session.user.id = token.id;
+      session.user.email = token.email;
+      session.user.role = token.role;
+      session.user.googleId = token.googleId;
 
-        // For Google users, fetch fresh data from MongoDB
-        const UserModel = await getUser();
-        await connectDB();
-        const user = await UserModel.findById(token.id).lean();
+      // Try to fetch additional fields from database (vehicleReg, batteryCapacity)
+      // but don't fail if it doesn't work
+      if (!token.id?.startsWith("demo-")) {
+        try {
+          const UserModel = await getUser();
+          await connectDB();
+          const user = await UserModel.findById(token.id).lean();
 
-        if (user) {
-          console.log("Fetched user from DB:", {
-            id: user._id,
-            isFirstLogin: user.isFirstLogin,
-            role: user.role,
-          });
-          session.user.id = user._id.toString();
-          session.user.role = user.role;
-          session.user.googleId = user.googleId;
-          session.user.vehicleReg = user.vehicleReg;
-          session.user.batteryCapacity = user.batteryCapacity;
-          session.user.isFirstLogin = user.isFirstLogin;
-        } else {
-          // Fallback if user not found
-          session.user.id = token.id;
-          session.user.role = token.role;
-          session.user.isFirstLogin = token.isFirstLogin || false;
+          if (user) {
+            session.user.vehicleReg = user.vehicleReg;
+            session.user.batteryCapacity = user.batteryCapacity;
+          }
+        } catch (error) {
+          // It's okay if we can't fetch additional fields
+          // The essential fields (id, email, role) come from the token
         }
-      } catch (error) {
-        console.error("Session callback error:", error);
-        // Fallback to token data on error
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.isFirstLogin = token.isFirstLogin || false;
       }
 
       return session;
+    },
+
+    async redirect({ url, baseUrl }) {
+      // After OAuth, redirect to home page
+      // Middleware will then check the user's role and redirect to appropriate page
+      // This ensures middleware has a chance to check the fresh session data
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      // Redirect to root, let middleware handle the routing
+      return baseUrl;
     },
   },
 });

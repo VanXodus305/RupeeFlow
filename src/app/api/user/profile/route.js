@@ -50,7 +50,7 @@ export async function PUT(req) {
         ...(name && { name }),
         ...(vehicleReg && { vehicleReg }),
         ...(batteryCapacity && { batteryCapacity }),
-        ...(role && { role, isFirstLogin: false }),
+        ...(role && { role }),
       },
       { new: true }
     );
@@ -67,7 +67,6 @@ export async function PUT(req) {
       role: user.role,
       vehicleReg: user.vehicleReg,
       batteryCapacity: user.batteryCapacity,
-      isFirstLogin: user.isFirstLogin,
     });
   } catch (error) {
     console.error("Profile PUT error:", error);

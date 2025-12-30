@@ -15,14 +15,10 @@ const userSchema = new mongoose.Schema(
     image: String,
     role: {
       type: String,
-      enum: ["owner", "operator"],
-      default: "owner",
+      enum: ["owner", "operator", null],
+      default: null,
     },
     googleId: String,
-    isFirstLogin: {
-      type: Boolean,
-      default: true,
-    },
     vehicleReg: String,
     batteryCapacity: Number,
   },

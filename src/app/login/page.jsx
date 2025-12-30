@@ -5,71 +5,92 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("owner@example.com");
   const [password, setPassword] = useState("password123");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
-  const handleSubmit = async (e) => {
+  const handleDemoLogin = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
+    setIsLoading(true);
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    if (result?.error) {
-      setError("Invalid email or password");
-    } else {
-      router.push("/ev-owner-dashboard");
+      if (!result?.ok) {
+        setError("Invalid credentials");
+        setIsLoading(false);
+        return;
+      }
+
+      // Demo users have roles, so redirect to their dashboard
+      router.push(
+        email === "operator@example.com"
+          ? "/station-dashboard"
+          : "/ev-owner-dashboard"
+      );
+    } catch (err) {
+      setError("Login failed");
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    await signIn("google", {
-      redirect: true,
-      callbackUrl: "/ev-owner-dashboard",
-    });
+  const handleGoogleLogin = async () => {
+    // NextAuth's signIn with redirect: true will handle the OAuth flow
+    // and the browser will follow the redirect
+    // Middleware will check the session and redirect to role-selection if needed
+    await signIn("google", { redirect: true });
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "100px auto", padding: "20px" }}>
-      <h1>RupeeFlow Login</h1>
+    <div
+      style={{
+        maxWidth: "400px",
+        margin: "100px auto",
+        padding: "30px",
+        border: "1px solid #ddd",
+        borderRadius: "8px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      }}
+    >
+      <h1 style={{ textAlign: "center", marginBottom: "30px" }}>
+        Welcome to RupeeFlow
+      </h1>
 
-      {/* Google Sign In */}
-      <button
-        onClick={handleGoogleSignIn}
-        disabled={isLoading}
-        style={{
-          width: "100%",
-          padding: "12px",
-          marginBottom: "20px",
-          backgroundColor: "#fff",
-          border: "1px solid #ccc",
-          borderRadius: "4px",
-          cursor: "pointer",
-          fontSize: "16px",
-        }}
-      >
-        🔐 Sign in with Google
-      </button>
+      {error && (
+        <div
+          style={{
+            padding: "10px",
+            marginBottom: "20px",
+            backgroundColor: "#fee",
+            border: "1px solid #f99",
+            borderRadius: "4px",
+            color: "#c33",
+          }}
+        >
+          {error}
+        </div>
+      )}
 
-      <hr style={{ margin: "20px 0", color: "#ccc" }} />
-      <p style={{ textAlign: "center", color: "#666" }}>
-        Or use demo credentials below
-      </p>
-      <hr style={{ margin: "20px 0", color: "#ccc" }} />
-
-      <form onSubmit={handleSubmit}>
+      {/* Demo Login */}
+      <form onSubmit={handleDemoLogin}>
+        <h2 style={{ fontSize: "18px", marginBottom: "15px" }}>Demo Login</h2>
         <div style={{ marginBottom: "15px" }}>
-          <label>Email:</label>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "5px",
+              fontWeight: "500",
+            }}
+          >
+            Email:
+          </label>
           <input
             type="email"
             value={email}
@@ -77,14 +98,26 @@ export default function LoginPage() {
             style={{
               width: "100%",
               padding: "8px",
-              marginTop: "5px",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
               boxSizing: "border-box",
             }}
           />
+          <small style={{ color: "#666" }}>
+            Try: owner@example.com or operator@example.com
+          </small>
         </div>
 
         <div style={{ marginBottom: "15px" }}>
-          <label>Password:</label>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "5px",
+              fontWeight: "500",
+            }}
+          >
+            Password:
+          </label>
           <input
             type="password"
             value={password}
@@ -92,32 +125,67 @@ export default function LoginPage() {
             style={{
               width: "100%",
               padding: "8px",
-              marginTop: "5px",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
               boxSizing: "border-box",
             }}
           />
+          <small style={{ color: "#666" }}>Default: password123</small>
         </div>
-
-        {error && <p style={{ color: "red", marginBottom: "15px" }}>{error}</p>}
 
         <button
           type="submit"
           disabled={isLoading}
-          style={{ width: "100%", padding: "10px" }}
+          style={{
+            width: "100%",
+            padding: "10px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: isLoading ? "not-allowed" : "pointer",
+            opacity: isLoading ? 0.6 : 1,
+            fontSize: "16px",
+            marginBottom: "20px",
+          }}
         >
-          {isLoading ? "Signing in..." : "Sign In"}
+          {isLoading ? "Logging in..." : "Login with Demo"}
         </button>
       </form>
 
       <hr style={{ margin: "20px 0" }} />
 
-      <h3>Demo Accounts:</h3>
-      <p>
-        <strong>EV Owner:</strong> owner@example.com / password123
-      </p>
-      <p>
-        <strong>Station Operator:</strong> operator@example.com / password123
-      </p>
+      {/* Google Login */}
+      <div>
+        <h2 style={{ fontSize: "18px", marginBottom: "15px" }}>
+          Or continue with Google
+        </h2>
+        <button
+          onClick={handleGoogleLogin}
+          disabled={isLoading}
+          style={{
+            width: "100%",
+            padding: "10px",
+            backgroundColor: "#f1f1f1",
+            color: "#333",
+            border: "1px solid #ddd",
+            borderRadius: "4px",
+            cursor: isLoading ? "not-allowed" : "pointer",
+            opacity: isLoading ? 0.6 : 1,
+            fontSize: "16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+          }}
+        >
+          <span>🔗</span>
+          {isLoading ? "Signing in..." : "Continue with Google"}
+        </button>
+        <small style={{ display: "block", marginTop: "10px", color: "#666" }}>
+          First-time Google users will select their role after signing in
+        </small>
+      </div>
     </div>
   );
 }
