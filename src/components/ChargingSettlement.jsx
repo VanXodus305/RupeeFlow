@@ -9,12 +9,49 @@ export default function ChargingSettlement({
   totalKwh,
   chargePercentage,
   sessionId,
+  operatorId,
+  vehicleReg,
+  batteryCapacity,
+  ratePerKwh,
+  saveSession,
 }) {
   const [isSettling, setIsSettling] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [txHash, setTxHash] = useState(null);
   const [error, setError] = useState(null);
+  const [sessionSaved, setSessionSaved] = useState(false);
+
+  const handleSaveSession = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      if (!operatorId) {
+        throw new Error("Operator ID not available");
+      }
+
+      await saveSession(operatorId, vehicleReg, batteryCapacity, ratePerKwh);
+      setSessionSaved(true);
+
+      console.log("Session saved to database:", {
+        sessionId,
+        operatorId,
+        totalKwh,
+        totalCost,
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleSettle = async () => {
+    // First save to database if not already saved
+    if (!sessionSaved && saveSession) {
+      await handleSaveSession();
+    }
+
     try {
       setIsSettling(true);
       setError(null);
@@ -211,24 +248,45 @@ export default function ChargingSettlement({
             <p style={{ color: "red", marginBottom: "15px" }}>Error: {error}</p>
           )}
 
+          {sessionSaved && (
+            <div
+              style={{
+                backgroundColor: "#e3f2fd",
+                border: "2px solid #2196F3",
+                padding: "15px",
+                borderRadius: "8px",
+                marginBottom: "15px",
+              }}
+            >
+              <p style={{ fontWeight: "bold", marginBottom: "5px" }}>
+                ✅ Session Saved to Database
+              </p>
+              <p style={{ fontSize: "12px", color: "#666", margin: "0" }}>
+                Your charging session has been recorded in the system.
+              </p>
+            </div>
+          )}
+
           <button
             onClick={handleSettle}
-            disabled={isSettling}
+            disabled={isSettling || isSaving}
             style={{
               width: "100%",
               padding: "15px",
               fontSize: "16px",
               fontWeight: "bold",
-              backgroundColor: isSettling ? "#ccc" : "#2196F3",
+              backgroundColor: isSettling || isSaving ? "#ccc" : "#2196F3",
               color: "white",
               border: "none",
               borderRadius: "4px",
-              cursor: isSettling ? "not-allowed" : "pointer",
+              cursor: isSettling || isSaving ? "not-allowed" : "pointer",
             }}
           >
-            {isSettling
+            {isSaving
+              ? "Saving to Database... 💾"
+              : isSettling
               ? "Settling on Blockchain... ⛓️"
-              : "Settle on Blockchain ⛓️"}
+              : "Complete & Settle ✅"}
           </button>
 
           <p
@@ -239,7 +297,7 @@ export default function ChargingSettlement({
               textAlign: "center",
             }}
           >
-            This will record your charging on Polygon Amoy testnet
+            This will save your session and record on Polygon Amoy testnet
           </p>
         </>
       )}

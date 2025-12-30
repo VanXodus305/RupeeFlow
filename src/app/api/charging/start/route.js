@@ -1,8 +1,14 @@
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { userId, vehicleReg, batteryCapacity, ratePerKwh, chargerPower } =
-      body;
+    const {
+      userId,
+      vehicleReg,
+      batteryCapacity,
+      ratePerKwh,
+      chargerPower,
+      operatorId,
+    } = body;
 
     if (!userId || !vehicleReg || !batteryCapacity) {
       return Response.json(
@@ -22,11 +28,12 @@ export async function POST(req) {
         batteryCapacity,
         ratePerKwh,
         chargerPower,
+        operatorId,
       }),
     });
 
     const data = await response.json();
-    return Response.json(data);
+    return Response.json({ ...data, operatorId });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

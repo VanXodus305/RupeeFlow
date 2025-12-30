@@ -16,11 +16,16 @@ export default function EVOwnerDashboard() {
     startCharging,
     stopCharging,
     sessionId,
+    operatorId: savedOperatorId,
+    saveSession,
     ...chargingData
   } = useCharging();
   const [vehicleReg, setVehicleReg] = useState("MH-01-AB-1234");
   const [batteryCapacity, setBatteryCapacity] = useState(60);
   const [showSettlement, setShowSettlement] = useState(false);
+  const [operatorId, setOperatorId] = useState(null);
+  const [ratePerKwh, setRatePerKwh] = useState(12);
+  const [availableOperators, setAvailableOperators] = useState([]);
 
   // Redirect operators to station dashboard
   useEffect(() => {
@@ -29,8 +34,41 @@ export default function EVOwnerDashboard() {
     }
   }, [session, router]);
 
+  // Fetch available operators
+  useEffect(() => {
+    const fetchOperators = async () => {
+      try {
+        const res = await fetch("/api/operator/list");
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableOperators(data);
+          // Set first operator as default if available
+          if (data.length > 0) {
+            setOperatorId(data[0]._id);
+            setRatePerKwh(data[0].ratePerKwh || 12);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch operators:", err);
+      }
+    };
+
+    fetchOperators();
+  }, []);
+
   const handleStartCharging = async () => {
-    await startCharging(session.user.id, vehicleReg, batteryCapacity, 12, 7.4);
+    if (!operatorId) {
+      alert("Please select a charging station");
+      return;
+    }
+    await startCharging(
+      session.user.id,
+      vehicleReg,
+      batteryCapacity,
+      ratePerKwh,
+      7.4,
+      operatorId
+    );
   };
 
   const handleStopCharging = async () => {
@@ -70,7 +108,45 @@ export default function EVOwnerDashboard() {
           <h2>Start Charging</h2>
 
           <div style={{ marginBottom: "15px" }}>
-            <label>Vehicle Registration:</label>
+            <label style={{ fontWeight: "500" }}>Charging Station:</label>
+            {availableOperators.length === 0 ? (
+              <p style={{ color: "#666", marginTop: "5px" }}>
+                No charging stations available
+              </p>
+            ) : (
+              <select
+                value={operatorId || ""}
+                onChange={(e) => {
+                  setOperatorId(e.target.value);
+                  const selected = availableOperators.find(
+                    (op) => op._id === e.target.value
+                  );
+                  if (selected) {
+                    setRatePerKwh(selected.ratePerKwh || 12);
+                  }
+                }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "8px",
+                  marginTop: "5px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                }}
+              >
+                <option value="">Select a station</option>
+                {availableOperators.map((op) => (
+                  <option key={op._id} value={op._id}>
+                    {op.stationName} ({op.stationAddress}) - ₹{op.ratePerKwh}
+                    /kWh - {op.chargerPower}kW
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div style={{ marginBottom: "15px" }}>
+            <label style={{ fontWeight: "500" }}>Vehicle Registration:</label>
             <input
               type="text"
               value={vehicleReg}
@@ -80,6 +156,9 @@ export default function EVOwnerDashboard() {
                 width: "100%",
                 padding: "8px",
                 marginTop: "5px",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+                boxSizing: "border-box",
               }}
             />
           </div>
@@ -127,7 +206,15 @@ export default function EVOwnerDashboard() {
       )}
 
       {showSettlement && (
-        <ChargingSettlement {...chargingData} sessionId={sessionId} />
+        <ChargingSettlement
+          {...chargingData}
+          sessionId={sessionId}
+          operatorId={savedOperatorId || operatorId}
+          vehicleReg={vehicleReg}
+          batteryCapacity={batteryCapacity}
+          ratePerKwh={ratePerKwh}
+          saveSession={saveSession}
+        />
       )}
 
       {chargingData.error && (

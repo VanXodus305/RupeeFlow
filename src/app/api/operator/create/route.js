@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 import Operator from "@/models/Operator";
+import mongoose from "mongoose";
 
 export async function POST(req) {
   try {
@@ -20,7 +21,26 @@ export async function POST(req) {
     const body = await req.json();
     const { stationName, stationAddress, chargerPower, ratePerKwh } = body;
 
+    // Demo users cannot create profiles via API
+    if (session.user.id.startsWith("demo-")) {
+      return Response.json(
+        {
+          error:
+            "Demo accounts cannot create profiles via API. Use seed:operator command instead.",
+        },
+        { status: 403 }
+      );
+    }
+
     await connectDB();
+
+    // Validate ObjectId before querying
+    if (!mongoose.Types.ObjectId.isValid(session.user.id)) {
+      return Response.json(
+        { error: "Invalid user ID format" },
+        { status: 400 }
+      );
+    }
 
     // Check if operator profile already exists
     const existingOperator = await Operator.findOne({

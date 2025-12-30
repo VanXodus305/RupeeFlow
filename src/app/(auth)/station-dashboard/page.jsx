@@ -9,24 +9,9 @@ export default function StationDashboard() {
   const router = useRouter();
   const [operatorData, setOperatorData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [settlements] = useState([
-    {
-      id: 1,
-      vehicleReg: "MH-01-AB-1234",
-      kwh: 3.7,
-      amount: 44.4,
-      duration: 1800,
-      date: "2025-12-29 10:30",
-    },
-    {
-      id: 2,
-      vehicleReg: "MH-01-CD-5678",
-      kwh: 5.55,
-      amount: 66.6,
-      duration: 2700,
-      date: "2025-12-29 11:15",
-    },
-  ]);
+  const [settlements, setSettlements] = useState([]);
+  const [totalKwh, setTotalKwh] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
     // Wait for session to load
@@ -62,6 +47,17 @@ export default function StationDashboard() {
 
         // Operator exists, display dashboard
         setOperatorData(data);
+
+        // Fetch charging history
+        const historyResponse = await fetch("/api/charging/history");
+        const historyData = await historyResponse.json();
+
+        if (historyResponse.ok) {
+          setSettlements(historyData.sessions || []);
+          setTotalKwh(historyData.totalKwh || 0);
+          setTotalRevenue(historyData.totalRevenue || 0);
+        }
+
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching operator profile:", error);
@@ -84,9 +80,6 @@ export default function StationDashboard() {
   if (!operatorData) {
     return null;
   }
-
-  const totalKwh = settlements.reduce((sum, s) => sum + s.kwh, 0);
-  const totalRevenue = settlements.reduce((sum, s) => sum + s.amount, 0);
 
   return (
     <div style={{ padding: "20px", maxWidth: "1000px", margin: "0 auto" }}>
@@ -184,78 +177,129 @@ export default function StationDashboard() {
       </div>
 
       <h2>Charging History</h2>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ backgroundColor: "#f5f5f5" }}>
-            <th
-              style={{
-                padding: "10px",
-                border: "1px solid #ddd",
-                textAlign: "left",
-              }}
-            >
-              Vehicle Reg
-            </th>
-            <th
-              style={{
-                padding: "10px",
-                border: "1px solid #ddd",
-                textAlign: "left",
-              }}
-            >
-              Energy (kWh)
-            </th>
-            <th
-              style={{
-                padding: "10px",
-                border: "1px solid #ddd",
-                textAlign: "left",
-              }}
-            >
-              Amount (₹)
-            </th>
-            <th
-              style={{
-                padding: "10px",
-                border: "1px solid #ddd",
-                textAlign: "left",
-              }}
-            >
-              Duration (min)
-            </th>
-            <th
-              style={{
-                padding: "10px",
-                border: "1px solid #ddd",
-                textAlign: "left",
-              }}
-            >
-              Date
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {settlements.map((settlement) => (
-            <tr key={settlement.id}>
-              <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                {settlement.vehicleReg}
-              </td>
-              <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                {settlement.kwh}
-              </td>
-              <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                ₹{settlement.amount.toFixed(2)}
-              </td>
-              <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                {Math.floor(settlement.duration / 60)}
-              </td>
-              <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                {settlement.date}
-              </td>
+      {settlements.length === 0 ? (
+        <div
+          style={{
+            padding: "20px",
+            textAlign: "center",
+            backgroundColor: "#f9f9f9",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            color: "#666",
+          }}
+        >
+          <p>No charging sessions yet</p>
+        </div>
+      ) : (
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ backgroundColor: "#f5f5f5" }}>
+              <th
+                style={{
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  textAlign: "left",
+                }}
+              >
+                Vehicle Reg
+              </th>
+              <th
+                style={{
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  textAlign: "left",
+                }}
+              >
+                Energy (kWh)
+              </th>
+              <th
+                style={{
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  textAlign: "left",
+                }}
+              >
+                Amount (₹)
+              </th>
+              <th
+                style={{
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  textAlign: "left",
+                }}
+              >
+                Duration (min)
+              </th>
+              <th
+                style={{
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  textAlign: "left",
+                }}
+              >
+                Date
+              </th>
+              <th
+                style={{
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  textAlign: "left",
+                }}
+              >
+                Status
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {settlements.map((settlement) => (
+              <tr key={settlement.id}>
+                <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                  {settlement.vehicleReg}
+                </td>
+                <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                  {settlement.totalKwh || settlement.kwh}
+                </td>
+                <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                  ₹{(settlement.totalCost || settlement.amount).toFixed(2)}
+                </td>
+                <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                  {Math.floor((settlement.duration || 0) / 60)}
+                </td>
+                <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                  {settlement.date
+                    ? new Date(settlement.date).toLocaleString()
+                    : settlement.date}
+                </td>
+                <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      backgroundColor:
+                        settlement.status === "completed"
+                          ? "#d4edda"
+                          : settlement.status === "settled"
+                          ? "#cfe2ff"
+                          : "#fff3cd",
+                      color:
+                        settlement.status === "completed"
+                          ? "#155724"
+                          : settlement.status === "settled"
+                          ? "#084298"
+                          : "#856404",
+                    }}
+                  >
+                    {settlement.status || "pending"}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

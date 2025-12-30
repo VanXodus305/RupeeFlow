@@ -1,26 +1,30 @@
-import { SessionProvider } from "next-auth/react";
-import { auth } from "@/auth";
+import { Geist } from "next/font/google";
 import "./globals.css";
+import Provider from "@/contexts/Provider";
+// import GlobalNavbar from "@/components/Navbar";
+// import GlobalFooter from "@/components/Footer";
+
+const geistSans = Geist({
+  subsets: ["latin"],
+});
 
 export const metadata = {
-  title: "RupeeFlow - EV Charging Payment",
+  title: "RupeeFlow - EV Charging Management System",
   description:
     "Real-time pay-as-you-use EV charging with blockchain settlement",
 };
 
-export default async function RootLayout({ children }) {
-  const session = await auth();
-
+export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        style={{
-          fontFamily: "system-ui, -apple-system, sans-serif",
-          margin: 0,
-          padding: 0,
-        }}
+        className={`${geistSans.className} bg-gradient-to-b from-background-200 to-background-100 min-h-screen dark flex flex-col`}
       >
-        <SessionProvider session={session}>{children}</SessionProvider>
+        <Provider>
+          {/* <GlobalNavbar /> */}
+          <main className="flex-1">{children}</main>
+          {/* <GlobalFooter /> */}
+        </Provider>
       </body>
     </html>
   );

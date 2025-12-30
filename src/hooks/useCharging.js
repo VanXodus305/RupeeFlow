@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 
 export function useCharging() {
   const [sessionId, setSessionId] = useState(null);
+  const [operatorId, setOperatorId] = useState(null);
   const [isCharging, setIsCharging] = useState(false);
   const [secondsUsed, setSecondsUsed] = useState(0);
   const [totalKwh, setTotalKwh] = useState(0);
@@ -45,7 +46,8 @@ export function useCharging() {
     vehicleReg,
     batteryCapacity,
     ratePerKwh,
-    chargerPower
+    chargerPower,
+    operatorId
   ) => {
     try {
       setError(null);
@@ -59,6 +61,7 @@ export function useCharging() {
           batteryCapacity,
           ratePerKwh,
           chargerPower,
+          operatorId,
         }),
       });
 
@@ -70,6 +73,7 @@ export function useCharging() {
       const sid = data.sessionId;
 
       setSessionId(sid);
+      setOperatorId(operatorId);
       setIsCharging(true);
       setSecondsUsed(0);
       setTotalKwh(0);
@@ -143,8 +147,51 @@ export function useCharging() {
     }
   };
 
+  const saveSession = async (
+    operatorId,
+    vehicleReg,
+    batteryCapacity,
+    ratePerKwh
+  ) => {
+    try {
+      if (!sessionId) {
+        throw new Error("No active session");
+      }
+
+      const res = await fetch("/api/charging/save-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          operatorId,
+          vehicleReg,
+          batteryCapacity,
+          totalKwh: parseFloat(totalKwh),
+          totalCost: parseFloat(totalCost),
+          duration: secondsUsed,
+          chargePercentage: parseFloat(chargePercentage),
+          ratePerKwh: parseFloat(ratePerKwh),
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to save session");
+      }
+
+      const data = await res.json();
+      console.log("[Hook] Session saved to database:", data);
+      return data;
+    } catch (err) {
+      console.error("[Hook] Error saving session:", err);
+      setError(err.message);
+      throw err;
+    }
+  };
+
   return {
     sessionId,
+    operatorId,
     isCharging,
     secondsUsed,
     totalKwh,
@@ -154,5 +201,6 @@ export function useCharging() {
     error,
     startCharging,
     stopCharging,
+    saveSession,
   };
 }

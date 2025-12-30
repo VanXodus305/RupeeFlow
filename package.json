@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed:operator": "node seed-demo-operator.js",
+    "seed:owner": "node seed-demo-owner.js",
+    "seed:all": "node seed-demo-operator.js && node seed-demo-owner.js"
   },
   "dependencies": {
     "@heroui/react": "^2.7",
@@ -14,6 +17,8 @@
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "ethers": "^6.8.0",
     "framer-motion": "^12.23.22",
     "mongoose": "^8.1.0",
     "next": "15.4.8",
@@ -21,7 +26,6 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-icons": "^5.5.0",
-    "ethers": "^6.8.0",
     "socket.io-client": "^4.7.2"
   },
   "devDependencies": {
