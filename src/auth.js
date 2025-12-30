@@ -3,7 +3,6 @@ export const runtime = "nodejs";
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import connectDB from "@/lib/mongodb";
 
 // Demo users for credentials provider
 const demoUsers = [
@@ -23,10 +22,20 @@ const demoUsers = [
   },
 ];
 
-// Lazy load User model
-async function getUser() {
-  const { default: User } = await import("./models/User.js");
-  return User;
+// Lazy load User model - use require with dynamic path to prevent webpack static analysis
+function getUser() {
+  // Using dynamic require so webpack can't statically analyze this import
+  const moduleName = "./models/" + "User" + ".js";
+  const module = require(moduleName);
+  return module.default || module;
+}
+
+// Lazy load database connection - use require with dynamic path to prevent webpack static analysis
+function getDB() {
+  // Using dynamic require so webpack can't statically analyze this import
+  const moduleName = "./lib/" + "mongodb";
+  const module = require(moduleName);
+  return module.default || module;
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -63,7 +72,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
         try {
-          const UserModel = await getUser();
+          const UserModel = getUser();
+          const connectDB = getDB();
           await connectDB();
 
           let dbUser = await UserModel.findOne({ email: user.email });
@@ -123,7 +133,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // but don't fail if it doesn't work
       if (!token.id?.startsWith("demo-")) {
         try {
-          const UserModel = await getUser();
+          const UserModel = getUser();
+          const connectDB = getDB();
           await connectDB();
           const user = await UserModel.findById(token.id).lean();
 
