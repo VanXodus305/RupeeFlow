@@ -1,7 +1,7 @@
 import { heroui } from "@heroui/react";
 
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -15,12 +15,12 @@ module.exports = {
     extend: {
       colors: {
         background: {
-          100: "#274F62",
-          200: "#091F2A",
+          100: "#1a3a48",
+          200: "#050e14",
         },
-        primary: "#2ACCBB",
-        secondary: "#F8FFC0",
-        foreground: "#F0F0F0",
+        primary: "#1fb5a8",
+        secondary: "#d4e6a0",
+        foreground: "#e0e0e0",
       },
     },
   },
