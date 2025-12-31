@@ -1,10 +1,18 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 export default function HowItWorksSection() {
   return (
     <section id="how-it-works" className="relative sm:pt-24 pb-24 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-10 space-y-4">
+        <motion.div
+          className="text-center mb-10 space-y-4"
+          initial={{ opacity: 0, y: -30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
           <h2
             className="text-4xl sm:text-5xl font-bold"
             style={{ fontFamily: "Conthrax, sans-serif" }}
@@ -16,7 +24,7 @@ export default function HowItWorksSection() {
           <p className="text-foreground/70 text-lg">
             Simple, transparent, blockchain-backed process
           </p>
-        </div>
+        </motion.div>
 
         {/* Vertical Timeline */}
         <div className="relative">
@@ -59,14 +67,21 @@ export default function HowItWorksSection() {
                 side: "right",
               },
             ].map((step, i) => (
-              <div
+              <motion.div
                 key={i}
                 className={`flex items-center gap-4 md:gap-8 ${
                   step.side === "left" ? "md:flex-row" : "md:flex-row-reverse"
                 }`}
+                initial={{ opacity: 0, x: step.side === "left" ? -50 : 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: i * 0.15 }}
+                viewport={{ once: true }}
               >
                 {/* Card - Desktop */}
-                <div className="hidden md:block flex-1">
+                <motion.div
+                  className="hidden md:block flex-1"
+                  whileHover={{ y: -5 }}
+                >
                   <div className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 rounded-2xl p-6 space-y-4 hover:border-primary/40 transition-all duration-300 hover:-translate-y-1">
                     <h3
                       className="text-xl font-semibold text-secondary"
@@ -81,10 +96,17 @@ export default function HowItWorksSection() {
                       {step.details}
                     </p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Timeline Circle */}
-                <div className="flex-shrink-0 relative z-10 h-full">
+                <motion.div
+                  className="flex-shrink-0 relative z-10 h-full"
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  transition={{ duration: 0.5, delay: i * 0.15 + 0.2 }}
+                  viewport={{ once: true }}
+                  whileHover={{ scale: 1.15 }}
+                >
                   <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-background-100 via-primary to-background-100 flex items-center justify-center border-4 border-background-200 shadow-lg shadow-primary/50">
                     <span
                       className="text-xl md:text-2xl font-bold text-background-200"
@@ -93,10 +115,10 @@ export default function HowItWorksSection() {
                       {step.number}
                     </span>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Card - Mobile */}
-                <div className="flex-1 md:hidden">
+                <motion.div className="flex-1 md:hidden" whileHover={{ y: -5 }}>
                   <div className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 rounded-2xl p-5 space-y-3 hover:border-primary/40 transition-all duration-300">
                     <h3
                       className="text-lg font-semibold text-secondary"
@@ -111,11 +133,11 @@ export default function HowItWorksSection() {
                       {step.details}
                     </p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Empty Space for Alternating Layout - Desktop Only */}
                 <div className="hidden md:block flex-1"></div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

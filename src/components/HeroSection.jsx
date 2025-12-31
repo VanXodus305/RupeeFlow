@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@heroui/react";
+import { motion } from "framer-motion";
 import {
   FaArrowRight,
   FaBolt,
@@ -20,8 +21,20 @@ export default function HeroSection({
     <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 pt-24">
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         {/* Left Content */}
-        <div className="space-y-8">
-          <div className="space-y-4">
+        <motion.div
+          className="space-y-8"
+          initial={{ opacity: 0, x: -50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+        >
+          <motion.div
+            className="space-y-4"
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            viewport={{ once: true }}
+          >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 backdrop-blur-sm">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
               <span className="text-primary text-sm font-semibold">
@@ -43,57 +56,85 @@ export default function HeroSection({
               and blockchain transparency. Pay only for what you use, instantly
               settled.
             </p>
-          </div>
+          </motion.div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 pt-4">
-            <Button
-              as={Link}
-              href="/login"
-              className="bg-gradient-to-r from-primary to-primary/80 text-background-200 font-semibold text-lg px-8 py-6 hover:shadow-lg hover:shadow-primary/50 transition-all duration-200 group"
-              radius="full"
-            >
-              Get Started
-              <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button
-              as={Link}
-              href="#features"
-              variant="bordered"
-              className="border-2 border-primary text-primary font-semibold text-lg px-8 py-6 hover:bg-primary/10 transition-all duration-200"
-              radius="full"
-            >
-              Learn More
-            </Button>
-          </div>
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 pt-4"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                as={Link}
+                href="/login"
+                className="bg-gradient-to-r from-primary to-primary/80 text-background-200 font-semibold text-lg px-8 py-6 hover:shadow-lg hover:shadow-primary/50 transition-all duration-200 group"
+                radius="full"
+              >
+                Get Started
+                <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                as={Link}
+                href="#features"
+                variant="bordered"
+                className="border-2 border-primary text-primary font-semibold text-lg px-8 py-6 hover:bg-primary/10 transition-all duration-200"
+                radius="full"
+              >
+                Learn More
+              </Button>
+            </motion.div>
+          </motion.div>
 
           {/* Tech Stack */}
-          <div className="grid grid-cols-3 gap-4 pt-3">
+          <motion.div
+            className="grid grid-cols-3 gap-4 pt-3"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            viewport={{ once: true }}
+          >
             {[
               { tech: "Polygon", label: "Blockchain" },
               { tech: "MetaMask", label: "Web3 Wallet" },
               { tech: "Real-time", label: "Settlement" },
             ].map((item, i) => (
-              <div
+              <motion.div
                 key={i}
-                className="py-4 px-2 sm:px-4 rounded-lg bg-white/5 border border-primary/20 backdrop-blur-sm"
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05 }}
               >
-                <div
-                  className="text-xs sm:text-xl font-bold text-primary"
-                  style={{ fontFamily: "Conthrax, sans-serif" }}
-                >
-                  {item.tech}
+                <div className="py-4 px-2 sm:px-4 rounded-lg bg-white/5 border border-primary/20 backdrop-blur-sm">
+                  <div
+                    className="text-xs sm:text-xl font-bold text-primary"
+                    style={{ fontFamily: "Conthrax, sans-serif" }}
+                  >
+                    {item.tech}
+                  </div>
+                  <div className="text-xs sm:text-sm text-foreground/60">
+                    {item.label}
+                  </div>
                 </div>
-                <div className="text-xs sm:text-sm text-foreground/60">
-                  {item.label}
-                </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Right Visual */}
-        <div className="relative h-96 sm:h-[500px] lg:h-full flex items-center justify-center">
+        <motion.div
+          className="relative h-96 sm:h-[500px] lg:h-full flex items-center justify-center"
+          initial={{ opacity: 0, x: 50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+        >
           <div className="relative w-full h-full">
             {/* Animated gradient card */}
             <div
@@ -104,8 +145,18 @@ export default function HeroSection({
             <div className="relative bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 rounded-3xl p-8 backdrop-blur-xl h-full flex items-center justify-center overflow-hidden">
               {/* Success checkmark animation */}
               {!isCharging && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-background-200 to-background-100 backdrop-blur-2xl rounded-3xl">
-                  <div className="text-center space-y-6 animate-in fade-in duration-500">
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-background-200 to-background-100 backdrop-blur-2xl rounded-3xl"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <motion.div
+                    className="text-center space-y-6"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
                     {/* Animated checkmark circle */}
                     <div className="relative w-32 h-32 mx-auto">
                       <div
@@ -129,8 +180,8 @@ export default function HeroSection({
                         <span>Settled on Polygon</span>
                       </p>
                     </div>
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
               )}
 
               <div
@@ -138,10 +189,17 @@ export default function HeroSection({
                   !isCharging ? "hidden" : ""
                 }`}
               >
-                <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-primary/40 transition-transform animate-pulse">
+                <motion.div
+                  className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-primary/40 transition-transform animate-pulse"
+                  whileHover={{ scale: 1.1 }}
+                >
                   <FaBolt className="text-4xl text-primary" />
-                </div>
-                <div>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
                   <p className="text-foreground/60 text-sm mb-2">
                     Real-time Energy Meter
                   </p>
@@ -157,25 +215,30 @@ export default function HeroSection({
                       {maticAmount} MATIC
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Progress bar with animation */}
-                <div className="w-full space-y-2">
+                <motion.div
+                  className="w-full space-y-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                >
                   <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-primary/20">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary via-secondary to-primary rounded-full transition-all duration-500"
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-primary via-secondary to-primary rounded-full"
                       style={{ width: `${(progress / 16) * 100}%` }}
-                    ></div>
+                    ></motion.div>
                   </div>
                   <div className="flex justify-between items-center text-xs text-foreground/60">
                     <span>{isCharging ? "Charging..." : "Complete"}</span>
                     <span>{((progress / 16) * 100).toFixed(0)}%</span>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

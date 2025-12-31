@@ -1,18 +1,26 @@
 "use client";
 
+import { motion } from "framer-motion";
 import {
   FaBolt,
   FaShieldAlt,
   FaChartLine,
   FaLock,
   FaClock,
+  FaUserShield
 } from "react-icons/fa";
 
 export default function FeaturesSection() {
   return (
     <section id="features" className="relative py-24 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16 space-y-4">
+        <motion.div
+          className="text-center mb-16 space-y-4"
+          initial={{ opacity: 0, y: -30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
           <h2
             className="text-4xl sm:text-5xl font-bold"
             style={{ fontFamily: "Conthrax, sans-serif" }}
@@ -24,7 +32,7 @@ export default function FeaturesSection() {
           <p className="text-foreground/70 text-lg max-w-2xl mx-auto">
             Everything you need for transparent, instant EV charging settlements
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
           {[
@@ -59,19 +67,29 @@ export default function FeaturesSection() {
                 "Track your charging history, costs, and savings with detailed analytics.",
             },
             {
-              icon: FaLock,
+              icon: FaUserShield,
               title: "Multi-Auth Support",
               description:
                 "Sign in with Google or credentials. Demo accounts available for testing.",
             },
           ].map((feature, i) => (
-            <div key={i} className="relative group pt-12">
-              {/* Icon at top center - positioned absolutely outside card */}
-              <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-10">
+            <motion.div
+              key={i}
+              className="relative group pt-12 flex flex-col items-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -10 }}
+            >
+              <motion.div
+                className="absolute top-4 z-10"
+                whileHover={{ scale: 1.2, rotate: 10 }}
+              >
                 <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center border-2 border-primary/30">
                   <feature.icon className="text-3xl text-primary" />
                 </div>
-              </div>
+              </motion.div>
 
               {/* Chipped corners card */}
               <div
@@ -84,7 +102,7 @@ export default function FeaturesSection() {
                 {/* Content */}
                 <div className="space-y-3 text-center">
                   <h3
-                    className="text-xl font-semibold text-foreground mt-5"
+                    className="text-xl font-semibold text-foreground mt-6"
                     style={{ fontFamily: "Conthrax, sans-serif" }}
                   >
                     {feature.title}
@@ -94,7 +112,7 @@ export default function FeaturesSection() {
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
