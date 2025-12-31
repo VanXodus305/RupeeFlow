@@ -12,20 +12,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
     CredentialsProvider({
       async authorize(credentials) {
-        const demoUser = demoUsers.find(
-          (u) =>
-            u.email === credentials.email && u.password === credentials.password
-        );
+        // Demo users - authenticate via API route to avoid Mongoose in auth.js
+        if (
+          credentials.email === "owner@example.com" ||
+          credentials.email === "operator@example.com"
+        ) {
+          try {
+            const response = await fetch(
+              `${process.env.NEXTAUTH_URL}/api/auth/credentials-signin`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  email: credentials.email,
+                  password: credentials.password,
+                }),
+              }
+            );
 
-        if (demoUser) {
-          return {
-            id: demoUser.id,
-            email: demoUser.email,
-            name: demoUser.name,
-            role: demoUser.role,
-            isDemo: true,
-          };
+            if (!response.ok) {
+              return null;
+            }
+
+            const user = await response.json();
+            return user;
+          } catch (error) {
+            console.error("Credentials signin error:", error);
+            return null;
+          }
         }
+
         return null;
       },
     }),
