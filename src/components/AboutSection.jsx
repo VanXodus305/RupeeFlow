@@ -12,7 +12,6 @@ export default function AboutSection() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          whileHover={{ borderColor: "var(--color-primary)" }}
         >
           <h2
             className="text-4xl font-bold mb-6 text-center md:text-left"

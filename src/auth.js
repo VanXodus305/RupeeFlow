@@ -4,40 +4,6 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-// Demo users for credentials provider
-const demoUsers = [
-  {
-    id: "demo-owner",
-    email: "owner@example.com",
-    password: "password123",
-    name: "EV Owner",
-    role: "owner",
-  },
-  {
-    id: "demo-operator",
-    email: "operator@example.com",
-    password: "password123",
-    name: "Station Operator",
-    role: "operator",
-  },
-];
-
-// Lazy load User model - use require with dynamic path to prevent webpack static analysis
-function getUser() {
-  // Using dynamic require so webpack can't statically analyze this import
-  const moduleName = "./models/" + "User" + ".js";
-  const module = require(moduleName);
-  return module.default || module;
-}
-
-// Lazy load database connection - use require with dynamic path to prevent webpack static analysis
-function getDB() {
-  // Using dynamic require so webpack can't statically analyze this import
-  const moduleName = "./lib/" + "mongodb";
-  const module = require(moduleName);
-  return module.default || module;
-}
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     GoogleProvider({
@@ -54,11 +20,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (demoUser) {
           // Fetch the real MongoDB user to get their actual ObjectId
           try {
-            const UserModel = getUser();
-            const connectDB = getDB();
+            const { default: connectDB } = await import("@/lib/mongodb");
+            const { default: User } = await import("@/models/User");
+
             await connectDB();
 
-            const dbUser = await UserModel.findOne({ email: demoUser.email });
+            const dbUser = await User.findOne({ email: demoUser.email });
             if (dbUser) {
               return {
                 id: dbUser._id.toString(), // Use real MongoDB ObjectId
@@ -94,15 +61,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
         try {
-          const UserModel = getUser();
-          const connectDB = getDB();
+          const { default: connectDB } = await import("@/lib/mongodb");
+          const { default: User } = await import("@/models/User");
+
           await connectDB();
 
-          let dbUser = await UserModel.findOne({ email: user.email });
+          let dbUser = await User.findOne({ email: user.email });
 
           if (!dbUser) {
             // New Google user - create with role: null
-            dbUser = await UserModel.create({
+            dbUser = await User.create({
               email: user.email,
               name: user.name,
               image: user.image,
@@ -157,10 +125,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // but don't fail if it doesn't work
       if (!token.isDemo) {
         try {
-          const UserModel = getUser();
-          const connectDB = getDB();
+          const { default: connectDB } = await import("@/lib/mongodb");
+          const { default: User } = await import("@/models/User");
+
           await connectDB();
-          const user = await UserModel.findById(token.id).lean();
+          const user = await User.findById(token.id).lean();
 
           if (user) {
             session.user.vehicleReg = user.vehicleReg;
