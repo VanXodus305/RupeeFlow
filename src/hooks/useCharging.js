@@ -47,7 +47,8 @@ export function useCharging() {
     batteryCapacity,
     ratePerKwh,
     chargerPower,
-    operatorId
+    operatorId,
+    ownerName
   ) => {
     try {
       setError(null);
@@ -77,7 +78,6 @@ export function useCharging() {
 
       // Listen for meter readings from server
       socketRef.current.on("meter-reading", (meterData) => {
-        console.log("[Hook] Meter reading received:", meterData);
         setSecondsUsed(meterData.secondsElapsed);
         setTotalKwh(meterData.totalKwh);
         setTotalCost(meterData.totalCost);
@@ -93,6 +93,7 @@ export function useCharging() {
         ratePerKwh,
         chargerPower,
         operatorId,
+        ownerName,
       });
 
       console.log("[Hook] Start charging event emitted");
@@ -200,7 +201,6 @@ export function useCharging() {
 
       // Re-attach meter-reading listener
       socketRef.current.on("meter-reading", (meterData) => {
-        console.log("[Hook] Meter reading received (resumed):", meterData);
         setSecondsUsed(meterData.secondsElapsed);
         setTotalKwh(meterData.totalKwh);
         setTotalCost(meterData.totalCost);

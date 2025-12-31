@@ -52,16 +52,19 @@ export async function GET(req) {
     return Response.json({
       exists: true,
       id: operator._id.toString(),
-      userId: operator.userId.toString(),
+      userId: operator.userId ? operator.userId.toString() : operator.userId,
       stationName: operator.stationName,
       stationAddress: operator.stationAddress,
       chargerPower: operator.chargerPower,
       ratePerKwh: operator.ratePerKwh,
-      totalEnergyDelivered: operator.totalEnergyDelivered,
-      totalRevenue: operator.totalRevenue,
+      totalEnergyDelivered: operator.totalEnergyDelivered || 0,
+      totalRevenue: operator.totalRevenue || 0,
     });
   } catch (error) {
     console.error("Operator check error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return Response.json(
+      { error: "Internal server error", details: error.message },
+      { status: 500 }
+    );
   }
 }

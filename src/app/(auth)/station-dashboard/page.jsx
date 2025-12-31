@@ -40,6 +40,13 @@ export default function StationDashboard() {
     const fetchOperatorProfile = async () => {
       try {
         const response = await fetch("/api/operator/check");
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Operator check failed:", errorData);
+          router.push("/login");
+          return;
+        }
+
         const data = await response.json();
 
         if (!data.exists) {
@@ -70,11 +77,41 @@ export default function StationDashboard() {
             reconnectionDelay: 1000,
             reconnectionDelayMax: 5000,
             reconnectionAttempts: 5,
+            transports: ["websocket", "polling"],
+          });
+
+          socketRef.current.on("connect", () => {
+            // Emit operator ID to register for events
+            const operatorProfileId = data.id;
+            socketRef.current.emit("register-operator", {
+              operatorId: operatorProfileId,
+            });
           });
 
           socketRef.current.on("meter-reading", (meterData) => {
-            // Update ongoing sessions with live meter data
+            // If this is a new session, add it to ongoing sessions
             setOngoingSessions((prev) => {
+              const sessionExists = prev.some(
+                (s) => s.sessionId === meterData.sessionId
+              );
+
+              if (!sessionExists) {
+                // New session, add it
+                return [
+                  {
+                    sessionId: meterData.sessionId,
+                    vehicleReg: meterData.vehicleReg,
+                    totalKwh: meterData.totalKwh || 0,
+                    totalCost: meterData.totalCost || 0,
+                    duration: meterData.secondsElapsed || 0,
+                    chargePercentage: meterData.chargePercentage || 0,
+                    currentPower: meterData.currentPower || 0,
+                  },
+                  ...prev,
+                ];
+              }
+
+              // Update existing session
               const updated = prev.map((session) => {
                 if (session.sessionId === meterData.sessionId) {
                   return {
@@ -93,6 +130,7 @@ export default function StationDashboard() {
           });
 
           socketRef.current.on("session-completed", (completedSession) => {
+            console.log("Session completed:", completedSession);
             // Move completed session from ongoing to settlements
             setOngoingSessions((prev) =>
               prev.filter((s) => s.sessionId !== completedSession.sessionId)
@@ -101,6 +139,14 @@ export default function StationDashboard() {
               { ...completedSession, status: "completed" },
               ...prev,
             ]);
+          });
+
+          socketRef.current.on("disconnect", () => {
+            console.log("WebSocket disconnected");
+          });
+
+          socketRef.current.on("connect_error", (error) => {
+            console.error("WebSocket connection error:", error);
           });
         }
       } catch (error) {
@@ -208,7 +254,7 @@ export default function StationDashboard() {
         >
           <h3>Total Energy Delivered</h3>
           <p style={{ fontSize: "24px", fontWeight: "bold", margin: "10px 0" }}>
-            {totalKwh.toFixed(2)} kWh
+            {(totalKwh || 0).toFixed(2)} kWh
           </p>
         </div>
 
@@ -222,7 +268,7 @@ export default function StationDashboard() {
         >
           <h3>Total Revenue</h3>
           <p style={{ fontSize: "24px", fontWeight: "bold", margin: "10px 0" }}>
-            ₹{totalRevenue.toFixed(2)}
+            ₹{(totalRevenue || 0).toFixed(2)}
           </p>
         </div>
       </div>
@@ -262,7 +308,7 @@ export default function StationDashboard() {
               }}
             >
               <h4 style={{ margin: "0 0 10px 0" }}>
-                {session.vehicleReg || "Unknown Vehicle"}
+                {session.ownerName || session.vehicleReg || "Unknown User"}
               </h4>
               <div style={{ fontSize: "13px" }}>
                 <p style={{ margin: "5px 0" }}>
@@ -396,10 +442,10 @@ export default function StationDashboard() {
                   {settlement.vehicleReg}
                 </td>
                 <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                  {settlement.totalKwh || settlement.kwh}
+                  {(settlement.totalKwh || settlement.kwh || 0).toFixed(2)}
                 </td>
                 <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                  ₹{(settlement.totalCost || settlement.amount).toFixed(2)}
+                  ₹{(settlement.totalCost || settlement.amount || 0).toFixed(2)}
                 </td>
                 <td style={{ padding: "10px", border: "1px solid #ddd" }}>
                   {Math.floor((settlement.duration || 0) / 60)}

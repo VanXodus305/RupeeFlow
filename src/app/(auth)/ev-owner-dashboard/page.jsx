@@ -93,7 +93,8 @@ export default function EVOwnerDashboard() {
       batteryCapacity,
       ratePerKwh,
       7.4,
-      operatorId
+      operatorId,
+      session.user.name
     );
   };
 

@@ -13,15 +13,24 @@ import {
  * Initialize Socket.io event handlers
  */
 export function initializeSocketHandlers(io) {
+  // Store operator socket IDs by operatorId
+  const operatorSockets = new Map();
+
   io.on("connection", (socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`);
 
-    socket.on("start-charging", (data) => {
-      console.log(`[Socket] Start charging request:`, data);
+    // Register operator socket
+    socket.on("register-operator", (data) => {
+      const { operatorId } = data;
+      if (!operatorSockets.has(operatorId)) {
+        operatorSockets.set(operatorId, []);
+      }
+      operatorSockets.get(operatorId).push(socket.id);
+    });
 
+    socket.on("start-charging", (data) => {
       const session = createSession({ ...data, socketId: socket.id });
       socket.emit("charging-started", { sessionId: session.id });
-      console.log(`[Socket] Charging session created: ${session.id}`);
 
       // Meter reading simulation every 0.5 seconds
       const interval = setInterval(() => {
@@ -31,25 +40,33 @@ export function initializeSocketHandlers(io) {
           return;
         }
 
+        // Add owner info to meter data
+        meterData.ownerName = data.ownerName || "Unknown User";
+        meterData.vehicleReg = session.vehicleReg;
+
+        // Emit to owner socket
         socket.emit("meter-reading", meterData);
+
+        // Also emit to operator socket(s)
+        if (data.operatorId && operatorSockets.has(data.operatorId)) {
+          const operatorIds = operatorSockets.get(data.operatorId);
+          operatorIds.forEach((opSocketId) => {
+            io.to(opSocketId).emit("meter-reading", meterData);
+          });
+        }
       }, config.METER_UPDATE_INTERVAL);
 
       session.interval = interval;
     });
 
     socket.on("stop-charging", (data) => {
-      console.log(`[Socket] Stop charging request: ${data.sessionId}`);
-
       const response = stopSession(data.sessionId);
       if (response) {
         socket.emit("charging-stopped", response);
-        console.log(`[Socket] Charging stopped: ${data.sessionId}`);
       }
     });
 
     socket.on("resume-charging", (data) => {
-      console.log(`[Socket] Resume charging request: ${data.sessionId}`);
-
       const session = resumeSession(data.sessionId);
       if (!session) {
         socket.emit("resume-error", { error: "Session not found" });
@@ -57,7 +74,6 @@ export function initializeSocketHandlers(io) {
       }
 
       socket.emit("charging-resumed", { sessionId: session.id });
-      console.log(`[Socket] Charging resumed: ${session.id}`);
 
       // Restart meter reading simulation every 0.5 seconds
       const interval = setInterval(() => {
@@ -68,6 +84,14 @@ export function initializeSocketHandlers(io) {
         }
 
         socket.emit("meter-reading", meterData);
+
+        // Also emit to operator socket(s)
+        if (data.operatorId && operatorSockets.has(data.operatorId)) {
+          const operatorIds = operatorSockets.get(data.operatorId);
+          operatorIds.forEach((opSocketId) => {
+            io.to(opSocketId).emit("meter-reading", meterData);
+          });
+        }
       }, config.METER_UPDATE_INTERVAL);
 
       session.interval = interval;
@@ -75,6 +99,18 @@ export function initializeSocketHandlers(io) {
 
     socket.on("disconnect", () => {
       console.log(`[Socket] Client disconnected: ${socket.id}`);
+
+      // Remove from operator sockets map
+      operatorSockets.forEach((sockets, operatorId) => {
+        const index = sockets.indexOf(socket.id);
+        if (index > -1) {
+          sockets.splice(index, 1);
+          if (sockets.length === 0) {
+            operatorSockets.delete(operatorId);
+          }
+        }
+      });
+
       cleanupSocketSessions(socket.id);
     });
   });
