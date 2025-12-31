@@ -18,34 +18,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (demoUser) {
-          // Fetch the real MongoDB user to get their actual ObjectId
-          try {
-            const { default: connectDB } = await import("@/lib/mongodb");
-            const { default: User } = await import("@/models/User");
-
-            await connectDB();
-
-            const dbUser = await User.findOne({ email: demoUser.email });
-            if (dbUser) {
-              return {
-                id: dbUser._id.toString(), // Use real MongoDB ObjectId
-                email: dbUser.email,
-                name: dbUser.name,
-                role: dbUser.role,
-                isDemo: true, // Mark as demo user
-              };
-            }
-          } catch (error) {
-            console.error("Error fetching demo user from DB:", error);
-          }
-
-          // Fallback to hardcoded user if DB fetch fails
           return {
             id: demoUser.id,
             email: demoUser.email,
             name: demoUser.name,
             role: demoUser.role,
-            isDemo: true, // Mark as demo user
+            isDemo: true,
           };
         }
         return null;
@@ -61,31 +39,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
         try {
-          const { default: connectDB } = await import("@/lib/mongodb");
-          const { default: User } = await import("@/models/User");
+          // Call API route to handle Google user creation/linking
+          // This avoids importing Mongoose in the edge runtime (middleware)
+          const response = await fetch(
+            `${process.env.NEXTAUTH_URL}/api/auth/google-signin`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: user.email,
+                name: user.name,
+                image: user.image,
+                googleId: profile?.sub,
+              }),
+            }
+          );
 
-          await connectDB();
-
-          let dbUser = await User.findOne({ email: user.email });
-
-          if (!dbUser) {
-            // New Google user - create with role: null
-            dbUser = await User.create({
-              email: user.email,
-              name: user.name,
-              image: user.image,
-              googleId: profile?.sub,
-              role: null, // No role selected yet
-            });
-          } else if (!dbUser.googleId) {
-            // Existing user linking Google account
-            dbUser.googleId = profile?.sub;
-            await dbUser.save();
+          if (!response.ok) {
+            console.error("Google signIn API error:", response.status);
+            return false;
           }
 
-          user.id = dbUser._id.toString();
-          user.role = dbUser.role;
-          user.googleId = dbUser.googleId;
+          const data = await response.json();
+          user.id = data.id;
+          user.role = data.role;
+          user.googleId = data.googleId;
         } catch (error) {
           console.error("Google signIn error:", error);
           return false;
@@ -121,19 +99,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.googleId = token.googleId;
       session.user.isDemo = token.isDemo || false;
 
-      // Try to fetch additional fields from database (vehicleReg, batteryCapacity)
-      // but don't fail if it doesn't work
-      if (!token.isDemo) {
+      // For non-demo users, try to fetch additional fields from API
+      if (!token.isDemo && token.id) {
         try {
-          const { default: connectDB } = await import("@/lib/mongodb");
-          const { default: User } = await import("@/models/User");
-
-          await connectDB();
-          const user = await User.findById(token.id).lean();
-
-          if (user) {
-            session.user.vehicleReg = user.vehicleReg;
-            session.user.batteryCapacity = user.batteryCapacity;
+          const response = await fetch(
+            `${process.env.NEXTAUTH_URL}/api/user/profile/${token.id}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            session.user.vehicleReg = data.vehicleReg;
+            session.user.batteryCapacity = data.batteryCapacity;
           }
         } catch (error) {
           // It's okay if we can't fetch additional fields
