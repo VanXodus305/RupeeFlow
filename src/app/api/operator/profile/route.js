@@ -70,18 +70,6 @@ export async function GET(req) {
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-      stationAddress: operator.stationAddress,
-      chargerPower: operator.chargerPower,
-      ratePerKwh: operator.ratePerKwh,
-      totalEnergyDelivered: operator.totalEnergyDelivered,
-      totalRevenue: operator.totalRevenue,
-      chargingSessions: operator.chargingSessions,
-    });
-  } catch (error) {
-    console.error("Operator profile GET error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
 
 export async function PUT(req) {
   try {
