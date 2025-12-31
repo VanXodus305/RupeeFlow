@@ -72,13 +72,16 @@ export default function StationDashboard() {
 
         // Setup WebSocket for live updates
         if (!socketRef.current) {
-          socketRef.current = io("http://localhost:3001", {
-            reconnection: true,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000,
-            reconnectionAttempts: 5,
-            transports: ["websocket", "polling"],
-          });
+          socketRef.current = io(
+            process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001",
+            {
+              reconnection: true,
+              reconnectionDelay: 1000,
+              reconnectionDelayMax: 5000,
+              reconnectionAttempts: 5,
+              transports: ["websocket", "polling"],
+            }
+          );
 
           socketRef.current.on("connect", () => {
             // Emit operator ID to register for events
