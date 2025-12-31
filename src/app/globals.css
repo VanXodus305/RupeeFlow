@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Conthrax Font */
+@font-face {
+  font-family: "Conthrax";
+  src: url("/fonts/Conthrax-SemiBold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #1f2a37;

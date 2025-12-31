@@ -17,7 +17,7 @@ export default function Home() {
   const { data: session } = useSession();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background-200 via-background-100 to-background-200 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-background-200 via-background-100/20 to-background-200 overflow-hidden">
       {/* Background gradient orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 -left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
@@ -37,7 +37,10 @@ export default function Home() {
                   Powered by Blockchain
                 </span>
               </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
+              <h1
+                className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight"
+                style={{ fontFamily: "Conthrax, sans-serif" }}
+              >
                 <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
                   Charge Smart
                 </span>
@@ -63,6 +66,8 @@ export default function Home() {
                 <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button
+                as={Link}
+                href="#features"
                 variant="bordered"
                 className="border-2 border-primary text-primary font-semibold text-lg px-8 py-6 hover:bg-primary/10 transition-all duration-200"
                 radius="full"
@@ -71,22 +76,25 @@ export default function Home() {
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 pt-8">
+            {/* Tech Stack */}
+            <div className="grid grid-cols-3 gap-4 pt-3">
               {[
-                { number: "10K+", label: "Charges" },
-                { number: "$50K+", label: "Settled" },
-                { number: "99.9%", label: "Uptime" },
-              ].map((stat, i) => (
+                { tech: "Polygon", label: "Blockchain" },
+                { tech: "MetaMask", label: "Web3 Wallet" },
+                { tech: "Real-time", label: "Settlement" },
+              ].map((item, i) => (
                 <div
                   key={i}
-                  className="p-4 rounded-lg bg-white/5 border border-primary/20 backdrop-blur-sm"
+                  className="py-4 px-2 sm:px-4 rounded-lg bg-white/5 border border-primary/20 backdrop-blur-sm"
                 >
-                  <div className="text-xl sm:text-2xl font-bold text-primary">
-                    {stat.number}
+                  <div
+                    className="text-xs sm:text-xl font-bold text-primary"
+                    style={{ fontFamily: "Conthrax, sans-serif" }}
+                  >
+                    {item.tech}
                   </div>
                   <div className="text-xs sm:text-sm text-foreground/60">
-                    {stat.label}
+                    {item.label}
                   </div>
                 </div>
               ))}
@@ -128,7 +136,10 @@ export default function Home() {
       <section id="features" className="relative py-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl sm:text-5xl font-bold">
+            <h2
+              className="text-4xl sm:text-5xl font-bold"
+              style={{ fontFamily: "Conthrax, sans-serif" }}
+            >
               <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Powerful Features
               </span>
@@ -139,7 +150,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
             {[
               {
                 icon: FaBolt,
@@ -178,23 +189,36 @@ export default function Home() {
                   "Sign in with Google or credentials. Demo accounts available for testing.",
               },
             ].map((feature, i) => (
-              <Card
-                key={i}
-                className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 hover:border-primary/40 transition-all duration-300 hover:-translate-y-1"
-                isPressable
-              >
-                <CardBody className="space-y-4">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                    <feature.icon className="text-2xl text-primary" />
+              <div key={i} className="relative group pt-12">
+                {/* Icon at top center - positioned absolutely outside card */}
+                <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center border-2 border-primary/30">
+                    <feature.icon className="text-3xl text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold text-foreground">
-                    {feature.title}
-                  </h3>
-                  <p className="text-foreground/70 leading-relaxed">
-                    {feature.description}
-                  </p>
-                </CardBody>
-              </Card>
+                </div>
+
+                {/* Chipped corners card */}
+                <div
+                  className="bg-gradient-to-br from-background-100/50 to-background-200/50 border-2 border-primary/20 hover:border-primary/40 transition-all duration-300 group-hover:-translate-y-1 p-6 space-y-4 h-full"
+                  style={{
+                    clipPath:
+                      "polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)",
+                  }}
+                >
+                  {/* Content */}
+                  <div className="space-y-3 text-center">
+                    <h3
+                      className="text-xl font-semibold text-foreground mt-5"
+                      style={{ fontFamily: "Conthrax, sans-serif" }}
+                    >
+                      {feature.title}
+                    </h3>
+                    <p className="text-foreground/70 leading-relaxed text-sm">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -202,9 +226,12 @@ export default function Home() {
 
       {/* How It Works Section */}
       <section id="how-it-works" className="relative py-24 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl sm:text-5xl font-bold">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10 space-y-4">
+            <h2
+              className="text-4xl sm:text-5xl font-bold"
+              style={{ fontFamily: "Conthrax, sans-serif" }}
+            >
               <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 How It Works
               </span>
@@ -214,60 +241,121 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              {
-                number: "1",
-                title: "Connect",
-                desc: "Sign in and connect MetaMask wallet",
-              },
-              {
-                number: "2",
-                title: "Start Charging",
-                desc: "Select station and plug in",
-              },
-              {
-                number: "3",
-                title: "Real-Time Meter",
-                desc: "Watch live energy consumption",
-              },
-              {
-                number: "4",
-                title: "Instant Settlement",
-                desc: "Auto-settle on blockchain",
-              },
-            ].map((step, i) => (
-              <div key={i} className="relative">
-                <div className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 rounded-2xl p-6 text-center space-y-4 h-full">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto">
-                    <span className="text-2xl font-bold text-background-200">
-                      {step.number}
-                    </span>
+          {/* Vertical Timeline */}
+          <div className="relative">
+            {/* Central Timeline Line - Desktop Only */}
+            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-secondary via-primary to-secondary transform -translate-x-1/2"></div>
+
+            {/* Timeline Items */}
+            <div className="space-y-8">
+              {[
+                {
+                  number: "1",
+                  title: "Connect",
+                  desc: "Sign in and connect MetaMask wallet",
+                  details:
+                    "Authenticate with Google or credentials and link your MetaMask Web3 wallet securely.",
+                  side: "left",
+                },
+                {
+                  number: "2",
+                  title: "Start Charging",
+                  desc: "Select station and plug in",
+                  details:
+                    "Browse available charging stations nearby and initiate your charging session with one click.",
+                  side: "right",
+                },
+                {
+                  number: "3",
+                  title: "Real-Time Meter",
+                  desc: "Watch live energy consumption",
+                  details:
+                    "Monitor live kWh consumption and rupee charges in real-time as your EV charges.",
+                  side: "left",
+                },
+                {
+                  number: "4",
+                  title: "Instant Settlement",
+                  desc: "Auto-settle on blockchain",
+                  details:
+                    "Automatic settlement on Polygon blockchain upon completion with transparent transaction records.",
+                  side: "right",
+                },
+              ].map((step, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-4 md:gap-8 ${
+                    step.side === "left" ? "md:flex-row" : "md:flex-row-reverse"
+                  }`}
+                >
+                  {/* Card - Desktop */}
+                  <div className="hidden md:block flex-1">
+                    <div className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 rounded-2xl p-6 space-y-4 hover:border-primary/40 transition-all duration-300 hover:-translate-y-1">
+                      <h3
+                        className="text-xl font-semibold text-secondary"
+                        style={{ fontFamily: "Conthrax, sans-serif" }}
+                      >
+                        {step.title}
+                      </h3>
+                      <p className="text-foreground/70 text-sm font-medium">
+                        {step.desc}
+                      </p>
+                      <p className="text-foreground/60 text-xs leading-relaxed">
+                        {step.details}
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-foreground">
-                    {step.title}
-                  </h3>
-                  <p className="text-foreground/70 text-sm">{step.desc}</p>
+
+                  {/* Timeline Circle */}
+                  <div className="flex-shrink-0 relative z-10 h-full">
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-background-100 via-primary to-background-100 flex items-center justify-center border-4 border-background-200 shadow-lg shadow-primary/50">
+                      <span
+                        className="text-xl md:text-2xl font-bold text-background-200"
+                        style={{ fontFamily: "Conthrax, sans-serif" }}
+                      >
+                        {step.number}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card - Mobile */}
+                  <div className="flex-1 md:hidden">
+                    <div className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 rounded-2xl p-5 space-y-3 hover:border-primary/40 transition-all duration-300">
+                      <h3
+                        className="text-lg font-semibold text-secondary"
+                        style={{ fontFamily: "Conthrax, sans-serif" }}
+                      >
+                        {step.title}
+                      </h3>
+                      <p className="text-foreground/70 text-sm font-medium">
+                        {step.desc}
+                      </p>
+                      <p className="text-foreground/60 text-xs leading-relaxed">
+                        {step.details}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Empty Space for Alternating Layout - Desktop Only */}
+                  <div className="hidden md:block flex-1"></div>
                 </div>
-                {i < 3 && (
-                  <div className="hidden md:block absolute top-8 -right-8 text-2xl text-primary/40">
-                    <FaArrowRight />
-                  </div>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* About Section */}
-      <section id="about" className="relative py-24 px-4 sm:px-6">
+      <section id="about" className="relative  px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 rounded-3xl p-8 sm:p-12 backdrop-blur-xl">
-            <h2 className="text-4xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <h2
+              className="text-4xl font-bold mb-6"
+              style={{ fontFamily: "Conthrax, sans-serif" }}
+            >
+              <h1 className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent text-center md:text-left">
                 About RupeeFlow
-              </span>
+              </h1>
             </h2>
             <p className="text-foreground/80 text-lg leading-relaxed mb-6">
               RupeeFlow is a next-generation EV charging platform that leverages
@@ -309,13 +397,6 @@ export default function Home() {
               radius="full"
             >
               Get Started Free
-            </Button>
-            <Button
-              variant="bordered"
-              className="border-2 border-primary text-primary font-semibold text-lg px-8 py-6"
-              radius="full"
-            >
-              See Demo
             </Button>
           </div>
         </div>
