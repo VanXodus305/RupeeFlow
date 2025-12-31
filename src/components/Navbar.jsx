@@ -19,18 +19,65 @@ import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
+import { useState, useEffect, useRef } from "react";
 
 const GlobalNavbar = () => {
   const { data: session } = useSession();
   const router = useRouter();
+  const [activeSection, setActiveSection] = useState("home");
+  const navbarRef = useRef(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = [
+        { id: "home", offset: 0 },
+        {
+          id: "features",
+          offset: document.getElementById("features")?.offsetTop || 0,
+        },
+        {
+          id: "how-it-works",
+          offset: document.getElementById("how-it-works")?.offsetTop || 0,
+        },
+        {
+          id: "about",
+          offset: document.getElementById("about")?.offsetTop || 0,
+        },
+      ];
+
+      const scrollPosition = window.scrollY + 100;
+
+      for (let i = sections.length - 1; i >= 0; i--) {
+        if (scrollPosition >= sections[i].offset) {
+          setActiveSection(sections[i].id);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const isLinkActive = (sectionId) => activeSection === sectionId;
 
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
   };
 
+  const closeNavbar = () => {
+    if (navbarRef.current) {
+      navbarRef.current.classList.add("hidden");
+      setTimeout(() => {
+        navbarRef.current?.classList.remove("hidden");
+      }, 100);
+    }
+  };
+
   return (
     <Navbar
+      ref={navbarRef}
       isBlurred
       isBordered
       className="fixed top-0 w-full z-50 bg-gradient-to-r from-background-200/60 via-background-200/50 to-background-100/60 backdrop-blur-xl"
@@ -45,7 +92,7 @@ const GlobalNavbar = () => {
           href="/"
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <div className="relative w-[70px] h-[70px] sm:w-24 sm:h-24">
+          <div className="relative w-[84px] h-[84px] sm:w-24 sm:h-24">
             <Image
               src="/images/logo.png"
               alt="RupeeFlow Logo"
@@ -61,31 +108,47 @@ const GlobalNavbar = () => {
         <NavbarItem>
           <Link
             href="/"
-            className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
+            className={`transition-colors duration-200 font-medium ${
+              isLinkActive("home")
+                ? "text-primary"
+                : "text-foreground hover:text-primary"
+            }`}
           >
             Home
           </Link>
         </NavbarItem>
         <NavbarItem>
           <Link
-            href="#features"
-            className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
+            href="/#features"
+            className={`transition-colors duration-200 font-medium ${
+              isLinkActive("features")
+                ? "text-primary"
+                : "text-foreground hover:text-primary"
+            }`}
           >
             Features
           </Link>
         </NavbarItem>
         <NavbarItem>
           <Link
-            href="#how-it-works"
-            className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
+            href="/#how-it-works"
+            className={`transition-colors duration-200 font-medium ${
+              isLinkActive("how-it-works")
+                ? "text-primary"
+                : "text-foreground hover:text-primary"
+            }`}
           >
             How It Works
           </Link>
         </NavbarItem>
         <NavbarItem>
           <Link
-            href="#about"
-            className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
+            href="/#about"
+            className={`transition-colors duration-200 font-medium ${
+              isLinkActive("about")
+                ? "text-primary"
+                : "text-foreground hover:text-primary"
+            }`}
           >
             About
           </Link>
@@ -179,6 +242,7 @@ const GlobalNavbar = () => {
           <NavbarMenuItem>
             <Link
               href="/"
+              onClick={closeNavbar}
               className="w-full text-foreground hover:text-primary transition-colors duration-200 py-2 px-3 rounded-lg hover:bg-white/5"
             >
               Home
@@ -186,7 +250,8 @@ const GlobalNavbar = () => {
           </NavbarMenuItem>
           <NavbarMenuItem>
             <Link
-              href="#features"
+              href="/#features"
+              onClick={closeNavbar}
               className="w-full text-foreground hover:text-primary transition-colors duration-200 py-2 px-3 rounded-lg hover:bg-white/5"
             >
               Features
@@ -194,7 +259,8 @@ const GlobalNavbar = () => {
           </NavbarMenuItem>
           <NavbarMenuItem>
             <Link
-              href="#how-it-works"
+              href="/#how-it-works"
+              onClick={closeNavbar}
               className="w-full text-foreground hover:text-primary transition-colors duration-200 py-2 px-3 rounded-lg hover:bg-white/5"
             >
               How It Works
@@ -202,7 +268,8 @@ const GlobalNavbar = () => {
           </NavbarMenuItem>
           <NavbarMenuItem>
             <Link
-              href="#about"
+              href="/#about"
+              onClick={closeNavbar}
               className="w-full text-foreground hover:text-primary transition-colors duration-200 py-2 px-3 rounded-lg hover:bg-white/5"
             >
               About
@@ -215,6 +282,7 @@ const GlobalNavbar = () => {
             <Button
               as={Link}
               href="/login"
+              onClick={closeNavbar}
               className="w-full bg-gradient-to-r from-primary to-primary/80 text-background-200 font-semibold"
               radius="lg"
               size="lg"
@@ -259,12 +327,16 @@ const GlobalNavbar = () => {
                       ? "/station-dashboard"
                       : "/ev-owner-dashboard"
                   }
+                  onClick={closeNavbar}
                   className="flex-1 text-center text-foreground hover:text-primary transition-colors duration-200 py-2 px-2 rounded-lg hover:bg-white/10 text-sm font-medium"
                 >
                   Dashboard
                 </Link>
                 <button
-                  onClick={handleSignOut}
+                  onClick={() => {
+                    closeNavbar();
+                    handleSignOut();
+                  }}
                   className="flex-1 text-center text-red-400 hover:text-red-300 transition-colors duration-200 py-2 px-2 rounded-lg hover:bg-red-500/20 text-sm font-medium"
                 >
                   Sign Out

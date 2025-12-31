@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 import { Button, Card, CardBody } from "@heroui/react";
 import {
   FaBolt,
@@ -10,11 +11,62 @@ import {
   FaLock,
   FaClock,
   FaArrowRight,
+  FaCheckCircle,
 } from "react-icons/fa";
 import Image from "next/image";
 
 export default function Home() {
   const { data: session } = useSession();
+  const [kwh, setKwh] = useState(0);
+  const [inrAmount, setInrAmount] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [isCharging, setIsCharging] = useState(true);
+
+  // Exchange rate (you can update this)
+  const MATIC_PRICE = 0.65; // 1 INR = 0.65 MATIC (approximately)
+
+  useEffect(() => {
+    if (!isCharging) {
+      // Reset after 3 seconds
+      const resetTimer = setTimeout(() => {
+        setKwh(0);
+        setInrAmount(0);
+        setProgress(0);
+        setIsCharging(true);
+      }, 3000);
+      return () => clearTimeout(resetTimer);
+    }
+
+    // Charge increment values
+    const maxKwh = 8;
+    const chargeInterval = 500; // 0.5 seconds
+    const chargesUntilComplete = 16; // 16 * 0.5s = 8 seconds
+
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        const newProgress = prev + 1;
+        const percentage = newProgress / chargesUntilComplete;
+
+        // Update kWh and INR amount
+        const newKwh = maxKwh * percentage;
+        const newAmount = newKwh * 15; // 15 INR per kWh
+
+        setKwh(newKwh);
+        setInrAmount(newAmount);
+
+        if (newProgress >= chargesUntilComplete) {
+          setIsCharging(false);
+          return chargesUntilComplete;
+        }
+
+        return newProgress;
+      });
+    }, chargeInterval);
+
+    return () => clearInterval(interval);
+  }, [isCharging]);
+
+  const maticAmount = (inrAmount * MATIC_PRICE).toFixed(4);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background-200 via-background-100/20 to-background-200 overflow-hidden">
@@ -105,25 +157,81 @@ export default function Home() {
           <div className="relative h-96 sm:h-[500px] lg:h-full flex items-center justify-center">
             <div className="relative w-full h-full">
               {/* Animated gradient card */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl blur-2xl animate-pulse"></div>
-              <div className="relative bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 rounded-3xl p-8 backdrop-blur-xl h-full flex items-center justify-center">
-                <div className="text-center space-y-6">
-                  <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-primary/40">
+              <div
+                className={`absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl blur-2xl ${
+                  isCharging ? "animate-pulse" : ""
+                }`}
+              ></div>
+              <div className="relative bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 rounded-3xl p-8 backdrop-blur-xl h-full flex items-center justify-center overflow-hidden">
+                {/* Success checkmark animation */}
+                {!isCharging && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-background-200 to-background-100 backdrop-blur-2xl rounded-3xl">
+                    <div className="text-center space-y-6 animate-in fade-in duration-500">
+                      {/* Animated checkmark circle */}
+                      <div className="relative w-32 h-32 mx-auto">
+                        <div
+                          className="absolute inset-0 bg-gradient-to-br from-primary/30 to-secondary/30 rounded-full animate-pulse"
+                          style={{ animationDuration: "2s" }}
+                        ></div>
+                        <div className="absolute inset-2 bg-gradient-to-br from-primary/20 to-secondary/10 rounded-full border-2 border-primary/50"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <FaCheckCircle className="w-20 h-20 text-primary animate-in zoom-in-50 duration-700" />
+                        </div>
+                      </div>
+                      <div className="space-y-2 animate-in slide-in-from-bottom-3 duration-700">
+                        <p
+                          className="text-2xl font-bold text-primary"
+                          style={{ fontFamily: "Conthrax, sans-serif" }}
+                        >
+                          Transaction Complete!
+                        </p>
+                        <p className="text-foreground/70 text-sm flex items-center justify-center gap-2">
+                          <FaShieldAlt className="text-primary text-xs" />
+                          <span>Settled on Polygon</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  className={`text-center space-y-6 ${
+                    !isCharging ? "hidden" : ""
+                  }`}
+                >
+                  <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-primary/40 transition-transform animate-pulse">
                     <FaBolt className="text-4xl text-primary" />
                   </div>
                   <div>
                     <p className="text-foreground/60 text-sm mb-2">
                       Real-time Energy Meter
                     </p>
-                    <div className="text-4xl font-bold text-primary">
-                      0.00 kWh
+                    <div
+                      className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+                      style={{ fontFamily: "Conthrax, sans-serif" }}
+                    >
+                      {kwh.toFixed(2)} kWh
                     </div>
-                    <div className="text-2xl font-bold text-foreground mt-2">
-                      ₹0.00
+                    <div className="text-lg font-bold text-foreground mt-3 space-y-1">
+                      <div>₹{inrAmount.toFixed(2)}</div>
+                      <div className="text-sm text-primary">
+                        {maticAmount} MATIC
+                      </div>
                     </div>
                   </div>
-                  <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full w-1/3 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
+
+                  {/* Progress bar with animation */}
+                  <div className="w-full space-y-2">
+                    <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-primary/20">
+                      <div
+                        className="h-full bg-gradient-to-r from-primary via-secondary to-primary rounded-full transition-all duration-500"
+                        style={{ width: `${(progress / 16) * 100}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-foreground/60">
+                      <span>{isCharging ? "Charging..." : "Complete"}</span>
+                      <span>{((progress / 16) * 100).toFixed(0)}%</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -225,7 +333,10 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="relative py-24 px-4 sm:px-6">
+      <section
+        id="how-it-works"
+        className="relative sm:pt-24 pb-24 px-4 sm:px-6"
+      >
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10 space-y-4">
             <h2
@@ -350,12 +461,12 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           <div className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 rounded-3xl p-8 sm:p-12 backdrop-blur-xl">
             <h2
-              className="text-4xl font-bold mb-6"
+              className="text-4xl font-bold mb-6 text-center md:text-left"
               style={{ fontFamily: "Conthrax, sans-serif" }}
             >
-              <h1 className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent text-center md:text-left">
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent ">
                 About RupeeFlow
-              </h1>
+              </span>
             </h2>
             <p className="text-foreground/80 text-lg leading-relaxed mb-6">
               RupeeFlow is a next-generation EV charging platform that leverages
