@@ -10,6 +10,14 @@
   font-style: normal;
 }
 
+/* Utility classes for Conthrax font */
+@layer components {
+  .font-conthrax {
+    font-family: "Conthrax", sans-serif;
+    letter-spacing: -0.5px;
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #1f2a37;

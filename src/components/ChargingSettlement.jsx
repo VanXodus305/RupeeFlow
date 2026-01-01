@@ -10,6 +10,16 @@ import {
   getNetworkInfo,
   markSessionAsSettled,
 } from "@/utils/contract-interactions";
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  Button,
+  Divider,
+  Chip,
+  Spinner,
+} from "@heroui/react";
+import { FiCheck, FiAlertCircle, FiZap, FiTrendingUp } from "react-icons/fi";
 
 export default function ChargingSettlement({
   totalCost,
@@ -25,6 +35,7 @@ export default function ChargingSettlement({
   saveSession,
   onSettled,
   isPendingSettlement = false,
+  onSettlingChange,
 }) {
   const [isSettling, setIsSettling] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -38,6 +49,13 @@ export default function ChargingSettlement({
   const [txStatus, setTxStatus] = useState(null);
   const [networkInfo, setNetworkInfo] = useState(null);
   const [isCheckingBalance, setIsCheckingBalance] = useState(false);
+
+  // Notify parent when settling state changes
+  useEffect(() => {
+    if (onSettlingChange) {
+      onSettlingChange(isSettling);
+    }
+  }, [isSettling, onSettlingChange]);
 
   // Get network info on mount
   useEffect(() => {
@@ -217,353 +235,293 @@ export default function ChargingSettlement({
   const minutes = Math.floor(durationInSeconds / 60);
   const seconds = durationInSeconds % 60;
 
+  // Calculate MATIC equivalent (1 MATIC ≈ 50 INR as approximate rate)
+  const maticAmount = (totalCost / 50).toFixed(4);
+
   return (
-    <div
-      style={{
-        border: "2px solid #4CAF50",
-        padding: "20px",
-        borderRadius: "8px",
-        backgroundColor: "#f1f8f4",
-      }}
-    >
-      <h2>
-        {isPendingSettlement ? "Pending Settlement" : "Charging Complete"} ✅
-      </h2>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr 1fr",
-          gap: "15px",
-          marginBottom: "20px",
-        }}
-      >
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "15px",
-            borderRadius: "8px",
-            border: "1px solid #ddd",
-          }}
-        >
-          <p style={{ margin: "0", fontSize: "12px", color: "#666" }}>
-            Total Cost
-          </p>
-          <p
-            style={{
-              fontSize: "20px",
-              fontWeight: "bold",
-              margin: "5px 0",
-              color: "#4CAF50",
-            }}
-          >
-            ₹{totalCost.toFixed(2)}
-          </p>
-        </div>
-
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "15px",
-            borderRadius: "8px",
-            border: "1px solid #ddd",
-          }}
-        >
-          <p style={{ margin: "0", fontSize: "12px", color: "#666" }}>
-            Energy Used
-          </p>
-          <p
-            style={{
-              fontSize: "20px",
-              fontWeight: "bold",
-              margin: "5px 0",
-              color: "#2196F3",
-            }}
-          >
-            {totalKwh.toFixed(2)} kWh
-          </p>
-        </div>
-
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "15px",
-            borderRadius: "8px",
-            border: "1px solid #ddd",
-          }}
-        >
-          <p style={{ margin: "0", fontSize: "12px", color: "#666" }}>
-            Duration
-          </p>
-          <p style={{ fontSize: "20px", fontWeight: "bold", margin: "5px 0" }}>
-            {String(minutes).padStart(2, "0")}:
-            {String(seconds).padStart(2, "0")}
-          </p>
-        </div>
-
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "15px",
-            borderRadius: "8px",
-            border: "1px solid #ddd",
-          }}
-        >
-          <p style={{ margin: "0", fontSize: "12px", color: "#666" }}>
-            Battery
-          </p>
-          <p
-            style={{
-              fontSize: "20px",
-              fontWeight: "bold",
-              margin: "5px 0",
-              color: "#FF9800",
-            }}
-          >
-            +{chargePercentage.toFixed(1)}%
-          </p>
-        </div>
-      </div>
-
+    <>
       {txHash ? (
-        <div
-          style={{
-            backgroundColor: "#e8f5e9",
-            border: "2px solid #4CAF50",
-            padding: "15px",
-            borderRadius: "8px",
-          }}
-        >
-          <p style={{ fontWeight: "bold", marginBottom: "10px" }}>
-            ✅ Settlement Confirmed on Blockchain!
-          </p>
-          <p style={{ fontSize: "12px", color: "#666", marginBottom: "5px" }}>
-            Transaction Hash:
-          </p>
-          <p
-            style={{
-              wordBreak: "break-all",
-              fontFamily: "monospace",
-              fontSize: "12px",
-              marginBottom: "10px",
-            }}
-          >
-            {txHash}
-          </p>
-          <a
-            href={`https://amoy.polygonscan.com/tx/${txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "inline-block",
-              padding: "8px 16px",
-              backgroundColor: "#4CAF50",
-              color: "white",
-              textDecoration: "none",
-              borderRadius: "4px",
-            }}
-          >
-            View on PolygonScan
-          </a>
-        </div>
+        <Card className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 backdrop-blur-sm">
+          <CardBody className="gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <FiCheck className="text-primary text-xl" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-foreground">
+                  Settlement Confirmed!
+                </h3>
+                <p className="text-sm text-foreground/60">
+                  Your transaction has been recorded on blockchain
+                </p>
+              </div>
+            </div>
+
+            <Divider className="bg-primary/20" />
+
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-foreground/60 mb-1">
+                  Transaction Hash
+                </p>
+                <p className="text-xs font-mono text-primary break-all bg-background-100/30 p-2 rounded border border-primary/20">
+                  {txHash}
+                </p>
+              </div>
+
+              <Button
+                as="a"
+                href={`https://amoy.polygonscan.com/tx/${txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-gradient-to-r from-primary to-secondary text-background-200 font-semibold hover:shadow-lg hover:shadow-primary/50 transition-all"
+              >
+                View on PolygonScan ↗️
+              </Button>
+            </div>
+          </CardBody>
+        </Card>
       ) : (
-        <>
-          {error && (
-            <p style={{ color: "red", marginBottom: "15px" }}>Error: {error}</p>
-          )}
-
-          {sessionSaved && (
-            <div
-              style={{
-                backgroundColor: "#e3f2fd",
-                border: "2px solid #2196F3",
-                padding: "15px",
-                borderRadius: "8px",
-                marginBottom: "15px",
-              }}
-            >
-              <p style={{ fontWeight: "bold", marginBottom: "5px" }}>
-                ✅ Session Saved to Database
-              </p>
-              <p style={{ fontSize: "12px", color: "#666", margin: "0" }}>
-                Your charging session has been recorded in the system.
-              </p>
+        <Card className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 backdrop-blur-sm">
+          <CardHeader className="flex flex-col gap-3 border-b border-primary/10">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary"></div>
+              <h2 className="text-2xl font-bold text-foreground font-conthrax">
+                {isPendingSettlement
+                  ? "Pending Settlement"
+                  : "Charging Complete"}{" "}
+                ✅
+              </h2>
             </div>
-          )}
+          </CardHeader>
 
-          {/* Network Info */}
-          {networkInfo && (
-            <div
-              style={{
-                backgroundColor: "#f5f5f5",
-                padding: "10px",
-                borderRadius: "4px",
-                marginBottom: "15px",
-                fontSize: "12px",
-                color: "#666",
-              }}
-            >
-              <p style={{ margin: "0" }}>
-                <strong>Network:</strong> {networkInfo.network} (Chain ID:{" "}
-                {networkInfo.chainId})
-              </p>
-            </div>
-          )}
-
-          {/* Wallet Balance Section */}
-          <div
-            style={{
-              backgroundColor: "#fff3cd",
-              border: "1px solid #ffc107",
-              padding: "12px",
-              borderRadius: "4px",
-              marginBottom: "15px",
-            }}
-          >
-            <p style={{ margin: "0 0 10px 0", fontWeight: "bold" }}>
-              💰 Wallet Balance
-            </p>
-            {walletBalance ? (
-              <div>
-                <p style={{ margin: "5px 0", fontSize: "12px" }}>
-                  <strong>Balance:</strong> {walletBalance.balance} MATIC
+          <CardBody className="gap-6">
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+              <div className="bg-gradient-to-br from-background-200/50 to-background-100/30 border border-primary/20 rounded-lg p-3 md:p-4 hover:border-primary/40 transition-all hover:shadow-lg hover:shadow-primary/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiZap className="text-primary text-xs md:text-sm" />
+                  <p className="text-xs text-foreground/60 font-semibold">
+                    Total Cost
+                  </p>
+                </div>
+                <p className="text-xl md:text-2xl font-bold text-primary font-conthrax">
+                  ₹{totalCost.toFixed(2)}
+                </p>
+                <p className="text-xs text-secondary font-semibold mt-1 font-conthrax">
+                  {maticAmount} MATIC
                 </p>
               </div>
-            ) : (
-              <p style={{ margin: "0", fontSize: "12px", color: "#666" }}>
-                Click "Check Wallet" to verify your balance before settlement
-              </p>
-            )}
-            <button
-              onClick={handleCheckWallet}
-              disabled={isCheckingBalance}
-              style={{
-                marginTop: "8px",
-                padding: "6px 12px",
-                fontSize: "12px",
-                backgroundColor: "#ffc107",
-                color: "black",
-                border: "none",
-                borderRadius: "4px",
-                cursor: isCheckingBalance ? "not-allowed" : "pointer",
-              }}
-            >
-              {isCheckingBalance ? "Checking..." : "Check Wallet Balance"}
-            </button>
-          </div>
 
-          {/* Gas Estimate Section */}
-          <div
-            style={{
-              backgroundColor: "#e8f4f8",
-              border: "1px solid #0288d1",
-              padding: "12px",
-              borderRadius: "4px",
-              marginBottom: "15px",
-            }}
-          >
-            <p style={{ margin: "0 0 10px 0", fontWeight: "bold" }}>
-              ⛽ Gas Estimation
-            </p>
-            {gasEstimate ? (
-              <div>
-                <p style={{ margin: "5px 0", fontSize: "12px" }}>
-                  <strong>Gas Price:</strong> {gasEstimate.gasPrice} GWEI
+              <div className="bg-gradient-to-br from-background-200/50 to-background-100/30 border border-secondary/20 rounded-lg p-3 md:p-4 hover:border-secondary/40 transition-all hover:shadow-lg hover:shadow-secondary/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiTrendingUp className="text-secondary text-xs md:text-sm" />
+                  <p className="text-xs text-foreground/60 font-semibold">
+                    Energy Used
+                  </p>
+                </div>
+                <p className="text-xl md:text-2xl font-bold text-secondary font-conthrax">
+                  {totalKwh.toFixed(2)}
                 </p>
-                <p style={{ margin: "5px 0", fontSize: "12px" }}>
-                  <strong>Estimated Cost:</strong>{" "}
-                  {gasEstimate.estimatedGasCostMatic} MATIC (~₹
-                  {(parseFloat(gasEstimate.estimatedGasCostMatic) * 50).toFixed(
-                    2
-                  )}
-                  )
-                </p>
+                <p className="text-xs text-foreground/50 mt-1">kWh</p>
               </div>
-            ) : (
-              <p style={{ margin: "0", fontSize: "12px", color: "#666" }}>
-                Click "Estimate Gas" to see transaction cost
-              </p>
-            )}
-            <button
-              onClick={handleEstimateGas}
-              style={{
-                marginTop: "8px",
-                padding: "6px 12px",
-                fontSize: "12px",
-                backgroundColor: "#0288d1",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-            >
-              Estimate Gas Fees
-            </button>
-          </div>
 
-          {/* Transaction Status Section */}
-          {txStatus && (
-            <div
-              style={{
-                backgroundColor: "#e8f5e9",
-                border: "1px solid #4CAF50",
-                padding: "12px",
-                borderRadius: "4px",
-                marginBottom: "15px",
-              }}
-            >
-              <p style={{ margin: "0 0 10px 0", fontWeight: "bold" }}>
-                📊 Transaction Status
-              </p>
-              <p style={{ margin: "5px 0", fontSize: "12px" }}>
-                <strong>Status:</strong>{" "}
-                {txStatus.status === "confirmed"
-                  ? "✅ Confirmed"
-                  : "⏳ Pending"}
-              </p>
-              {txStatus.blockNumber && (
-                <p style={{ margin: "5px 0", fontSize: "12px" }}>
-                  <strong>Block:</strong> {txStatus.blockNumber}
+              <div className="bg-gradient-to-br from-background-200/50 to-background-100/30 border border-primary/20 rounded-lg p-3 md:p-4 hover:border-primary/40 transition-all hover:shadow-lg hover:shadow-primary/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiCheck className="text-primary text-xs md:text-sm" />
+                  <p className="text-xs text-foreground/60 font-semibold">
+                    Duration
+                  </p>
+                </div>
+                <p className="text-xl md:text-2xl font-bold text-primary font-conthrax">
+                  {String(minutes).padStart(2, "0")}:
+                  {String(seconds).padStart(2, "0")}
+                </p>
+                <p className="text-xs text-foreground/50 mt-1">mm:ss</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-background-200/50 to-background-100/30 border border-secondary/20 rounded-lg p-3 md:p-4 hover:border-secondary/40 transition-all hover:shadow-lg hover:shadow-secondary/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiZap className="text-secondary text-xs md:text-sm" />
+                  <p className="text-xs text-foreground/60 font-semibold">
+                    Battery Gain
+                  </p>
+                </div>
+                <p className="text-xl md:text-2xl font-bold text-secondary font-conthrax">
+                  +{chargePercentage.toFixed(1)}
+                </p>
+                <p className="text-xs text-foreground/50 mt-1">percent</p>
+              </div>
+            </div>
+
+            {error && (
+              <Card className="bg-red-500/10 border border-red-500/30">
+                <CardBody className="flex flex-row items-center gap-3 py-3">
+                  <FiAlertCircle className="text-red-400 text-lg flex-shrink-0" />
+                  <p className="text-sm text-red-400">{error}</p>
+                </CardBody>
+              </Card>
+            )}
+
+            {sessionSaved && (
+              <Card className="bg-primary/10 border border-primary/30">
+                <CardBody className="flex flex-row items-center gap-3 py-3">
+                  <FiCheck className="text-primary text-lg flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      ✅ Session Saved
+                    </p>
+                    <p className="text-xs text-foreground/60">
+                      Your charging session has been recorded in the system
+                    </p>
+                  </div>
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Network Info */}
+            {networkInfo && (
+              <Card className="bg-background-100/20 border border-primary/10">
+                <CardBody className="py-3">
+                  <p className="text-xs text-foreground/70">
+                    <span className="font-semibold">Network:</span>{" "}
+                    {networkInfo.network} (Chain ID: {networkInfo.chainId})
+                  </p>
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Wallet Balance Section */}
+            <div className="bg-background-100/30 border border-primary/20 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <FiZap className="text-secondary" />
+                <p className="font-semibold text-foreground">Wallet Balance</p>
+              </div>
+
+              {walletBalance ? (
+                <p className="text-sm text-foreground">
+                  <span className="font-semibold">{walletBalance.balance}</span>{" "}
+                  MATIC
+                </p>
+              ) : (
+                <p className="text-xs text-foreground/60">
+                  Click to verify your balance before settlement
                 </p>
               )}
+
+              <Button
+                onClick={handleCheckWallet}
+                disabled={isCheckingBalance}
+                className="w-full bg-secondary/80 text-background-200 font-semibold hover:bg-secondary transition-all"
+              >
+                {isCheckingBalance ? "Checking..." : "Check Wallet Balance"}
+              </Button>
             </div>
-          )}
 
-          <button
-            onClick={handleSettle}
-            disabled={isSettling || isSaving}
-            style={{
-              width: "100%",
-              padding: "15px",
-              fontSize: "16px",
-              fontWeight: "bold",
-              backgroundColor: isSettling || isSaving ? "#ccc" : "#2196F3",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: isSettling || isSaving ? "not-allowed" : "pointer",
-            }}
-          >
-            {isSaving
-              ? "Saving to Database... 💾"
-              : isSettling
-              ? "Settling on Blockchain... ⛓️"
-              : "Complete & Settle ✅"}
-          </button>
+            {/* Gas Estimate Section */}
+            <div className="bg-background-100/30 border border-primary/20 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <FiTrendingUp className="text-primary" />
+                <p className="font-semibold text-foreground">Gas Estimation</p>
+              </div>
 
-          <p
-            style={{
-              fontSize: "12px",
-              color: "#666",
-              marginTop: "10px",
-              textAlign: "center",
-            }}
-          >
-            This will save your session and record on Polygon Amoy testnet using
-            your wallet
-          </p>
-        </>
+              {gasEstimate ? (
+                <div className="space-y-2 text-sm">
+                  <p className="text-foreground/80">
+                    <span className="font-semibold">Gas Price:</span>{" "}
+                    {gasEstimate.gasPrice} GWEI
+                  </p>
+                  <p className="text-foreground/80">
+                    <span className="font-semibold">Est. Cost:</span>{" "}
+                    {gasEstimate.estimatedGasCostMatic} MATIC (~₹
+                    {(
+                      parseFloat(gasEstimate.estimatedGasCostMatic) * 50
+                    ).toFixed(2)}
+                    )
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-foreground/60">
+                  Click to estimate transaction cost
+                </p>
+              )}
+
+              <Button
+                onClick={handleEstimateGas}
+                className="w-full bg-primary/80 text-background-200 font-semibold hover:bg-primary transition-all"
+              >
+                Estimate Gas Fees
+              </Button>
+            </div>
+
+            {/* Transaction Status Section */}
+            {txStatus && (
+              <Card className="bg-primary/10 border border-primary/20">
+                <CardBody className="py-4 gap-3">
+                  <div className="flex items-center gap-2">
+                    <FiCheck className="text-primary" />
+                    <p className="font-semibold text-foreground">
+                      Transaction Status
+                    </p>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <p className="text-foreground/80">
+                      <span className="font-semibold">Status:</span>{" "}
+                      {txStatus.status === "confirmed" ? (
+                        <Chip
+                          size="sm"
+                          className="bg-primary/20 text-primary ml-2"
+                        >
+                          ✅ Confirmed
+                        </Chip>
+                      ) : (
+                        <Chip
+                          size="sm"
+                          className="bg-secondary/20 text-secondary ml-2"
+                        >
+                          ⏳ Pending
+                        </Chip>
+                      )}
+                    </p>
+                    {txStatus.blockNumber && (
+                      <p className="text-foreground/70">
+                        <span className="font-semibold">Block:</span>{" "}
+                        {txStatus.blockNumber}
+                      </p>
+                    )}
+                  </div>
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Settlement Button */}
+            <Button
+              onClick={handleSettle}
+              disabled={isSettling || isSaving}
+              className="w-full bg-gradient-to-r from-primary to-secondary text-background-200 font-semibold py-6 text-lg hover:shadow-lg hover:shadow-primary/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? (
+                <>
+                  <Spinner size="sm" color="current" />
+                  Saving to Database... 💾
+                </>
+              ) : isSettling ? (
+                <>
+                  <Spinner size="sm" color="current" />
+                  Settling on MetaMask... 🦊
+                </>
+              ) : (
+                "Complete & Settle ✅"
+              )}
+            </Button>
+
+            <p className="text-xs text-foreground/60 text-center">
+              This will save your session and record on Polygon Amoy testnet
+              using your wallet
+            </p>
+          </CardBody>
+        </Card>
       )}
-    </div>
+    </>
   );
 }
