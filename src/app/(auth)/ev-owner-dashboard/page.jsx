@@ -134,7 +134,7 @@ export default function EVOwnerDashboard() {
         const data = await res.json();
         if (!data.hasPending) {
           setPendingSession(null);
-          setShowSettlement(false);
+          // Don't hide settlement screen - keep it visible so user can see the success and click "Back to Dashboard"
         }
       }
     } catch (err) {

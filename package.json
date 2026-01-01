@@ -6,10 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "seed:operator": "node seed-demo-operator.js",
-    "seed:owner": "node seed-demo-owner.js",
-    "seed:all": "node seed-demo-operator.js && node seed-demo-owner.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "@heroui/react": "^2.7",

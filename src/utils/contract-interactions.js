@@ -47,9 +47,9 @@ export async function checkWalletBalance(userAddress) {
     const balance = await provider.getBalance(userAddress);
     const balanceInMatic = ethers.formatEther(balance);
 
-    console.log(
-      `[Ethers] Wallet balance for ${userAddress}: ${balanceInMatic} MATIC`
-    );
+    // console.log(
+    //   `[Ethers] Wallet balance for ${userAddress}: ${balanceInMatic} MATIC`
+    // );
 
     return {
       success: true,
@@ -88,11 +88,11 @@ export async function estimateGasFees() {
     const estimatedGasWei = gasPrice * estimatedGasUnits;
     const estimatedGasInMatic = ethers.formatEther(estimatedGasWei);
 
-    console.log(`[Ethers] Gas estimation:`, {
-      gasPrice: gasPriceInGwei,
-      estimatedGas: estimatedGasUnits.toString(),
-      estimatedCost: estimatedGasInMatic,
-    });
+    // console.log(`[Ethers] Gas estimation:`, {
+    //   gasPrice: gasPriceInGwei,
+    //   estimatedGas: estimatedGasUnits.toString(),
+    //   estimatedCost: estimatedGasInMatic,
+    // });
 
     return {
       success: true,
@@ -117,7 +117,7 @@ export async function checkTransactionStatus(txHash) {
   try {
     const provider = new ethers.JsonRpcProvider(POLYGON_RPC_URL);
 
-    console.log(`[Ethers] Checking transaction: ${txHash}`);
+    // console.log(`[Ethers] Checking transaction: ${txHash}`);
 
     const receipt = await provider.getTransactionReceipt(txHash);
 
@@ -131,11 +131,11 @@ export async function checkTransactionStatus(txHash) {
 
     const status = receipt.status === 1 ? "confirmed" : "failed";
 
-    console.log(`[Ethers] Transaction ${status}:`, {
-      hash: txHash,
-      block: receipt.blockNumber,
-      gasUsed: receipt.gasUsed.toString(),
-    });
+    // console.log(`[Ethers] Transaction ${status}:`, {
+    //   hash: txHash,
+    //   block: receipt.blockNumber,
+    //   gasUsed: receipt.gasUsed.toString(),
+    // });
 
     return {
       success: true,
@@ -165,17 +165,17 @@ export async function listenToSettlementEvents(callback) {
       provider
     );
 
-    console.log("[Ethers] Listening to ChargingSettled events...");
+    // console.log("[Ethers] Listening to ChargingSettled events...");
 
     // Listen for ChargingSettled events
     contract.on("ChargingSettled", (evOwner, station, amount, timestamp) => {
       const amountInMatic = ethers.formatEther(amount);
-      console.log("[Ethers] Event received - ChargingSettled:", {
-        evOwner,
-        station,
-        amount: amountInMatic,
-        timestamp: timestamp.toString(),
-      });
+      // console.log("[Ethers] Event received - ChargingSettled:", {
+      //   evOwner,
+      //   station,
+      //   amount: amountInMatic,
+      //   timestamp: timestamp.toString(),
+      // });
 
       if (callback) {
         callback({
@@ -252,7 +252,7 @@ export async function settleChargingDirect(
     const signer = await provider.getSigner();
     const userAddress = await signer.getAddress();
 
-    console.log(`[Ethers] User address: ${userAddress}`);
+    // console.log(`[Ethers] User address: ${userAddress}`);
 
     // Check balance first
     const balanceCheck = await checkWalletBalance(userAddress);
@@ -293,21 +293,21 @@ export async function settleChargingDirect(
     const energyInWei = BigInt(Math.floor(totalKwh * 100));
     const durationInSeconds = BigInt(Math.floor(duration));
 
-    console.log("[Ethers] Raw parameters:", {
-      evOwner: userAddress,
-      station: stationEthAddress,
-      energyKwh: totalKwh,
-      amountPaid: totalCost,
-      duration: duration,
-    });
+    // console.log("[Ethers] Raw parameters:", {
+    //   evOwner: userAddress,
+    //   station: stationEthAddress,
+    //   energyKwh: totalKwh,
+    //   amountPaid: totalCost,
+    //   duration: duration,
+    // });
 
-    console.log("[Ethers] Encoded parameters (BigInt):", {
-      evOwner: userAddress,
-      station: stationEthAddress,
-      energyKwh: energyInWei.toString(),
-      amountPaid: amountInWei.toString(),
-      duration: durationInSeconds.toString(),
-    });
+    // console.log("[Ethers] Encoded parameters (BigInt):", {
+    //   evOwner: userAddress,
+    //   station: stationEthAddress,
+    //   energyKwh: energyInWei.toString(),
+    //   amountPaid: amountInWei.toString(),
+    //   duration: durationInSeconds.toString(),
+    // });
 
     // Encode the function call to see the data
     const iface = new ethers.Interface(RUPEEFLOW_ABI);
@@ -319,8 +319,8 @@ export async function settleChargingDirect(
       durationInSeconds,
     ]);
 
-    console.log("[Ethers] Encoded transaction data:", encodedData);
-    console.log("[Ethers] Compare this data with PolygonScan test values");
+    // console.log("[Ethers] Encoded transaction data:", encodedData);
+    // console.log("[Ethers] Compare this data with PolygonScan test values");
 
     // Submit settlement transaction
     const tx = await contract.settleCharging(
@@ -335,7 +335,7 @@ export async function settleChargingDirect(
     );
 
     const txHash = tx.hash;
-    console.log(`[Ethers] Transaction submitted: ${txHash}`);
+    // console.log(`[Ethers] Transaction submitted: ${txHash}`);
 
     // Wait for confirmation
     const receipt = await tx.wait();
@@ -428,10 +428,10 @@ export function convertUserIdToAddress(userId) {
   const paddedId = userId.toString().padStart(40, "0");
   const address = "0x" + paddedId;
 
-  console.log(`[Ethers] Converted user ID to address:`, {
-    userId,
-    address,
-  });
+  // console.log(`[Ethers] Converted user ID to address:`, {
+  //   userId,
+  //   address,
+  // });
 
   return address;
 }
