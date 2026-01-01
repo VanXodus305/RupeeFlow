@@ -3,10 +3,7 @@
 import { ethers } from "ethers";
 
 // Contract configuration
-const RUPEEFLOW_CONTRACT_ADDRESS =
-  process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ||
-  "0x8ba1f109551bD432803012645Ac136ddd64DBA72";
-
+const RUPEEFLOW_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
 const POLYGON_RPC_URL =
   process.env.NEXT_PUBLIC_POLYGON_RPC_URL ||
   "https://rpc-amoy.polygon.technology";
@@ -31,7 +28,9 @@ const RUPEEFLOW_ABI = [
     inputs: [
       { indexed: true, name: "evOwner", type: "address" },
       { indexed: true, name: "station", type: "address" },
-      { indexed: false, name: "amount", type: "uint256" },
+      { indexed: false, name: "energyKwh", type: "uint256" },
+      { indexed: false, name: "amountPaid", type: "uint256" },
+      { indexed: false, name: "duration", type: "uint256" },
       { indexed: false, name: "timestamp", type: "uint256" },
     ],
     name: "ChargingSettled",
@@ -215,8 +214,6 @@ export async function settleChargingDirect(
       throw new Error("MetaMask or other Web3 wallet not found");
     }
 
-    console.log("[Ethers] Initiating direct wallet settlement...");
-
     // IMPORTANT: Switch to Polygon Amoy first
     try {
       await window.ethereum.request({
@@ -279,21 +276,51 @@ export async function settleChargingDirect(
     );
 
     // Convert stationAddress to valid Ethereum address format
-    // stationAddress is a MongoDB ObjectId, pad to 40 hex characters
-    const stationEthAddress = "0x" + stationAddress.toString().padEnd(40, "0");
+    // For now, use dummy operator address
+    const stationEthAddress = "0x0000000000000000000000000000000000000001";
 
-    // Convert amounts to proper format
-    const amountInWei = ethers.parseEther(totalCost.toString());
-    const energyInWei = ethers.parseEther(totalKwh.toString());
-    const durationInSeconds = Math.floor(duration);
+    // Convert amounts to proper format - Validate amounts first
+    if (totalCost <= 0 || totalKwh <= 0 || duration <= 0) {
+      throw new Error(
+        `Invalid settlement values: cost=${totalCost}, kwh=${totalKwh}, duration=${duration}`
+      );
+    }
 
-    console.log("[Ethers] Submitting settlement transaction...", {
+    // Convert to Wei properly - use parseEther for currency amounts
+    // NOTE: These are plain integers, not ETH amounts, so we use BigInt directly
+    // Multiply by 100 to convert decimals to whole numbers (0.04 -> 4, 0.49 -> 49)
+    const amountInWei = BigInt(Math.floor(totalCost * 100));
+    const energyInWei = BigInt(Math.floor(totalKwh * 100));
+    const durationInSeconds = BigInt(Math.floor(duration));
+
+    console.log("[Ethers] Raw parameters:", {
       evOwner: userAddress,
       station: stationEthAddress,
       energyKwh: totalKwh,
       amountPaid: totalCost,
-      duration: durationInSeconds,
+      duration: duration,
     });
+
+    console.log("[Ethers] Encoded parameters (BigInt):", {
+      evOwner: userAddress,
+      station: stationEthAddress,
+      energyKwh: energyInWei.toString(),
+      amountPaid: amountInWei.toString(),
+      duration: durationInSeconds.toString(),
+    });
+
+    // Encode the function call to see the data
+    const iface = new ethers.Interface(RUPEEFLOW_ABI);
+    const encodedData = iface.encodeFunctionData("settleCharging", [
+      userAddress,
+      stationEthAddress,
+      energyInWei,
+      amountInWei,
+      durationInSeconds,
+    ]);
+
+    console.log("[Ethers] Encoded transaction data:", encodedData);
+    console.log("[Ethers] Compare this data with PolygonScan test values");
 
     // Submit settlement transaction
     const tx = await contract.settleCharging(
@@ -303,7 +330,7 @@ export async function settleChargingDirect(
       amountInWei,
       durationInSeconds,
       {
-        gasLimit: ethers.toBigInt("200000"), // Safety margin
+        gasLimit: ethers.toBigInt("500000"), // Increased from 200000
       }
     );
 
