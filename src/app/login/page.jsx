@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Input, Button, Card, CardBody } from "@heroui/react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -51,143 +52,137 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: "400px",
-        margin: "100px auto",
-        padding: "30px",
-        border: "1px solid #ddd",
-        borderRadius: "8px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-      }}
-    >
-      <h1 style={{ textAlign: "center", marginBottom: "30px" }}>
-        Welcome to RupeeFlow
-      </h1>
-
-      {error && (
-        <div
-          style={{
-            padding: "10px",
-            marginBottom: "20px",
-            backgroundColor: "#fee",
-            border: "1px solid #f99",
-            borderRadius: "4px",
-            color: "#c33",
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      {/* Demo Login */}
-      <form onSubmit={handleDemoLogin}>
-        <h2 style={{ fontSize: "18px", marginBottom: "15px" }}>Demo Login</h2>
-        <div style={{ marginBottom: "15px" }}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "5px",
-              fontWeight: "500",
-            }}
+    <section className="relative min-h-screen flex flex-col items-center justify-center px- sm:px-6 py-20 lg:py-24 overflow-hidden">
+      {/* Darker gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background-200 via-background-100/30 to-background-200 pointer-events-none"></div>
+      
+      <div className="max-w-6xl mx-auto w-full space-y-6 px-8 relative z-10">
+        {/* Heading Section */}
+        <div className="text-center space-y-2">
+          <h1
+            className="text-5xl sm:text-6xl lg:text-6xl font-bold tracking-tight"
+            style={{ fontFamily: "Conthrax, sans-serif" }}
           >
-            Email:
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              boxSizing: "border-box",
-            }}
-          />
-          <small style={{ color: "#666" }}>
-            Try: owner@example.com or operator@example.com
-          </small>
+            <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+              Login
+            </span>
+          </h1>
+          <p className="text-lg text-foreground/70">Welcome back</p>
         </div>
 
-        <div style={{ marginBottom: "15px" }}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "5px",
-              fontWeight: "500",
-            }}
-          >
-            Password:
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              boxSizing: "border-box",
-            }}
-          />
-          <small style={{ color: "#666" }}>Default: password123</small>
+        {/* Centered Login Form */}
+        <div className="flex justify-center">
+          <Card className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 backdrop-blur-xl w-full max-w-md">
+            <CardBody className="space-y-6 p-8">
+              {error && (
+                <div className="p-4 rounded-lg bg-red-500/20 border border-red-500/50 text-red-200 text-sm">
+                  {error}
+                </div>
+              )}
+
+              {/* Demo Login Form */}
+              <form onSubmit={handleDemoLogin} className="space-y-4">
+                <h2 className="text-xl font-bold text-foreground">Demo Login</h2>
+
+                <Input
+                  type="email"
+                  label="Email Address"
+                  placeholder="owner@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  classNames={{
+                    input: "bg-background-200/50 text-foreground",
+                    label: "text-foreground/70",
+                    mainWrapper: "text-foreground",
+                  }}
+                  variant="bordered"
+                  description="Try: owner@example.com or operator@example.com"
+                />
+
+                <Input
+                  type="password"
+                  label="Password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  classNames={{
+                    input: "bg-background-200/50 text-foreground",
+                    label: "text-foreground/70",
+                    mainWrapper: "text-foreground",
+                  }}
+                  variant="bordered"
+                  description="Default: password123"
+                />
+
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-primary to-primary/80 text-background-200 font-semibold text-lg py-6 hover:shadow-lg hover:shadow-primary/50 transition-all duration-200"
+                  radius="full"
+                >
+                  {isLoading ? "Signing in..." : "Sign In with Demo"}
+                </Button>
+              </form>
+
+              {/* Divider */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 h-px bg-primary/20"></div>
+                <span className="text-foreground/50 text-sm">OR</span>
+                <div className="flex-1 h-px bg-primary/20"></div>
+              </div>
+
+              {/* Google Login */}
+              <Button
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+                variant="bordered"
+                className="w-full border-2 border-primary/40 text-foreground font-semibold text-lg py-6 hover:bg-primary/10 transition-all duration-200 group"
+                radius="full"
+              >
+                <span>🔗</span>
+                {isLoading ? "Signing in..." : "Continue with Google"}
+              </Button>
+
+              <p className="text-center text-foreground/50 text-sm">
+                First-time Google users will select their role after signing in
+              </p>
+            </CardBody>
+          </Card>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          style={{
-            width: "100%",
-            padding: "10px",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: isLoading ? "not-allowed" : "pointer",
-            opacity: isLoading ? 0.6 : 1,
-            fontSize: "16px",
-            marginBottom: "20px",
-          }}
-        >
-          {isLoading ? "Logging in..." : "Login with Demo"}
-        </button>
-      </form>
+        {/* Feature Highlights - Horizontal Layout */}
+        <div className="flex flex-wrap justify-center gap-6">
+          <div className="p-6 rounded-2xl bg-white/5 border border-primary/20 backdrop-blur-sm hover:bg-white/10 transition-all duration-200 w-full sm:w-80">
+            <div className="text-primary text-2xl font-bold mb-2">⚡</div>
+            <h3 className="text-foreground font-semibold mb-1">
+              Real-time Settlement
+            </h3>
+            <p className="text-foreground/60 text-sm">
+              Instant blockchain-based transactions
+            </p>
+          </div>
 
-      <hr style={{ margin: "20px 0" }} />
+          <div className="p-6 rounded-2xl bg-white/5 border border-primary/20 backdrop-blur-sm hover:bg-white/10 transition-all duration-200 w-full sm:w-80">
+            <div className="text-secondary text-2xl font-bold mb-2">🔒</div>
+            <h3 className="text-foreground font-semibold mb-1">
+              Secure & Transparent
+            </h3>
+            <p className="text-foreground/60 text-sm">
+              Blockchain-verified transactions
+            </p>
+          </div>
 
-      {/* Google Login */}
-      <div>
-        <h2 style={{ fontSize: "18px", marginBottom: "15px" }}>
-          Or continue with Google
-        </h2>
-        <button
-          onClick={handleGoogleLogin}
-          disabled={isLoading}
-          style={{
-            width: "100%",
-            padding: "10px",
-            backgroundColor: "#f1f1f1",
-            color: "#333",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-            cursor: isLoading ? "not-allowed" : "pointer",
-            opacity: isLoading ? 0.6 : 1,
-            fontSize: "16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-          }}
-        >
-          <span>🔗</span>
-          {isLoading ? "Signing in..." : "Continue with Google"}
-        </button>
-        <small style={{ display: "block", marginTop: "10px", color: "#666" }}>
-          First-time Google users will select their role after signing in
-        </small>
+          <div className="p-6 rounded-2xl bg-white/5 border border-primary/20 backdrop-blur-sm hover:bg-white/10 transition-all duration-200 w-full sm:w-80">
+            <div className="text-primary text-2xl font-bold mb-2">💳</div>
+            <h3 className="text-foreground font-semibold mb-1">
+              Pay As You Use
+            </h3>
+            <p className="text-foreground/60 text-sm">
+              No hidden charges or fees
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
