@@ -31,6 +31,8 @@ export default function EVOwnerDashboard() {
   const [ratePerKwh, setRatePerKwh] = useState(12);
   const [availableOperators, setAvailableOperators] = useState([]);
   const [chargingHistory, setChargingHistory] = useState([]);
+  const [pendingSession, setPendingSession] = useState(null);
+  const [loadingPending, setLoadingPending] = useState(true);
 
   // Redirect operators to station dashboard
   useEffect(() => {
@@ -82,6 +84,32 @@ export default function EVOwnerDashboard() {
     }
   }, [session]);
 
+  // Check for pending settlements on load
+  useEffect(() => {
+    const checkPendingSettlement = async () => {
+      try {
+        setLoadingPending(true);
+        const res = await fetch("/api/charging/pending-settlement");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.hasPending && data.sessions.length > 0) {
+            // Get the most recent pending session
+            setPendingSession(data.sessions[0]);
+            setShowSettlement(true);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check pending settlement:", err);
+      } finally {
+        setLoadingPending(false);
+      }
+    };
+
+    if (session) {
+      checkPendingSettlement();
+    }
+  }, [session]);
+
   const handleStartCharging = async () => {
     if (!operatorId) {
       alert("Please select a charging station");
@@ -96,6 +124,23 @@ export default function EVOwnerDashboard() {
       operatorId,
       session.user.name
     );
+  };
+
+  const handleSettlementComplete = async () => {
+    // Refresh pending settlements
+    try {
+      const res = await fetch("/api/charging/pending-settlement");
+      if (res.ok) {
+        const data = await res.json();
+        if (!data.hasPending) {
+          setPendingSession(null);
+          setShowSettlement(false);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to refresh pending settlements:", err);
+    }
+    setSessionSettled(true);
   };
 
   const handleStopCharging = async () => {
@@ -246,10 +291,27 @@ export default function EVOwnerDashboard() {
 
           <button
             onClick={handleStartCharging}
-            style={{ width: "100%", padding: "10px", fontSize: "16px" }}
+            disabled={pendingSession !== null}
+            style={{
+              width: "100%",
+              padding: "10px",
+              fontSize: "16px",
+              opacity: pendingSession !== null ? 0.5 : 1,
+              cursor: pendingSession !== null ? "not-allowed" : "pointer",
+            }}
           >
-            Start Charging ⚡
+            {pendingSession
+              ? "Complete pending settlement first"
+              : "Start Charging ⚡"}
           </button>
+          {pendingSession && (
+            <p
+              style={{ color: "#d32f2f", marginTop: "10px", fontSize: "14px" }}
+            >
+              ⚠️ You have a pending charging session that needs to be settled
+              before starting a new one.
+            </p>
+          )}
         </div>
       )}
 
@@ -278,13 +340,19 @@ export default function EVOwnerDashboard() {
         <div>
           <ChargingSettlement
             {...chargingData}
-            sessionId={sessionId}
-            operatorId={savedOperatorId || operatorId}
-            vehicleReg={vehicleReg}
-            batteryCapacity={batteryCapacity}
-            ratePerKwh={ratePerKwh}
+            sessionId={pendingSession?.sessionId || sessionId}
+            operatorId={
+              pendingSession?.operatorId || savedOperatorId || operatorId
+            }
+            vehicleReg={pendingSession?.vehicleReg || vehicleReg}
+            batteryCapacity={pendingSession?.batteryCapacity || batteryCapacity}
+            ratePerKwh={pendingSession?.ratePerKwh || ratePerKwh}
+            totalCost={pendingSession?.totalCost || chargingData.totalCost}
+            totalKwh={pendingSession?.totalKwh || chargingData.totalKwh}
+            duration={pendingSession?.duration || chargingData.duration}
             saveSession={saveSession}
-            onSettled={() => setSessionSettled(true)}
+            onSettled={handleSettlementComplete}
+            isPendingSettlement={pendingSession !== null}
           />
           <div
             style={{
@@ -294,7 +362,7 @@ export default function EVOwnerDashboard() {
               flexWrap: "wrap",
             }}
           >
-            {!sessionSettled && (
+            {!sessionSettled && pendingSession === null && (
               <button
                 onClick={handleContinueCharging}
                 style={{

@@ -8,6 +8,7 @@ import {
   checkTransactionStatus,
   listenToSettlementEvents,
   getNetworkInfo,
+  markSessionAsSettled,
 } from "@/utils/contract-interactions";
 
 export default function ChargingSettlement({
@@ -23,6 +24,7 @@ export default function ChargingSettlement({
   ratePerKwh,
   saveSession,
   onSettled,
+  isPendingSettlement = false,
 }) {
   const [isSettling, setIsSettling] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -37,7 +39,7 @@ export default function ChargingSettlement({
   const [networkInfo, setNetworkInfo] = useState(null);
   const [isCheckingBalance, setIsCheckingBalance] = useState(false);
 
-  // Get network info and setup event listener on mount
+  // Get network info on mount
   useEffect(() => {
     const initNetwork = async () => {
       const networkData = await getNetworkInfo();
@@ -47,11 +49,6 @@ export default function ChargingSettlement({
     };
 
     initNetwork();
-
-    // Listen for settlement events
-    listenToSettlementEvents((event) => {
-      console.log("Settlement event detected:", event);
-    });
   }, []);
 
   const handleSaveSession = async () => {
@@ -134,8 +131,9 @@ export default function ChargingSettlement({
   };
 
   const handleSettle = async () => {
-    // First save to database if not already saved
-    if (!sessionSaved && saveSession) {
+    // For pending settlements, skip saving since the session is already in database
+    // For new settlements, save to database if not already saved
+    if (!isPendingSettlement && !sessionSaved && saveSession) {
       await handleSaveSession();
     }
 
@@ -157,13 +155,18 @@ export default function ChargingSettlement({
 
       setTxHash(settlementResult.transactionHash);
 
-      console.log("Settlement successful:", {
+      // Mark session as settled in database
+      const markResult = await markSessionAsSettled(
         sessionId,
-        totalKwh,
-        totalCost,
-        txHash: settlementResult.transactionHash,
-        blockNumber: settlementResult.blockNumber,
-      });
+        settlementResult.transactionHash
+      );
+
+      if (!markResult.success) {
+        console.warn(
+          "Failed to mark session as settled in database:",
+          markResult.error
+        );
+      }
 
       // Check transaction status
       const statusResult = await checkTransactionStatus(
@@ -178,7 +181,30 @@ export default function ChargingSettlement({
         onSettled();
       }
     } catch (err) {
-      setError(err.message);
+      // Provide user-friendly error messages
+      let userFriendlyError = err.message;
+
+      if (
+        err.message.includes("user rejected") ||
+        err.message.includes("User denied")
+      ) {
+        userFriendlyError =
+          "❌ Transaction rejected by user. Please click 'Complete & Settle' again to try again.";
+      } else if (err.message.includes("insufficient funds")) {
+        userFriendlyError =
+          "❌ Insufficient MATIC balance in your wallet. Please add more MATIC and try again.";
+      } else if (err.message.includes("Internal JSON-RPC error")) {
+        userFriendlyError =
+          "❌ Transaction failed. Please try again or contact support.";
+      } else if (err.message.includes("Network")) {
+        userFriendlyError =
+          "❌ Network error. Please check your internet connection and try again.";
+      } else if (err.message.includes("MetaMask")) {
+        userFriendlyError =
+          "❌ MetaMask error. Please make sure you are connected to Polygon Amoy network.";
+      }
+
+      setError(userFriendlyError);
       console.error("Settlement error:", err);
     } finally {
       setIsSettling(false);
@@ -200,7 +226,9 @@ export default function ChargingSettlement({
         backgroundColor: "#f1f8f4",
       }}
     >
-      <h2>Charging Complete ✅</h2>
+      <h2>
+        {isPendingSettlement ? "Pending Settlement" : "Charging Complete"} ✅
+      </h2>
 
       <div
         style={{

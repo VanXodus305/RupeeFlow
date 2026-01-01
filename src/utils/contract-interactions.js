@@ -340,12 +340,6 @@ export async function settleChargingDirect(
     // Wait for confirmation
     const receipt = await tx.wait();
 
-    console.log("[Ethers] Settlement confirmed:", {
-      hash: receipt.hash,
-      blockNumber: receipt.blockNumber,
-      gasUsed: receipt.gasUsed.toString(),
-    });
-
     return {
       success: true,
       transactionHash: receipt.hash,
@@ -354,6 +348,41 @@ export async function settleChargingDirect(
     };
   } catch (error) {
     console.error("[Ethers] Settlement error:", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * 6. Mark charging session as settled in database
+ */
+export async function markSessionAsSettled(sessionId, transactionHash) {
+  try {
+    const response = await fetch("/api/charging/mark-settled", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sessionId,
+        transactionHash,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to mark session as settled");
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      message: "Session marked as settled",
+      session: data.session,
+    };
+  } catch (error) {
+    console.error("[Ethers] Error marking session as settled:", error);
     return {
       success: false,
       error: error.message,

@@ -17,17 +17,24 @@ import {
 } from "@heroui/react";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
 import { useState, useEffect, useRef } from "react";
 
 const GlobalNavbar = () => {
   const { data: session } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [activeSection, setActiveSection] = useState("home");
   const navbarRef = useRef(null);
 
   useEffect(() => {
+    // Only enable section highlighting on the homepage
+    if (pathname !== "/") {
+      setActiveSection("");
+      return;
+    }
+
     const handleScroll = () => {
       const sections = [
         { id: "home", offset: 0 },
@@ -57,7 +64,7 @@ const GlobalNavbar = () => {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [pathname]);
 
   const isLinkActive = (sectionId) => activeSection === sectionId;
 
@@ -80,7 +87,7 @@ const GlobalNavbar = () => {
       ref={navbarRef}
       isBlurred
       isBordered
-      className="fixed top-0 w-full z-50 bg-gradient-to-r from-background-200/60 via-background-200/50 to-background-100/60 backdrop-blur-xl"
+      className="fixed top-0 w-full z-50 bg-gradient-to-r from-background-200/60 via-background-200/50 to-background-100/60 backdrop-blur-3xl"
       classNames={{
         wrapper: "max-w-full px-4 sm:px-6 flex justify-between items-center",
       }}
