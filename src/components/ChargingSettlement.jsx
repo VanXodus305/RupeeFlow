@@ -174,6 +174,9 @@ export default function ChargingSettlement({
 
       setTxHash(settlementResult.transactionHash);
 
+      // Scroll to top to show the transaction hash
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
       // Mark session as settled in database
       const markResult = await markSessionAsSettled(
         sessionId,
@@ -245,7 +248,7 @@ export default function ChargingSettlement({
         <Card className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 backdrop-blur-sm">
           <CardBody className="gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+              <div className="rounded-full bg-primary/20 flex items-center justify-center p-3">
                 <FiCheck className="text-primary text-xl" />
               </div>
               <div>
