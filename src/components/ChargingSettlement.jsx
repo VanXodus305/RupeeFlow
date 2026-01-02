@@ -36,6 +36,7 @@ export default function ChargingSettlement({
   onSettled,
   isPendingSettlement = false,
   onSettlingChange,
+  walletAvailable = true,
 }) {
   const [isSettling, setIsSettling] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -248,7 +249,7 @@ export default function ChargingSettlement({
                 <FiCheck className="text-primary text-xl" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-foreground">
+                <h3 className="text-xl font-bold text-primary font-conthrax">
                   Settlement Confirmed!
                 </h3>
                 <p className="text-sm text-foreground/60">
@@ -381,77 +382,100 @@ export default function ChargingSettlement({
 
             {/* Network Info */}
             {networkInfo && (
-              <Card className="bg-background-100/20 border border-primary/10">
-                <CardBody className="py-3">
-                  <p className="text-xs text-foreground/70">
-                    <span className="font-semibold">Network:</span>{" "}
-                    {networkInfo.network} (Chain ID: {networkInfo.chainId})
-                  </p>
+              <Card className="bg-gradient-to-r from-primary/15 to-secondary/15 border-2 border-primary/30 backdrop-blur-sm">
+                <CardBody className="py-4 px-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-primary"></div>
+                    <div>
+                      <p className="text-xs text-foreground/60 font-semibold uppercase tracking-wide">
+                        Network
+                      </p>
+                      <p className="text-base font-conthrax text-primary font-semibold mt-1">
+                        {networkInfo.network}
+                      </p>
+                      <p className="text-xs text-foreground/70 mt-1">
+                        Chain ID: {networkInfo.chainId}
+                      </p>
+                    </div>
+                  </div>
                 </CardBody>
               </Card>
             )}
 
-            {/* Wallet Balance Section */}
-            <div className="bg-background-100/30 border border-primary/20 rounded-lg p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <FiZap className="text-secondary" />
-                <p className="font-semibold text-foreground">Wallet Balance</p>
-              </div>
-
-              {walletBalance ? (
-                <p className="text-sm text-foreground">
-                  <span className="font-semibold">{walletBalance.balance}</span>{" "}
-                  MATIC
-                </p>
-              ) : (
-                <p className="text-xs text-foreground/60">
-                  Click to verify your balance before settlement
-                </p>
-              )}
-
-              <Button
-                onClick={handleCheckWallet}
-                disabled={isCheckingBalance}
-                className="w-full bg-secondary/80 text-background-200 font-semibold hover:bg-secondary transition-all"
-              >
-                {isCheckingBalance ? "Checking..." : "Check Wallet Balance"}
-              </Button>
-            </div>
-
-            {/* Gas Estimate Section */}
-            <div className="bg-background-100/30 border border-primary/20 rounded-lg p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <FiTrendingUp className="text-primary" />
-                <p className="font-semibold text-foreground">Gas Estimation</p>
-              </div>
-
-              {gasEstimate ? (
-                <div className="space-y-2 text-sm">
-                  <p className="text-foreground/80">
-                    <span className="font-semibold">Gas Price:</span>{" "}
-                    {gasEstimate.gasPrice} GWEI
-                  </p>
-                  <p className="text-foreground/80">
-                    <span className="font-semibold">Est. Cost:</span>{" "}
-                    {gasEstimate.estimatedGasCostMatic} MATIC (~₹
-                    {(
-                      parseFloat(gasEstimate.estimatedGasCostMatic) * 50
-                    ).toFixed(2)}
-                    )
+            {/* Wallet Balance and Gas Estimation - Responsive Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Wallet Balance Section */}
+              <div className="bg-background-100/30 border border-primary/20 rounded-lg p-4 space-y-3 flex flex-col">
+                <div className="flex items-center gap-2">
+                  <FiZap className="text-secondary" />
+                  <p className="font-semibold text-foreground">
+                    Wallet Balance
                   </p>
                 </div>
-              ) : (
-                <p className="text-xs text-foreground/60">
-                  Click to estimate transaction cost
-                </p>
-              )}
 
-              <Button
-                onClick={handleEstimateGas}
-                className="w-full bg-primary/80 text-background-200 font-semibold hover:bg-primary transition-all"
-              >
-                Estimate Gas Fees
-              </Button>
+                <div className="flex-1">
+                  {walletBalance ? (
+                    <p className="text-sm text-foreground">
+                      <span className="font-semibold">
+                        {walletBalance.balance}
+                      </span>{" "}
+                      MATIC
+                    </p>
+                  ) : (
+                    <p className="text-xs text-foreground/60">
+                      Click to verify your balance before settlement
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  onClick={handleCheckWallet}
+                  disabled={isCheckingBalance}
+                  className="w-full bg-secondary/80 text-background-200 font-semibold hover:bg-secondary transition-all"
+                >
+                  {isCheckingBalance ? "Checking..." : "Check Wallet Balance"}
+                </Button>
+              </div>
+
+              {/* Gas Estimate Section */}
+              <div className="bg-background-100/30 border border-primary/20 rounded-lg p-4 space-y-3 flex flex-col">
+                <div className="flex items-center gap-2">
+                  <FiTrendingUp className="text-primary" />
+                  <p className="font-semibold text-foreground">
+                    Gas Estimation
+                  </p>
+                </div>
+
+                <div className="flex-1">
+                  {gasEstimate ? (
+                    <div className="space-y-2 text-sm">
+                      <p className="text-foreground/80">
+                        <span className="font-semibold">Gas Price:</span>{" "}
+                        {gasEstimate.gasPrice} GWEI
+                      </p>
+                      <p className="text-foreground/80">
+                        <span className="font-semibold">Est. Cost:</span>{" "}
+                        {gasEstimate.estimatedGasCostMatic} MATIC (~₹
+                        {(
+                          parseFloat(gasEstimate.estimatedGasCostMatic) * 50
+                        ).toFixed(2)}
+                        )
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-foreground/60">
+                      Click to estimate transaction cost
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  onClick={handleEstimateGas}
+                  className="w-full bg-primary/80 text-background-200 font-semibold hover:bg-primary transition-all"
+                >
+                  Estimate Gas Fees
+                </Button>
+              </div>
             </div>
 
             {/* Transaction Status Section */}
@@ -497,10 +521,12 @@ export default function ChargingSettlement({
             {/* Settlement Button */}
             <Button
               onClick={handleSettle}
-              disabled={isSettling || isSaving}
+              disabled={isSettling || isSaving || !walletAvailable}
               className="w-full bg-gradient-to-r from-primary to-secondary text-background-200 font-semibold py-6 text-lg hover:shadow-lg hover:shadow-primary/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSaving ? (
+              {!walletAvailable ? (
+                "❌ MetaMask Required to Settle"
+              ) : isSaving ? (
                 <>
                   <Spinner size="sm" color="current" />
                   Saving to Database... 💾

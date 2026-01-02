@@ -4,9 +4,11 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useCharging } from "@/hooks/useCharging";
+import { useWalletWarning } from "@/hooks/useWalletWarning";
 import { useState } from "react";
 import ChargingTimer from "@/components/ChargingTimer";
 import ChargingSettlement from "@/components/ChargingSettlement";
+import WalletWarningBanner from "@/components/WalletWarningBanner";
 import {
   Button,
   Input,
@@ -42,6 +44,7 @@ export default function EVOwnerDashboard() {
     saveSession,
     ...chargingData
   } = useCharging();
+  const walletWarning = useWalletWarning();
   const [vehicleReg, setVehicleReg] = useState("MH-01-AB-1234");
   const [batteryCapacity, setBatteryCapacity] = useState(60);
   const [initialBatteryPercent, setInitialBatteryPercent] = useState(20);
@@ -188,12 +191,15 @@ export default function EVOwnerDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background-200 via-background-100/20 to-background-200 mt-16">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Wallet Warning Banner */}
+        <WalletWarningBanner />
+
         {!isCharging && !showSettlement && (
           <Card className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 backdrop-blur-sm">
             <CardHeader className="flex flex-col gap-3 border-b border-primary/10">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary"></div>
-                <h2 className="text-2xl font-bold text-foreground font-conthrax">
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground font-conthrax">
                   Start Charging Session
                 </h2>
               </div>
@@ -351,6 +357,10 @@ export default function EVOwnerDashboard() {
                 onSettled={handleSettlementComplete}
                 isPendingSettlement={pendingSession !== null}
                 onSettlingChange={setIsSettling}
+                walletAvailable={
+                  walletWarning.hasMaskInstalled ||
+                  walletWarning.isInMetaMaskApp
+                }
               />
 
               <div className="flex gap-3 flex-wrap">
