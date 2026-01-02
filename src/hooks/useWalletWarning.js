@@ -40,8 +40,7 @@ export function useWalletWarning() {
     if (isMobile && !isInMetaMaskApp) {
       const currentUrl = window.location.href;
       // Ensure the URL is HTTPS for MetaMask Mobile
-      const httpsUrl = currentUrl;
-      deepLink = `metamask://dapp/${encodeURIComponent(httpsUrl)}`;
+      deepLink = `metamask://dapp/${currentUrl}`;
     }
 
     // Determine if warning should show
