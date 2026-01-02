@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { Input, Button, Card, CardBody, CardHeader } from "@heroui/react";
 
 export default function OperatorOnboardingPage() {
   const { data: session, status } = useSession();
@@ -17,36 +18,27 @@ export default function OperatorOnboardingPage() {
   });
 
   useEffect(() => {
-    // Wait for session to load
-    if (status === "loading") {
-      return;
-    }
+    if (status === "loading") return;
 
-    // Not authenticated
     if (!session) {
       router.push("/login");
       return;
     }
 
-    // Only operators can access onboarding
     if (session.user?.role !== "operator") {
       router.push("/login");
       return;
     }
 
-    // Check if operator profile already exists
     const checkOperatorExists = async () => {
       try {
         const response = await fetch("/api/operator/check");
         const data = await response.json();
-
-        // If operator profile exists, redirect to dashboard
         if (data.exists) {
           router.push("/station-dashboard");
         }
-      } catch (error) {
-        console.error("Error checking operator profile:", error);
-        // Continue showing onboarding if check fails
+      } catch (err) {
+        console.error("Error checking operator profile:", err);
       }
     };
 
@@ -81,12 +73,10 @@ export default function OperatorOnboardingPage() {
         throw new Error(errorData.error || "Failed to create operator profile");
       }
 
-      const data = await response.json();
-
-      // Redirect to station dashboard
+      await response.json();
       router.push("/station-dashboard");
     } catch (err) {
-      console.error("Error creating operator profile:", err);
+      console.error(err);
       setError(err.message || "Failed to create operator profile");
       setIsLoading(false);
     }
@@ -94,184 +84,125 @@ export default function OperatorOnboardingPage() {
 
   if (status === "loading") {
     return (
-      <div style={{ padding: "40px", textAlign: "center" }}>
-        <p>Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-foreground/60 text-lg">Loading...</p>
       </div>
     );
   }
 
-  if (!session || session.user?.role !== "operator") {
-    return null;
-  }
+  if (!session || session.user?.role !== "operator") return null;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
-        paddingTop: "40px",
-      }}
-    >
-      <div style={{ maxWidth: "600px", margin: "0 auto", padding: "20px" }}>
-        <div
-          style={{
-            backgroundColor: "white",
-            borderRadius: "8px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            padding: "40px",
-          }}
-        >
-          <h1 style={{ marginBottom: "10px" }}>Setup Your Charging Station</h1>
-          <p style={{ color: "#666", marginBottom: "30px" }}>
-            Complete the details below to start operating your charging station.
+    <section className="relative min-h-screen flex items-center justify-center px-4 py-24 overflow-hidden">
+      {/* Background gradient (same as role-selection) */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background-200 via-background-100/30 to-background-200 pointer-events-none" />
+
+      <div className="relative z-10 w-full max-w-2xl">
+        {/* Heading */}
+        <div className="text-center mb-10">
+          <h1
+            className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent"
+            style={{ fontFamily: "Conthrax, sans-serif" }}
+          >
+            Station Onboarding
+          </h1>
+          <p className="mt-3 text-foreground/70">
+            Configure your charging station to start accepting sessions
           </p>
+        </div>
 
-          {error && (
-            <div
-              style={{
-                backgroundColor: "#f8d7da",
-                color: "#721c24",
-                padding: "12px",
-                borderRadius: "4px",
-                marginBottom: "20px",
-              }}
-            >
-              {error}
-            </div>
-          )}
+        {/* Glass Card */}
+        <Card className="bg-gradient-to-br from-background-100/60 to-background-200/60 backdrop-blur-xl border border-primary/20 shadow-xl">
+          <CardHeader className="pb-0" />
+          <CardBody className="space-y-6 p-8">
+            {error && (
+              <div className="rounded-lg bg-danger-50/10 border border-danger/30 text-danger px-4 py-3 text-sm">
+                {error}
+              </div>
+            )}
 
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: "20px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: "500",
-                }}
-              >
-                Station Name *
-              </label>
-              <input
-                type="text"
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <Input
+                label="Station Name"
                 name="stationName"
                 value={formData.stationName}
                 onChange={handleChange}
-                required
-                placeholder="Enter your charging station name"
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  fontSize: "16px",
-                  boxSizing: "border-box",
+                placeholder="Demo Charging Station"
+                isRequired
+                variant="bordered"
+                classNames={{
+                  label: "text-foreground/80 font-medium",
+                  input: "text-foreground",
+                  inputWrapper:
+                    "border-primary/30 hover:border-primary/50 bg-background/40",
                 }}
               />
-            </div>
 
-            <div style={{ marginBottom: "20px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: "500",
-                }}
-              >
-                Station Address
-              </label>
-              <input
-                type="text"
+              <Input
+                label="Station Address"
                 name="stationAddress"
                 value={formData.stationAddress}
                 onChange={handleChange}
-                placeholder="Enter your station address"
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  fontSize: "16px",
-                  boxSizing: "border-box",
+                placeholder="123 Main Street, City"
+                variant="bordered"
+                classNames={{
+                  label: "text-foreground/80 font-medium",
+                  input: "text-foreground",
+                  inputWrapper:
+                    "border-primary/30 hover:border-primary/50 bg-background/40",
                 }}
               />
-            </div>
 
-            <div style={{ marginBottom: "20px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: "500",
-                }}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  type="number"
+                  label="Charger Power (kW)"
+                  name="chargerPower"
+                  value={formData.chargerPower.toString()}
+                  onChange={handleChange}
+                  step="0.1"
+                  min="0.1"
+                  variant="bordered"
+                  classNames={{
+                    label: "text-foreground/80 font-medium",
+                    input: "text-foreground",
+                    inputWrapper:
+                      "border-secondary/30 hover:border-secondary/50 bg-background/40",
+                  }}
+                />
+
+                <Input
+                  type="number"
+                  label="Rate per kWh (₹)"
+                  name="ratePerKwh"
+                  value={formData.ratePerKwh.toString()}
+                  onChange={handleChange}
+                  step="0.1"
+                  min="0.1"
+                  startContent={<span className="text-foreground/50">₹</span>}
+                  variant="bordered"
+                  classNames={{
+                    label: "text-foreground/80 font-medium",
+                    input: "text-foreground",
+                    inputWrapper:
+                      "border-secondary/30 hover:border-secondary/50 bg-background/40",
+                  }}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                isLoading={isLoading}
+                radius="full"
+                className="w-full bg-gradient-to-r from-primary to-secondary text-background-200 font-semibold text-lg py-6 hover:shadow-lg hover:shadow-primary/40 transition-all"
               >
-                Charger Power (kW)
-              </label>
-              <input
-                type="number"
-                name="chargerPower"
-                value={formData.chargerPower}
-                onChange={handleChange}
-                step="0.1"
-                min="0.1"
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  fontSize: "16px",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: "30px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: "500",
-                }}
-              >
-                Rate per kWh (₹)
-              </label>
-              <input
-                type="number"
-                name="ratePerKwh"
-                value={formData.ratePerKwh}
-                onChange={handleChange}
-                step="0.1"
-                min="0.1"
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  fontSize: "16px",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              style={{
-                width: "100%",
-                padding: "12px",
-                backgroundColor: isLoading ? "#ccc" : "#28a745",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                fontSize: "16px",
-                fontWeight: "500",
-                cursor: isLoading ? "not-allowed" : "pointer",
-              }}
-            >
-              {isLoading ? "Creating Station..." : "Create Station"}
-            </button>
-          </form>
-        </div>
+                {isLoading ? "Creating Station..." : "Create Station"}
+              </Button>
+            </form>
+          </CardBody>
+        </Card>
       </div>
-    </div>
+    </section>
   );
 }
+

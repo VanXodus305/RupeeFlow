@@ -13,13 +13,17 @@ export function useCharging() {
   const [currentPower, setCurrentPower] = useState(0);
   const [chargePercentage, setChargePercentage] = useState(0);
   const [error, setError] = useState(null);
+
+  const [socketReady, setSocketReady] = useState(false);
   const socketRef = useRef(null);
 
-  // Initialize WebSocket
+  // 🔌 Initialize WebSocket
   useEffect(() => {
     const backendUrl =
       process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
     socketRef.current = io(backendUrl, {
+      transports: ["websocket"], // force websocket
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
@@ -27,20 +31,27 @@ export function useCharging() {
 
     socketRef.current.on("connect", () => {
       console.log("[Hook] WebSocket connected:", socketRef.current.id);
+      setSocketReady(true);
+      setError(null);
+    });
+
+    socketRef.current.on("disconnect", () => {
+      console.warn("[Hook] WebSocket disconnected");
+      setSocketReady(false);
     });
 
     socketRef.current.on("connect_error", (err) => {
-      console.error("[Hook] WebSocket error:", err);
+      console.error("[Hook] WebSocket error:", err.message);
+      setSocketReady(false);
       setError("Failed to connect to backend");
     });
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      socketRef.current?.disconnect();
     };
   }, []);
 
+  // ▶️ Start Charging
   const startCharging = async (
     userId,
     vehicleReg,
@@ -53,8 +64,9 @@ export function useCharging() {
     try {
       setError(null);
 
-      if (!socketRef.current || !socketRef.current.connected) {
-        throw new Error("WebSocket not connected");
+      if (!socketReady || !socketRef.current) {
+        setError("Connecting to backend, please wait...");
+        return;
       }
 
       // Reset state
@@ -66,17 +78,15 @@ export function useCharging() {
       setTotalCost(0);
       setChargePercentage(0);
 
-      // Remove any existing meter-reading listeners
+      // Clean old listeners
       socketRef.current.off("meter-reading");
       socketRef.current.off("charging-started");
 
-      // Listen for session started confirmation
       socketRef.current.once("charging-started", (data) => {
-        console.log("[Hook] Charging started with sessionId:", data.sessionId);
+        console.log("[Hook] Charging started:", data.sessionId);
         setSessionId(data.sessionId);
       });
 
-      // Listen for meter readings from server
       socketRef.current.on("meter-reading", (meterData) => {
         setSecondsUsed(meterData.secondsElapsed);
         setTotalKwh(meterData.totalKwh);
@@ -85,7 +95,6 @@ export function useCharging() {
         setChargePercentage(meterData.chargePercentage);
       });
 
-      // Emit start-charging via WebSocket
       socketRef.current.emit("start-charging", {
         userId,
         vehicleReg,
@@ -96,50 +105,41 @@ export function useCharging() {
         ownerName,
       });
 
-      console.log("[Hook] Start charging event emitted");
+      console.log("[Hook] start-charging emitted");
     } catch (err) {
-      console.error("[Hook] Error:", err);
+      console.error("[Hook] Start charging error:", err);
       setError(err.message);
       setIsCharging(false);
     }
   };
 
+  // ⏹ Stop Charging
   const stopCharging = async () => {
     try {
       setError(null);
 
       if (!sessionId) {
-        throw new Error("No active session");
+        setError("No active session");
+        return;
       }
 
-      // Stop listening for meter readings
       socketRef.current.off("meter-reading");
       socketRef.current.off("charging-stopped");
 
-      let stopData = null;
-
-      // Listen for charging-stopped response
       socketRef.current.once("charging-stopped", (data) => {
-        console.log("[Hook] Stop charging response:", data);
-        stopData = data;
+        console.log("[Hook] Charging stopped:", data);
       });
 
-      // Emit stop via WebSocket
       socketRef.current.emit("stop-charging", { sessionId });
 
-      // Wait a bit for response
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       setIsCharging(false);
-      console.log("[Hook] Charging stopped:", sessionId);
-      return stopData;
     } catch (err) {
-      console.error("[Hook] Error:", err);
+      console.error("[Hook] Stop charging error:", err);
       setError(err.message);
-      throw err;
     }
   };
 
+  // 💾 Save Session
   const saveSession = async (
     operatorId,
     vehicleReg,
@@ -159,11 +159,11 @@ export function useCharging() {
           operatorId,
           vehicleReg,
           batteryCapacity,
-          totalKwh: parseFloat(totalKwh),
-          totalCost: parseFloat(totalCost),
+          totalKwh: Number(totalKwh),
+          totalCost: Number(totalCost),
           duration: secondsUsed,
-          chargePercentage: parseFloat(chargePercentage),
-          ratePerKwh: parseFloat(ratePerKwh),
+          chargePercentage: Number(chargePercentage),
+          ratePerKwh: Number(ratePerKwh),
         }),
       });
 
@@ -172,34 +172,34 @@ export function useCharging() {
         throw new Error(error.error || "Failed to save session");
       }
 
-      const data = await res.json();
-      console.log("[Hook] Session saved to database:", data);
-      return data;
+      return await res.json();
     } catch (err) {
-      console.error("[Hook] Error saving session:", err);
+      console.error("[Hook] Save session error:", err);
       setError(err.message);
       throw err;
     }
   };
 
+  // 🔄 Resume Charging
   const resumeCharging = () => {
     try {
       if (!sessionId) {
-        throw new Error("No active session to resume");
+        setError("No active session to resume");
+        return;
       }
 
-      console.log("[Hook] Resuming charging session:", sessionId);
+      if (!socketReady) {
+        setError("Backend not connected");
+        return;
+      }
 
-      // Remove any existing listeners
       socketRef.current.off("meter-reading");
       socketRef.current.off("charging-resumed");
 
-      // Listen for resume confirmation
-      socketRef.current.once("charging-resumed", (data) => {
-        console.log("[Hook] Charging resumed with sessionId:", data.sessionId);
+      socketRef.current.once("charging-resumed", () => {
+        console.log("[Hook] Charging resumed");
       });
 
-      // Re-attach meter-reading listener
       socketRef.current.on("meter-reading", (meterData) => {
         setSecondsUsed(meterData.secondsElapsed);
         setTotalKwh(meterData.totalKwh);
@@ -208,16 +208,11 @@ export function useCharging() {
         setChargePercentage(meterData.chargePercentage);
       });
 
-      // Emit resume-charging via WebSocket to restart meter interval on server
       socketRef.current.emit("resume-charging", { sessionId });
-
-      // Re-enable charging UI
       setIsCharging(true);
       setError(null);
-
-      console.log("[Hook] Resume charging event emitted");
     } catch (err) {
-      console.error("[Hook] Error resuming:", err);
+      console.error("[Hook] Resume error:", err);
       setError(err.message);
     }
   };
@@ -232,6 +227,7 @@ export function useCharging() {
     currentPower,
     chargePercentage,
     error,
+    socketReady,
     startCharging,
     stopCharging,
     saveSession,
