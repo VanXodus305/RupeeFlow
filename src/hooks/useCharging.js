@@ -17,13 +17,12 @@ export function useCharging() {
   const [socketReady, setSocketReady] = useState(false);
   const socketRef = useRef(null);
 
-  // 🔌 Initialize WebSocket
   useEffect(() => {
     const backendUrl =
       process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
     socketRef.current = io(backendUrl, {
-      transports: ["websocket"], // force websocket
+      transports: ["websocket"],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
@@ -51,7 +50,6 @@ export function useCharging() {
     };
   }, []);
 
-  // ▶️ Start Charging
   const startCharging = async (
     userId,
     vehicleReg,
@@ -70,7 +68,6 @@ export function useCharging() {
         return;
       }
 
-      // Reset state
       setSessionId(null);
       setOperatorId(operatorId);
       setIsCharging(true);
@@ -79,7 +76,6 @@ export function useCharging() {
       setTotalCost(0);
       setChargePercentage(0);
 
-      // Clean old listeners
       socketRef.current.off("meter-reading");
       socketRef.current.off("charging-started");
 
@@ -115,7 +111,6 @@ export function useCharging() {
     }
   };
 
-  // ⏹ Stop Charging
   const stopCharging = async () => {
     try {
       setError(null);
@@ -141,7 +136,6 @@ export function useCharging() {
     }
   };
 
-  // 💾 Save Session
   const saveSession = async (
     operatorId,
     vehicleReg,
@@ -182,7 +176,6 @@ export function useCharging() {
     }
   };
 
-  // 🔄 Resume Charging
   const resumeCharging = () => {
     try {
       if (!sessionId) {

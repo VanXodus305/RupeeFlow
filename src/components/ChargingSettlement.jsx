@@ -45,21 +45,18 @@ export default function ChargingSettlement({
   const [sessionSaved, setSessionSaved] = useState(false);
   const [operatorWalletAddress, setOperatorWalletAddress] = useState(null);
 
-  // Ethers states
   const [walletBalance, setWalletBalance] = useState(null);
   const [gasEstimate, setGasEstimate] = useState(null);
   const [txStatus, setTxStatus] = useState(null);
   const [networkInfo, setNetworkInfo] = useState(null);
   const [isCheckingBalance, setIsCheckingBalance] = useState(false);
 
-  // Notify parent when settling state changes
   useEffect(() => {
     if (onSettlingChange) {
       onSettlingChange(isSettling);
     }
   }, [isSettling, onSettlingChange]);
 
-  // Get network info on mount
   useEffect(() => {
     const initNetwork = async () => {
       const networkData = await getNetworkInfo();
@@ -71,7 +68,6 @@ export default function ChargingSettlement({
     initNetwork();
   }, []);
 
-  // Fetch operator wallet address
   useEffect(() => {
     const fetchOperatorWallet = async () => {
       try {
@@ -84,9 +80,7 @@ export default function ChargingSettlement({
             setOperatorWalletAddress(data.walletAddress);
           }
         }
-      } catch (err) {
-        // Silent fail - wallet address is optional for some flows
-      }
+      } catch (err) {}
     };
 
     fetchOperatorWallet();
@@ -126,7 +120,6 @@ export default function ChargingSettlement({
         throw new Error("Please install MetaMask or another Web3 wallet");
       }
 
-      // Request wallet connection and get user address
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
@@ -172,8 +165,6 @@ export default function ChargingSettlement({
   };
 
   const handleSettle = async () => {
-    // For pending settlements, skip saving since the session is already in database
-    // For new settlements, save to database if not already saved
     if (!isPendingSettlement && !sessionSaved && saveSession) {
       await handleSaveSession();
     }
@@ -182,7 +173,6 @@ export default function ChargingSettlement({
       setIsSettling(true);
       setError(null);
 
-      // Use direct wallet settlement
       const settlementResult = await settleChargingDirect(
         totalCost,
         totalKwh,
@@ -197,10 +187,8 @@ export default function ChargingSettlement({
 
       setTxHash(settlementResult.transactionHash);
 
-      // Scroll to top to show the transaction hash
       window.scrollTo({ top: 0, behavior: "smooth" });
 
-      // Mark session as settled in database
       const markResult = await markSessionAsSettled(
         sessionId,
         settlementResult.transactionHash
@@ -213,7 +201,6 @@ export default function ChargingSettlement({
         );
       }
 
-      // Check transaction status
       const statusResult = await checkTransactionStatus(
         settlementResult.transactionHash
       );
@@ -221,12 +208,10 @@ export default function ChargingSettlement({
         setTxStatus(statusResult);
       }
 
-      // Notify parent that settlement is complete
       if (onSettled) {
         onSettled();
       }
     } catch (err) {
-      // Provide user-friendly error messages
       let userFriendlyError = err.message;
 
       if (
@@ -256,13 +241,11 @@ export default function ChargingSettlement({
     }
   };
 
-  // Use duration if provided, otherwise use secondsUsed
   const durationInSeconds =
     duration !== undefined ? duration : secondsUsed || 0;
   const minutes = Math.floor(durationInSeconds / 60);
   const seconds = durationInSeconds % 60;
 
-  // Calculate MATIC equivalent (1 MATIC ≈ 50 INR as approximate rate)
   const maticAmount = (totalCost / 50).toFixed(4);
 
   return (

@@ -2,13 +2,11 @@
 
 import { ethers } from "ethers";
 
-// Contract configuration
 const RUPEEFLOW_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
 const POLYGON_RPC_URL =
   process.env.NEXT_PUBLIC_POLYGON_RPC_URL ||
   "https://rpc-amoy.polygon.technology";
 
-// Minimal ABI for settlement
 const RUPEEFLOW_ABI = [
   {
     inputs: [
@@ -38,18 +36,11 @@ const RUPEEFLOW_ABI = [
   },
 ];
 
-/**
- * 1. Check user's wallet balance
- */
 export async function checkWalletBalance(userAddress) {
   try {
     const provider = new ethers.JsonRpcProvider(POLYGON_RPC_URL);
     const balance = await provider.getBalance(userAddress);
     const balanceInMatic = ethers.formatEther(balance);
-
-    // console.log(
-    //   `[Ethers] Wallet balance for ${userAddress}: ${balanceInMatic} MATIC`
-    // );
 
     return {
       success: true,
@@ -65,34 +56,22 @@ export async function checkWalletBalance(userAddress) {
   }
 }
 
-/**
- * 2. Estimate gas fees for settlement
- */
 export async function estimateGasFees() {
   try {
     const provider = new ethers.JsonRpcProvider(POLYGON_RPC_URL);
 
-    // Get fee data (works with EIP-1559 networks like Polygon)
     const feeData = await provider.getFeeData();
 
     if (!feeData.gasPrice && !feeData.maxFeePerGas) {
       throw new Error("Unable to fetch gas price from network");
     }
 
-    // Use maxFeePerGas for EIP-1559 or fall back to gasPrice
     const gasPrice = feeData.maxFeePerGas || feeData.gasPrice;
     const gasPriceInGwei = ethers.formatUnits(gasPrice, "gwei");
 
-    // Estimate gas (settlement is typically ~100k-150k gas on Polygon)
     const estimatedGasUnits = ethers.toBigInt("150000");
     const estimatedGasWei = gasPrice * estimatedGasUnits;
     const estimatedGasInMatic = ethers.formatEther(estimatedGasWei);
-
-    // console.log(`[Ethers] Gas estimation:`, {
-    //   gasPrice: gasPriceInGwei,
-    //   estimatedGas: estimatedGasUnits.toString(),
-    //   estimatedCost: estimatedGasInMatic,
-    // });
 
     return {
       success: true,
@@ -110,15 +89,9 @@ export async function estimateGasFees() {
   }
 }
 
-/**
- * 3. Check transaction status
- */
 export async function checkTransactionStatus(txHash) {
   try {
     const provider = new ethers.JsonRpcProvider(POLYGON_RPC_URL);
-
-    // console.log(`[Ethers] Checking transaction: ${txHash}`);
-
     const receipt = await provider.getTransactionReceipt(txHash);
 
     if (!receipt) {
@@ -130,12 +103,6 @@ export async function checkTransactionStatus(txHash) {
     }
 
     const status = receipt.status === 1 ? "confirmed" : "failed";
-
-    // console.log(`[Ethers] Transaction ${status}:`, {
-    //   hash: txHash,
-    //   block: receipt.blockNumber,
-    //   gasUsed: receipt.gasUsed.toString(),
-    // });
 
     return {
       success: true,
@@ -153,9 +120,6 @@ export async function checkTransactionStatus(txHash) {
   }
 }
 
-/**
- * 4. Listen to settlement events in real-time
- */
 export async function listenToSettlementEvents(callback) {
   try {
     const provider = new ethers.JsonRpcProvider(POLYGON_RPC_URL);
@@ -165,17 +129,8 @@ export async function listenToSettlementEvents(callback) {
       provider
     );
 
-    // console.log("[Ethers] Listening to ChargingSettled events...");
-
-    // Listen for ChargingSettled events
     contract.on("ChargingSettled", (evOwner, station, amount, timestamp) => {
       const amountInMatic = ethers.formatEther(amount);
-      // console.log("[Ethers] Event received - ChargingSettled:", {
-      //   evOwner,
-      //   station,
-      //   amount: amountInMatic,
-      //   timestamp: timestamp.toString(),
-      // });
 
       if (callback) {
         callback({
@@ -200,9 +155,6 @@ export async function listenToSettlementEvents(callback) {
   }
 }
 
-/**
- * 5. Direct wallet settlement (User submits transaction themselves)
- */
 export async function settleChargingDirect(
   totalCost,
   totalKwh,
@@ -215,7 +167,6 @@ export async function settleChargingDirect(
       throw new Error("MetaMask or other Web3 wallet not found");
     }
 
-    // Validate operator wallet address
     if (!operatorWalletAddress) {
       throw new Error("Operator wallet address is required");
     }
@@ -230,17 +181,13 @@ export async function settleChargingDirect(
 
     const cleanWalletAddress = trimmedWallet;
 
-    // IMPORTANT: Switch to Polygon Amoy first
     try {
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0x13882" }], // Polygon Amoy chain ID
+        params: [{ chainId: "0x13882" }],
       });
-      console.log("[Ethers] Switched to Polygon Amoy network");
     } catch (switchError) {
-      // Chain not added, request to add it
       if (switchError.code === 4902) {
-        console.log("[Ethers] Polygon Amoy not found, adding network...");
         await window.ethereum.request({
           method: "wallet_addEthereumChain",
           params: [
@@ -257,88 +204,43 @@ export async function settleChargingDirect(
             },
           ],
         });
-        console.log("[Ethers] Polygon Amoy network added and switched");
       } else {
         throw switchError;
       }
     }
 
-    // Get provider and signer from user's wallet
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
     const userAddress = await signer.getAddress();
 
-    // console.log(`[Ethers] User address: ${userAddress}`);
-
-    // Check balance first
     const balanceCheck = await checkWalletBalance(userAddress);
     if (!balanceCheck.success) {
       throw new Error(`Balance check failed: ${balanceCheck.error}`);
     }
 
-    // Estimate gas
     const gasEstimate = await estimateGasFees();
     if (!gasEstimate.success) {
       throw new Error(`Gas estimation failed: ${gasEstimate.error}`);
     }
 
-    console.log("[Ethers] Balance check passed, gas estimated");
-
-    // Create contract instance with signer
     const contract = new ethers.Contract(
       RUPEEFLOW_CONTRACT_ADDRESS,
       RUPEEFLOW_ABI,
       signer
     );
 
-    // Convert stationAddress to valid Ethereum address format
-    // Use the operator's actual wallet address from their profile
     const stationEthAddress = cleanWalletAddress;
 
-    // Convert amounts to proper format - Validate amounts first
     if (totalCost <= 0 || totalKwh <= 0 || duration <= 0) {
       throw new Error(
         `Invalid settlement values: cost=${totalCost}, kwh=${totalKwh}, duration=${duration}`
       );
     }
 
-    // Convert to Wei properly - use parseEther for currency amounts
-    // NOTE: These are plain integers, not ETH amounts, so we use BigInt directly
-    // Multiply by 100 to convert decimals to whole numbers (0.04 -> 4, 0.49 -> 49)
     const amountInWei = BigInt(Math.floor(totalCost * 100));
     const energyInWei = BigInt(Math.floor(totalKwh * 100));
     const durationInSeconds = BigInt(Math.floor(duration));
 
-    // console.log("[Ethers] Raw parameters:", {
-    //   evOwner: userAddress,
-    //   station: stationEthAddress,
-    //   energyKwh: totalKwh,
-    //   amountPaid: totalCost,
-    //   duration: duration,
-    // });
-
-    // console.log("[Ethers] Encoded parameters (BigInt):", {
-    //   evOwner: userAddress,
-    //   station: stationEthAddress,
-    //   energyKwh: energyInWei.toString(),
-    //   amountPaid: amountInWei.toString(),
-    //   duration: durationInSeconds.toString(),
-    // });
-
-    // Encode the function call to see the data
-    const iface = new ethers.Interface(RUPEEFLOW_ABI);
-    const encodedData = iface.encodeFunctionData("settleCharging", [
-      userAddress,
-      stationEthAddress,
-      energyInWei,
-      amountInWei,
-      durationInSeconds,
-    ]);
-
-    // console.log("[Ethers] Encoded transaction data:", encodedData);
-    // console.log("[Ethers] Compare this data with PolygonScan test values");
-
-    // Submit settlement transaction
     const tx = await contract.settleCharging(
       userAddress,
       stationEthAddress,
@@ -346,13 +248,11 @@ export async function settleChargingDirect(
       amountInWei,
       durationInSeconds,
       {
-        gasLimit: ethers.toBigInt("500000"), // Increased from 200000
+        gasLimit: ethers.toBigInt("500000"),
       }
     );
 
     const txHash = tx.hash;
-
-    // Wait for confirmation
     const receipt = await tx.wait();
 
     return {
@@ -369,9 +269,6 @@ export async function settleChargingDirect(
   }
 }
 
-/**
- * 6. Mark charging session as settled in database
- */
 export async function markSessionAsSettled(sessionId, transactionHash) {
   try {
     const response = await fetch("/api/charging/mark-settled", {
@@ -404,20 +301,11 @@ export async function markSessionAsSettled(sessionId, transactionHash) {
   }
 }
 
-/**
- * Get network information
- */
 export async function getNetworkInfo() {
   try {
     const provider = new ethers.JsonRpcProvider(POLYGON_RPC_URL);
     const network = await provider.getNetwork();
     const latestBlock = await provider.getBlockNumber();
-
-    console.log("[Ethers] Network info:", {
-      name: network.name,
-      chainId: network.chainId,
-      latestBlock,
-    });
 
     return {
       success: true,
@@ -434,18 +322,9 @@ export async function getNetworkInfo() {
   }
 }
 
-/**
- * Convert user ID to Ethereum address (for backend settlement reference)
- */
 export function convertUserIdToAddress(userId) {
-  // Pad userId to 40 hex characters (20 bytes)
   const paddedId = userId.toString().padStart(40, "0");
   const address = "0x" + paddedId;
-
-  // console.log(`[Ethers] Converted user ID to address:`, {
-  //   userId,
-  //   address,
-  // });
 
   return address;
 }

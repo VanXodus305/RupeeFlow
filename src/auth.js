@@ -12,7 +12,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
     CredentialsProvider({
       async authorize(credentials) {
-        // Demo users - authenticate via API route to avoid Mongoose in auth.js
         if (
           credentials.email === "owner@example.com" ||
           credentials.email === "operator@example.com"
@@ -55,8 +54,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
         try {
-          // Call API route to handle Google user creation/linking
-          // This avoids importing Mongoose in the edge runtime (middleware)
           const response = await fetch(
             `${process.env.NEXTAUTH_URL}/api/auth/google-signin`,
             {
@@ -91,7 +88,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        // Initial sign in
         token.id = user.id;
         token.email = user.email;
         token.role = user.role;
@@ -99,7 +95,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isDemo = user.isDemo || false;
       }
 
-      // Handle update trigger from client-side update() call
       if (trigger === "update" && session?.user?.role) {
         token.role = session.user.role;
       }
@@ -108,14 +103,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
 
     async session({ session, token }) {
-      // Use token data for session
       session.user.id = token.id;
       session.user.email = token.email;
       session.user.role = token.role;
       session.user.googleId = token.googleId;
       session.user.isDemo = token.isDemo || false;
 
-      // For non-demo users, try to fetch additional fields from API
       if (!token.isDemo && token.id) {
         try {
           const response = await fetch(
@@ -127,8 +120,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             session.user.batteryCapacity = data.batteryCapacity;
           }
         } catch (error) {
-          // It's okay if we can't fetch additional fields
-          // The essential fields (id, email, role) come from the token
         }
       }
 
@@ -136,13 +127,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
 
     async redirect({ url, baseUrl }) {
-      // After OAuth, redirect to home page
-      // Middleware will then check the user's role and redirect to appropriate page
-      // This ensures middleware has a chance to check the fresh session data
+
       if (url.startsWith(baseUrl)) {
         return url;
       }
-      // Redirect to root, let middleware handle the routing
       return baseUrl;
     },
   },

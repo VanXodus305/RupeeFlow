@@ -1,11 +1,7 @@
 import { config } from "./config.js";
 
-// In-memory charging session store
 const activeChargingSessions = new Map();
 
-/**
- * Create a new charging session
- */
 export function createSession(data) {
   const sessionId = `charging_${Date.now()}_${Math.random()
     .toString(36)
@@ -32,29 +28,21 @@ export function createSession(data) {
   return session;
 }
 
-/**
- * Get a session by ID
- */
 export function getSession(sessionId) {
   return activeChargingSessions.get(sessionId);
 }
 
-/**
- * Update session with meter reading
- */
 export function updateMeterReading(sessionId) {
   const session = activeChargingSessions.get(sessionId);
   if (!session) return null;
 
   session.secondsElapsed += config.METER_UPDATE_INTERVAL / 1000;
 
-  // Calculate kWh: (Power kW × Time seconds) / 3600
   const meterIntervalKwh =
     (session.chargerPower * (config.METER_UPDATE_INTERVAL / 1000)) / 3600;
   session.totalKwh += meterIntervalKwh;
   session.totalCost = session.totalKwh * session.ratePerKwh;
 
-  // Battery percentage increase from charging
   const chargePercentage = Math.min(
     (session.totalKwh / session.batteryCapacity) * 100,
     100
@@ -71,16 +59,13 @@ export function updateMeterReading(sessionId) {
   };
 }
 
-/**
- * Stop a charging session
- */
 export function stopSession(sessionId) {
   const session = activeChargingSessions.get(sessionId);
   if (!session) return null;
 
   if (session.interval) {
     clearInterval(session.interval);
-    session.interval = null; // Clear but keep session
+    session.interval = null;
   }
 
   const chargePercentage = Math.min(
@@ -99,13 +84,9 @@ export function stopSession(sessionId) {
     startTime: new Date(session.startTime).toISOString(),
   };
 
-  // DO NOT delete the session - keep it in memory for resuming
   return response;
 }
 
-/**
- * Resume a paused charging session
- */
 export function resumeSession(sessionId) {
   const session = activeChargingSessions.get(sessionId);
   if (!session) return null;
@@ -113,9 +94,6 @@ export function resumeSession(sessionId) {
   return session;
 }
 
-/**
- * Delete a session
- */
 export function deleteSession(sessionId) {
   const session = activeChargingSessions.get(sessionId);
   if (session && session.interval) {
@@ -124,23 +102,14 @@ export function deleteSession(sessionId) {
   activeChargingSessions.delete(sessionId);
 }
 
-/**
- * Get all active sessions
- */
 export function getAllActiveSessions() {
   return Array.from(activeChargingSessions.values());
 }
 
-/**
- * Get active sessions count
- */
 export function getActiveSessionsCount() {
   return activeChargingSessions.size;
 }
 
-/**
- * Clean up sessions for a disconnected socket
- */
 export function cleanupSocketSessions(socketId) {
   activeChargingSessions.forEach((session, sessionId) => {
     if (session.socketId === socketId) {

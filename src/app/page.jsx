@@ -15,12 +15,10 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [isCharging, setIsCharging] = useState(true);
 
-  // Exchange rate (you can update this)
-  const MATIC_PRICE = 0.65; // 1 INR = 0.65 MATIC (approximately)
+  const MATIC_PRICE = 0.65;
 
   useEffect(() => {
     if (!isCharging) {
-      // Reset after 3 seconds
       const resetTimer = setTimeout(() => {
         setKwh(0);
         setInrAmount(0);
@@ -30,19 +28,17 @@ export default function Home() {
       return () => clearTimeout(resetTimer);
     }
 
-    // Charge increment values
     const maxKwh = 8;
-    const chargeInterval = 500; // 0.5 seconds
-    const chargesUntilComplete = 16; // 16 * 0.5s = 8 seconds
+    const chargeInterval = 500;
+    const chargesUntilComplete = 16;
 
     const interval = setInterval(() => {
       setProgress((prev) => {
         const newProgress = prev + 1;
         const percentage = newProgress / chargesUntilComplete;
 
-        // Update kWh and INR amount
         const newKwh = maxKwh * percentage;
-        const newAmount = newKwh * 15; // 15 INR per kWh
+        const newAmount = newKwh * 15;
 
         setKwh(newKwh);
         setInrAmount(newAmount);

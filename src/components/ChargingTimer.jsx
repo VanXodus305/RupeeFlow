@@ -20,10 +20,8 @@ export default function ChargingTimer({
   const minutes = Math.floor(secondsUsed / 60);
   const seconds = secondsUsed % 60;
 
-  // Calculate MATIC equivalent (1 MATIC ≈ 50 INR as approximate rate)
   const maticAmount = (totalCost / 50).toFixed(4);
 
-  // Calculate progress from initial percentage to current (max 100%)
   const progressPercentage = initialBatteryPercent + (chargePercentage || 0);
   const displayPercentage = Math.min(100, progressPercentage);
 

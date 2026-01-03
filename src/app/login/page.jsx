@@ -28,14 +28,12 @@ export default function LoginPage() {
         redirect: false,
       });
 
-      // Check if login was successful
       if (result?.error || !result?.ok) {
         setError("Invalid credentials");
         setIsLoading(false);
         return;
       }
 
-      // Demo users have roles, so redirect to their dashboard
       router.push(
         email === "operator@example.com"
           ? "/station-dashboard"
@@ -49,19 +47,14 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    // NextAuth's signIn with redirect: true will handle the OAuth flow
-    // and the browser will follow the redirect
-    // Middleware will check the session and redirect to role-selection if needed
     await signIn("google", { redirect: true });
   };
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px- sm:px-6 py-20 lg:py-24 overflow-hidden">
-      {/* Darker gradient background */}
       <div className="absolute inset-0 bg-gradient-to-b from-background-200 via-background-100/30 to-background-200 pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto w-full space-y-6 px-8 relative z-10">
-        {/* Heading Section */}
         <div className="text-center space-y-2">
           <h1
             className="text-5xl sm:text-6xl lg:text-6xl font-bold tracking-tight"
@@ -74,7 +67,6 @@ export default function LoginPage() {
           <p className="text-lg text-foreground/70">Welcome back</p>
         </div>
 
-        {/* Centered Login Form */}
         <div className="flex justify-center">
           <Card className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 backdrop-blur-xl w-full max-w-md">
             <CardBody className="space-y-6 p-8">
@@ -84,7 +76,6 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {/* Demo Login Form */}
               <form onSubmit={handleDemoLogin} className="space-y-4">
                 <h2 className="text-xl font-bold text-foreground">
                   Demo Login
@@ -149,14 +140,12 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              {/* Divider */}
               <div className="flex items-center gap-4">
                 <div className="flex-1 h-px bg-primary/20"></div>
                 <span className="text-foreground/50 text-sm">OR</span>
                 <div className="flex-1 h-px bg-primary/20"></div>
               </div>
 
-              {/* Google Login */}
               <Button
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
@@ -182,7 +171,6 @@ export default function LoginPage() {
           </Card>
         </div>
 
-        {/* Feature Highlights - Horizontal Layout */}
         <div className="flex flex-wrap justify-center gap-6">
           <div className="p-6 rounded-2xl bg-white/5 border border-primary/20 backdrop-blur-sm hover:bg-white/10 transition-all duration-200 w-full sm:w-80">
             <div className="text-primary text-2xl font-bold mb-2">⚡</div>

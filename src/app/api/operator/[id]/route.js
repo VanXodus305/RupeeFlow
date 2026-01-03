@@ -8,7 +8,6 @@ export async function GET(req, { params }) {
 
     await connectDB();
 
-    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return Response.json(
         { error: "Invalid operator ID format" },
