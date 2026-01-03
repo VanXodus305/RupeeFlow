@@ -11,11 +11,9 @@ export async function POST(request) {
 
     await connectDB();
 
-    // Check if user exists
     let dbUser = await User.findOne({ email });
 
     if (!dbUser) {
-      // Create new Google user with role: null
       dbUser = await User.create({
         email,
         name,
@@ -24,7 +22,6 @@ export async function POST(request) {
         role: null,
       });
     } else if (!dbUser.googleId) {
-      // Link Google account to existing user
       dbUser.googleId = googleId;
       await dbUser.save();
     }

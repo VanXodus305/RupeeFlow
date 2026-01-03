@@ -36,7 +36,6 @@ export async function POST(req) {
       );
     }
 
-    // Update status to settled and store transaction hash
     chargingSession.status = "settled";
     chargingSession.transactionHash = transactionHash;
     await chargingSession.save();

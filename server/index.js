@@ -12,17 +12,13 @@ const io = new Server(server, {
   cors: corsOptions,
 });
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Initialize Socket.io handlers
 initializeSocketHandlers(io);
 
-// REST API Routes
 app.use(routes);
 
-// Start server
 server.listen(config.PORT, () => {
   console.log(`\n⚡ RupeeFlow Backend running on port ${config.PORT}`);
   console.log(`📊 WebSocket enabled for real-time meter readings`);

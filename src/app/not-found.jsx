@@ -49,7 +49,6 @@ const NotFound = () => {
           </Button>
         </div>
 
-        {/* Decorative Elements */}
         <div className="pt-4 space-y-4">
           <p className="text-foreground/50 text-sm">
             Need help? Check out these pages:

@@ -10,7 +10,6 @@ export async function GET(req) {
 
     let operators;
 
-    // For demo users, only return the demo operator
     if (session?.user?.isDemo) {
       operators = await Operator.find({ stationName: "Demo Charging Station" })
         .select(
@@ -18,7 +17,6 @@ export async function GET(req) {
         )
         .lean();
     } else {
-      // For real users, get all operators
       operators = await Operator.find({})
         .select(
           "_id stationName stationAddress ratePerKwh chargerPower totalEnergyDelivered totalRevenue walletAddress"

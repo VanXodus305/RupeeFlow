@@ -15,14 +15,12 @@ export async function GET(req) {
 
     let operator;
 
-    // For demo operator, find the seeded operator profile
     if (session.user.isDemo) {
       operator = await Operator.findOne({
         stationName: "Demo Charging Station",
       });
 
       if (!operator) {
-        // Return true with default demo profile if not seeded
         return Response.json({
           exists: true,
           id: "demo-operator-profile",
@@ -36,12 +34,10 @@ export async function GET(req) {
         });
       }
     } else {
-      // Validate ObjectId before querying
       if (!mongoose.Types.ObjectId.isValid(session.user.id)) {
         return Response.json({ exists: false });
       }
 
-      // Check if operator exists for this user
       operator = await Operator.findOne({ userId: session.user.id });
 
       if (!operator) {

@@ -9,10 +9,6 @@ import { config } from "./config.js";
 
 const router = express.Router();
 
-/**
- * POST /api/charging/start
- * Start a new charging session via REST API
- */
 router.post("/api/charging/start", (req, res) => {
   const { userId, vehicleReg, batteryCapacity, ratePerKwh, chargerPower } =
     req.body;
@@ -29,7 +25,6 @@ router.post("/api/charging/start", (req, res) => {
     chargerPower,
   });
 
-  // Start meter simulation
   const interval = setInterval(() => {
     const meterData = getSession(session.id);
     if (!meterData) {
@@ -50,10 +45,6 @@ router.post("/api/charging/start", (req, res) => {
   res.json({ sessionId: session.id });
 });
 
-/**
- * POST /api/charging/stop
- * Stop an active charging session
- */
 router.post("/api/charging/stop", (req, res) => {
   const { sessionId } = req.body;
 
@@ -71,10 +62,6 @@ router.post("/api/charging/stop", (req, res) => {
   res.json(response);
 });
 
-/**
- * GET /api/charging/:sessionId
- * Get current status of a charging session
- */
 router.get("/api/charging/:sessionId", (req, res) => {
   const session = getSession(req.params.sessionId);
 
@@ -93,10 +80,6 @@ router.get("/api/charging/:sessionId", (req, res) => {
   });
 });
 
-/**
- * GET /api/health
- * Health check endpoint
- */
 router.get("/api/health", (req, res) => {
   res.json({
     status: "ok",

@@ -19,16 +19,13 @@ export async function GET(req) {
     let totalRevenue = 0;
 
     if (session.user.role === "operator") {
-      // Operator: Get charging history for their station
       let operator;
 
-      // For demo operator, try to find the seeded operator profile
       if (session.user.isDemo) {
         operator = await Operator.findOne({
           stationName: "Demo Charging Station",
         });
       } else {
-        // For real operators, validate ObjectId first
         if (!mongoose.Types.ObjectId.isValid(session.user.id)) {
           return Response.json({ sessions: [], totalKwh: 0, totalRevenue: 0 });
         }
@@ -47,11 +44,9 @@ export async function GET(req) {
         .sort({ createdAt: -1 })
         .lean();
 
-      // Calculate totals from sessions
       totalKwh = sessions.reduce((sum, s) => sum + (s.totalKwh || 0), 0);
       totalRevenue = sessions.reduce((sum, s) => sum + (s.totalCost || 0), 0);
     } else {
-      // EV Owner: Get their own charging sessions
       if (!mongoose.Types.ObjectId.isValid(session.user.id)) {
         sessions = [];
       } else {
@@ -59,13 +54,11 @@ export async function GET(req) {
           evOwnerId: session.user.id,
         }).sort({ createdAt: -1 });
 
-        // Calculate totals from sessions
         totalKwh = sessions.reduce((sum, s) => sum + (s.totalKwh || 0), 0);
         totalRevenue = sessions.reduce((sum, s) => sum + (s.totalCost || 0), 0);
       }
     }
 
-    // Format sessions for display
     const formattedSessions = sessions.map((s) => ({
       id: s._id.toString(),
       sessionId: s.sessionId || s._id.toString(),

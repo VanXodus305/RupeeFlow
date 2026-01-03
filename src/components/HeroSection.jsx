@@ -217,7 +217,6 @@ export default function HeroSection({
                   </div>
                 </motion.div>
 
-                {/* Progress bar with animation */}
                 <motion.div
                   className="w-full space-y-2"
                   initial={{ opacity: 0 }}

@@ -59,14 +59,12 @@ export default function EVOwnerDashboard() {
   const [loadingPending, setLoadingPending] = useState(true);
   const [isSettling, setIsSettling] = useState(false);
 
-  // Redirect operators to station dashboard
   useEffect(() => {
     if (session && session.user?.role === "operator") {
       router.push("/station-dashboard");
     }
   }, [session, router]);
 
-  // Fetch available operators
   useEffect(() => {
     const fetchOperators = async () => {
       try {
@@ -74,7 +72,6 @@ export default function EVOwnerDashboard() {
         if (res.ok) {
           const data = await res.json();
           setAvailableOperators(data);
-          // Set first operator as default if available
           if (data.length > 0) {
             setOperatorId(data[0]._id);
             setRatePerKwh(data[0].ratePerKwh || 12);
@@ -90,7 +87,6 @@ export default function EVOwnerDashboard() {
     }
   }, [session]);
 
-  // Fetch charging history
   useEffect(() => {
     const fetchHistory = async () => {
       try {
@@ -109,7 +105,6 @@ export default function EVOwnerDashboard() {
     }
   }, [session]);
 
-  // Check for pending settlements on load
   useEffect(() => {
     const checkPendingSettlement = async () => {
       try {
@@ -118,7 +113,6 @@ export default function EVOwnerDashboard() {
         if (res.ok) {
           const data = await res.json();
           if (data.hasPending && data.sessions.length > 0) {
-            // Get the most recent pending session
             setPendingSession(data.sessions[0]);
             setShowSettlement(true);
           }
@@ -153,14 +147,12 @@ export default function EVOwnerDashboard() {
   };
 
   const handleSettlementComplete = async () => {
-    // Refresh pending settlements
     try {
       const res = await fetch("/api/charging/pending-settlement");
       if (res.ok) {
         const data = await res.json();
         if (!data.hasPending) {
           setPendingSession(null);
-          // Don't hide settlement screen - keep it visible so user can see the success and click "Back to Dashboard"
         }
       }
     } catch (err) {
@@ -176,7 +168,6 @@ export default function EVOwnerDashboard() {
   };
 
   const handleContinueCharging = async () => {
-    // Resume charging on the same charging session
     resumeCharging();
     setShowSettlement(false);
     setSessionSettled(false);
@@ -186,7 +177,6 @@ export default function EVOwnerDashboard() {
     setShowSettlement(false);
     setShowHistory(false);
     setSessionSettled(false);
-    // Reset charging state for next session
   };
 
   return (

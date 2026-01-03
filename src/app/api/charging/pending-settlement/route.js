@@ -13,7 +13,6 @@ export async function GET(req) {
       });
     }
 
-    // Find charging sessions that are either active or completed but not settled
     const pendingSessions = await ChargingSession.find({
       evOwnerId: session.user.id,
       status: { $in: ["active", "completed"] },

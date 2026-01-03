@@ -27,7 +27,6 @@ export async function POST(req) {
       walletAddress,
     } = body;
 
-    // Demo users cannot create profiles via API
     if (session.user.isDemo) {
       return Response.json(
         {
@@ -40,7 +39,6 @@ export async function POST(req) {
 
     await connectDB();
 
-    // Validate ObjectId before querying
     if (!mongoose.Types.ObjectId.isValid(session.user.id)) {
       return Response.json(
         { error: "Invalid user ID format" },
@@ -48,7 +46,6 @@ export async function POST(req) {
       );
     }
 
-    // Check if operator profile already exists
     const existingOperator = await Operator.findOne({
       userId: session.user.id,
     });
@@ -60,7 +57,6 @@ export async function POST(req) {
       );
     }
 
-    // Create operator profile
     const operator = await Operator.create({
       userId: session.user.id,
       stationName,
@@ -84,7 +80,6 @@ export async function POST(req) {
   } catch (error) {
     console.error("Operator create error:", error);
 
-    // Handle validation errors
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors)
         .map((err) => err.message)

@@ -29,7 +29,6 @@ const GlobalNavbar = () => {
   const navbarRef = useRef(null);
 
   useEffect(() => {
-    // Only enable section highlighting on the homepage
     if (pathname !== "/") {
       setActiveSection("");
       return;
@@ -199,7 +198,6 @@ const GlobalNavbar = () => {
               </DropdownTrigger>
               <DropdownMenu
                 aria-label="Profile Actions"
-                // className="bg-background-200/95 backdrop-blur-xl border border-primary/20"
                 itemClasses={{
                   base: "gap-4 text-foreground data-[hover=true]:bg-primary/10 data-[hover=true]:text-primary transition-colors",
                 }}

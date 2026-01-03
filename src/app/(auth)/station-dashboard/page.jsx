@@ -49,26 +49,22 @@ export default function StationDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
-    // Wait for session to load
     if (status === "loading") {
       return;
     }
 
-    // Not authenticated
     if (!session) {
       router.push("/login");
       setIsLoading(false);
       return;
     }
 
-    // Owner should not be here
     if (session.user?.role === "owner") {
       router.push("/ev-owner-dashboard");
       setIsLoading(false);
       return;
     }
 
-    // Fetch operator profile
     const fetchOperatorProfile = async () => {
       try {
         const response = await fetch("/api/operator/check");
@@ -82,15 +78,12 @@ export default function StationDashboard() {
         const data = await response.json();
 
         if (!data.exists) {
-          // No operator profile, redirect to onboarding
           router.push("/operator-onboarding");
           return;
         }
 
-        // Operator exists, display dashboard
         setOperatorData(data);
 
-        // Fetch charging history
         const historyResponse = await fetch("/api/charging/history");
         const historyData = await historyResponse.json();
 
@@ -102,7 +95,6 @@ export default function StationDashboard() {
 
         setIsLoading(false);
 
-        // Setup WebSocket for live updates
         if (!socketRef.current) {
           socketRef.current = io(
             process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001",
@@ -116,7 +108,6 @@ export default function StationDashboard() {
           );
 
           socketRef.current.on("connect", () => {
-            // Emit operator ID to register for events
             const operatorProfileId = data.id;
             socketRef.current.emit("register-operator", {
               operatorId: operatorProfileId,
@@ -124,14 +115,12 @@ export default function StationDashboard() {
           });
 
           socketRef.current.on("meter-reading", (meterData) => {
-            // If this is a new session, add it to ongoing sessions
             setOngoingSessions((prev) => {
               const sessionExists = prev.some(
                 (s) => s.sessionId === meterData.sessionId
               );
 
               if (!sessionExists) {
-                // New session, add it
                 return [
                   {
                     sessionId: meterData.sessionId,
@@ -147,7 +136,6 @@ export default function StationDashboard() {
                 ];
               }
 
-              // Update existing session
               const updated = prev.map((session) => {
                 if (session.sessionId === meterData.sessionId) {
                   return {
@@ -168,7 +156,6 @@ export default function StationDashboard() {
 
           socketRef.current.on("session-completed", (completedSession) => {
             console.log("Session completed:", completedSession);
-            // Move completed session from ongoing to settlements
             setOngoingSessions((prev) =>
               prev.filter((s) => s.sessionId !== completedSession.sessionId)
             );
@@ -188,14 +175,12 @@ export default function StationDashboard() {
         }
       } catch (error) {
         console.error("Error fetching operator profile:", error);
-        // On error, redirect to onboarding to be safe
         router.push("/operator-onboarding");
       }
     };
 
     fetchOperatorProfile();
 
-    // Cleanup WebSocket on unmount
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();

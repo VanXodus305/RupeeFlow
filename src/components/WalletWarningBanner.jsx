@@ -15,7 +15,6 @@ function WalletWarningBanner() {
     isInitialized,
   } = useWalletWarning();
 
-  // Don't render anything until initialized
   if (!isInitialized || !shouldShowWarning) {
     return null;
   }

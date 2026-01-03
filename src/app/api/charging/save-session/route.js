@@ -26,7 +26,6 @@ export async function POST(req) {
 
     await connectDB();
 
-    // Save charging session
     const chargingSession = await ChargingSession.create({
       sessionId,
       evOwnerId: session.user.id,
@@ -41,7 +40,6 @@ export async function POST(req) {
       status: "completed",
     });
 
-    // Update operator stats
     const operator = await Operator.findByIdAndUpdate(
       operatorId,
       {

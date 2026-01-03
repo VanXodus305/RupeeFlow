@@ -5,7 +5,6 @@ export async function POST(request) {
   try {
     const { email, password } = await request.json();
 
-    // Only allow demo users
     if (
       (email !== "owner@example.com" && email !== "operator@example.com") ||
       password !== "password123"

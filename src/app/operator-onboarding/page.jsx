@@ -64,7 +64,6 @@ export default function OperatorOnboardingPage() {
     setIsLoading(true);
     setError("");
 
-    // Validate wallet address format
     if (!formData.walletAddress) {
       setError("Wallet address is required");
       setIsLoading(false);
@@ -112,11 +111,9 @@ export default function OperatorOnboardingPage() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 py-24 overflow-hidden">
-      {/* Background gradient (same as role-selection) */}
       <div className="absolute inset-0 bg-gradient-to-b from-background-200 via-background-100/30 to-background-200 pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-2xl">
-        {/* Heading */}
         <div className="text-center mb-10">
           <h1
             className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent"
@@ -129,7 +126,6 @@ export default function OperatorOnboardingPage() {
           </p>
         </div>
 
-        {/* Glass Card */}
         <Card className="bg-gradient-to-br from-background-100/60 to-background-200/60 backdrop-blur-xl border border-primary/20 shadow-xl">
           <CardHeader className="pb-0" />
           <CardBody className="space-y-6 p-8">

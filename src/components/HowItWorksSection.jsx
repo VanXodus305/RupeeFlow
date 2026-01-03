@@ -28,7 +28,6 @@ export default function HowItWorksSection() {
 
         {/* Vertical Timeline */}
         <div className="relative">
-          {/* Central Timeline Line - Desktop Only */}
           <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-secondary via-primary to-secondary transform -translate-x-1/2"></div>
 
           {/* Timeline Items */}
@@ -135,7 +134,6 @@ export default function HowItWorksSection() {
                   </div>
                 </motion.div>
 
-                {/* Empty Space for Alternating Layout - Desktop Only */}
                 <div className="hidden md:block flex-1"></div>
               </motion.div>
             ))}

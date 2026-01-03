@@ -10,7 +10,6 @@ export default function RoleSelectionPage() {
   const { data: session, status, update } = useSession();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect if user already has a role or is not authenticated
   useEffect(() => {
     if (status === "loading") return;
 
@@ -19,7 +18,6 @@ export default function RoleSelectionPage() {
       return;
     }
 
-    // If user already has a role, redirect to their dashboard
     if (session.user?.role === "owner") {
       router.push("/ev-owner-dashboard");
     } else if (session.user?.role === "operator") {
@@ -31,7 +29,6 @@ export default function RoleSelectionPage() {
     setIsLoading(true);
 
     try {
-      // Update user role in database
       const response = await fetch("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -45,8 +42,7 @@ export default function RoleSelectionPage() {
 
       const updatedUser = await response.json();
 
-      // Update the session with the fresh user data from the API response
-      // This triggers jwt callback with trigger="update"
+      
       const updateResult = await update({
         user: {
           ...session?.user,
@@ -54,10 +50,8 @@ export default function RoleSelectionPage() {
         },
       });
 
-      // Small wait to ensure session is fully updated
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      // Redirect to appropriate dashboard or onboarding
       if (updateResult?.ok) {
         const redirectPath =
           selectedRole === "operator"
@@ -82,11 +76,9 @@ export default function RoleSelectionPage() {
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 py-24 lg:py-24  overflow-hidden">
-      {/* Darker gradient background */}
       <div className="absolute inset-0 bg-gradient-to-b from-background-200 via-background-100/30 to-background-200 pointer-events-none"></div>
 
       <div className="max-w-5xl mx-auto w-full space-y-12 px-8 relative z-10">
-        {/* Heading Section */}
         <div className="text-center space-y-2">
           <h1
             className="text-4xl sm:text-5xl lg:text-5xl font-bold tracking-tight"
@@ -104,9 +96,7 @@ export default function RoleSelectionPage() {
           </p>
         </div>
 
-        {/* Role Selection Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* EV Owner Option */}
           <Card className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-primary/20 backdrop-blur-xl hover:border-primary/40 transition-all duration-300 cursor-pointer group">
             <CardBody className="space-y-6 p-8">
               <div className="space-y-4">
@@ -149,7 +139,6 @@ export default function RoleSelectionPage() {
             </CardBody>
           </Card>
 
-          {/* Station Operator Option */}
           <Card className="bg-gradient-to-br from-background-100/50 to-background-200/50 border border-secondary/20 backdrop-blur-xl hover:border-secondary/40 transition-all duration-300 cursor-pointer group">
             <CardBody className="space-y-6 p-8">
               <div className="space-y-4">

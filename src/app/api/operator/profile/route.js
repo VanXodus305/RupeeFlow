@@ -15,14 +15,12 @@ export async function GET(req) {
 
     let operator;
 
-    // For demo operator, find the seeded operator profile
     if (session.user.isDemo) {
       operator = await Operator.findOne({
         stationName: "Demo Charging Station",
       });
 
       if (!operator) {
-        // Return default demo profile if not seeded
         return Response.json({
           id: "demo-operator-profile",
           userId: session.user.id,
@@ -36,7 +34,6 @@ export async function GET(req) {
         });
       }
     } else {
-      // Validate ObjectId before querying
       if (!mongoose.Types.ObjectId.isValid(session.user.id)) {
         return Response.json(
           { error: "Invalid user ID format" },
@@ -91,7 +88,6 @@ export async function PUT(req) {
       );
     }
 
-    // Validate ObjectId before querying
     if (!mongoose.Types.ObjectId.isValid(session.user.id)) {
       return Response.json(
         { error: "Invalid user ID format" },

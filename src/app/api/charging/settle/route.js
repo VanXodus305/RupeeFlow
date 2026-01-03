@@ -26,7 +26,6 @@ export async function POST(req) {
       );
     }
 
-    // Save settlement record to database (blockchain transaction done client-side)
     await connectDB();
 
     const chargingSession = await ChargingSession.findByIdAndUpdate(

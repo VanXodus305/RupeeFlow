@@ -2,7 +2,6 @@ import ChargingSession from "@/models/ChargingSession";
 
 export async function GET(request) {
   try {
-    // Get userId from query parameters
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get("userId");
 
@@ -13,7 +12,6 @@ export async function GET(request) {
       });
     }
 
-    // Get operator's ongoing charging sessions - try both active and completed statuses
     const ongoingSessions = await ChargingSession.find({
       operatorId: userId,
       status: { $in: ["active", "completed"] },

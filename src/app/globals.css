@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Conthrax Font */
 @font-face {
   font-family: "Conthrax";
   src: url("/fonts/Conthrax-SemiBold.otf") format("opentype");
@@ -10,7 +9,6 @@
   font-style: normal;
 }
 
-/* Utility classes for Conthrax font */
 @layer components {
   .font-conthrax {
     font-family: "Conthrax", sans-serif;
