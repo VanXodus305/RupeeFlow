@@ -14,14 +14,14 @@ export async function GET(req) {
     if (session?.user?.isDemo) {
       operators = await Operator.find({ stationName: "Demo Charging Station" })
         .select(
-          "_id stationName stationAddress ratePerKwh chargerPower totalEnergyDelivered totalRevenue"
+          "_id stationName stationAddress ratePerKwh chargerPower totalEnergyDelivered totalRevenue walletAddress"
         )
         .lean();
     } else {
       // For real users, get all operators
       operators = await Operator.find({})
         .select(
-          "_id stationName stationAddress ratePerKwh chargerPower totalEnergyDelivered totalRevenue"
+          "_id stationName stationAddress ratePerKwh chargerPower totalEnergyDelivered totalRevenue walletAddress"
         )
         .lean();
     }

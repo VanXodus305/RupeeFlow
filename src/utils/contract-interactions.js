@@ -207,12 +207,28 @@ export async function settleChargingDirect(
   totalCost,
   totalKwh,
   duration,
-  stationAddress
+  stationAddress,
+  operatorWalletAddress
 ) {
   try {
     if (!window.ethereum) {
       throw new Error("MetaMask or other Web3 wallet not found");
     }
+
+    // Validate operator wallet address
+    if (!operatorWalletAddress) {
+      throw new Error("Operator wallet address is required");
+    }
+
+    const trimmedWallet = (operatorWalletAddress || "").trim();
+
+    if (!/^0x[a-fA-F0-9]{40}$/.test(trimmedWallet)) {
+      throw new Error(
+        `Invalid operator wallet address format: ${trimmedWallet}`
+      );
+    }
+
+    const cleanWalletAddress = trimmedWallet;
 
     // IMPORTANT: Switch to Polygon Amoy first
     try {
@@ -276,8 +292,8 @@ export async function settleChargingDirect(
     );
 
     // Convert stationAddress to valid Ethereum address format
-    // For now, use dummy operator address
-    const stationEthAddress = "0x0000000000000000000000000000000000000001";
+    // Use the operator's actual wallet address from their profile
+    const stationEthAddress = cleanWalletAddress;
 
     // Convert amounts to proper format - Validate amounts first
     if (totalCost <= 0 || totalKwh <= 0 || duration <= 0) {
@@ -335,7 +351,6 @@ export async function settleChargingDirect(
     );
 
     const txHash = tx.hash;
-    // console.log(`[Ethers] Transaction submitted: ${txHash}`);
 
     // Wait for confirmation
     const receipt = await tx.wait();
@@ -347,7 +362,6 @@ export async function settleChargingDirect(
       gasUsed: ethers.formatUnits(receipt.gasUsed, "wei"),
     };
   } catch (error) {
-    console.error("[Ethers] Settlement error:", error);
     return {
       success: false,
       error: error.message,

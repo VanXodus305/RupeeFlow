@@ -13,6 +13,7 @@ export default function OperatorOnboardingPage() {
   const [formData, setFormData] = useState({
     stationName: "",
     stationAddress: "",
+    walletAddress: "",
     chargerPower: 7.4,
     ratePerKwh: 12,
   });
@@ -50,7 +51,9 @@ export default function OperatorOnboardingPage() {
     setFormData((prev) => ({
       ...prev,
       [name]:
-        name === "stationName" || name === "stationAddress"
+        name === "stationName" ||
+        name === "stationAddress" ||
+        name === "walletAddress"
           ? value
           : parseFloat(value),
     }));
@@ -60,6 +63,21 @@ export default function OperatorOnboardingPage() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+
+    // Validate wallet address format
+    if (!formData.walletAddress) {
+      setError("Wallet address is required");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!/^0x[a-fA-F0-9]{40}$/.test(formData.walletAddress)) {
+      setError(
+        "Invalid wallet address format. Must be 0x followed by 40 hex characters"
+      );
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/operator/create", {
@@ -153,6 +171,24 @@ export default function OperatorOnboardingPage() {
                 }}
               />
 
+              <Input
+                label="Wallet Address"
+                name="walletAddress"
+                value={formData.walletAddress}
+                onChange={handleChange}
+                placeholder="0x..."
+                isRequired
+                description="Your Ethereum wallet address for receiving settlements"
+                variant="bordered"
+                classNames={{
+                  label: "text-foreground/80 font-medium",
+                  input: "text-foreground font-mono text-sm",
+                  inputWrapper:
+                    "border-primary/30 hover:border-primary/50 bg-background/40",
+                  description: "text-foreground/60 text-xs",
+                }}
+              />
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   type="number"
@@ -205,4 +241,3 @@ export default function OperatorOnboardingPage() {
     </section>
   );
 }
-

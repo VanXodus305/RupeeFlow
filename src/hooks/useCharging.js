@@ -59,7 +59,8 @@ export function useCharging() {
     ratePerKwh,
     chargerPower,
     operatorId,
-    ownerName
+    ownerName,
+    initialBatteryPercent = 0
   ) => {
     try {
       setError(null);
@@ -103,6 +104,7 @@ export function useCharging() {
         chargerPower,
         operatorId,
         ownerName,
+        initialBatteryPercent,
       });
 
       console.log("[Hook] start-charging emitted");

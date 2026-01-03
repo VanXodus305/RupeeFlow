@@ -12,6 +12,20 @@ const operatorSchema = new mongoose.Schema(
       required: true,
     },
     stationAddress: String,
+    walletAddress: {
+      type: String,
+      required: [true, "Wallet address is required"],
+      trim: true,
+      validate: {
+        validator: function (v) {
+          // Check format: 0x followed by exactly 40 hex characters
+          // This regex is case-insensitive for the hex part
+          return /^0x[a-fA-F0-9]{40}$/.test(v);
+        },
+        message:
+          "Invalid Ethereum wallet address format (must be 0x followed by 40 hex characters)",
+      },
+    },
     chargerPower: {
       type: Number,
       default: 7.4,

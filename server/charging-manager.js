@@ -16,6 +16,7 @@ export function createSession(data) {
     userId: data.userId,
     vehicleReg: data.vehicleReg,
     batteryCapacity: data.batteryCapacity,
+    initialBatteryPercent: data.initialBatteryPercent || 0,
     ratePerKwh: data.ratePerKwh || config.RATE_PER_KWH,
     chargerPower: data.chargerPower || config.CHARGER_POWER_KW,
     startTime: Date.now(),
@@ -53,7 +54,7 @@ export function updateMeterReading(sessionId) {
   session.totalKwh += meterIntervalKwh;
   session.totalCost = session.totalKwh * session.ratePerKwh;
 
-  // Battery percentage (simplified)
+  // Battery percentage increase from charging
   const chargePercentage = Math.min(
     (session.totalKwh / session.batteryCapacity) * 100,
     100
@@ -66,6 +67,7 @@ export function updateMeterReading(sessionId) {
     totalCost: parseFloat(session.totalCost.toFixed(2)),
     currentPower: session.currentPower,
     chargePercentage: parseFloat(chargePercentage.toFixed(1)),
+    initialBatteryPercent: session.initialBatteryPercent,
   };
 }
 
@@ -93,6 +95,7 @@ export function stopSession(sessionId) {
     totalAmount: parseFloat(session.totalCost.toFixed(2)),
     duration: Math.floor(session.secondsElapsed),
     chargePercentage: parseFloat(chargePercentage.toFixed(1)),
+    initialBatteryPercent: session.initialBatteryPercent,
     startTime: new Date(session.startTime).toISOString(),
   };
 

@@ -1,9 +1,40 @@
 "use client";
 
+import React, { memo } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  Button,
+  Progress,
+  Chip,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Spinner,
+} from "@heroui/react";
+import {
+  FiLogOut,
+  FiZap,
+  FiTrendingUp,
+  FiBattery,
+  FiClock,
+  FiActivity,
+  FiCheck,
+} from "react-icons/fi";
+
+const LoadingSpinner = memo(() => (
+  <div className="flex items-center justify-center py-16">
+    <Spinner label="Loading dashboard..." color="primary" />
+  </div>
+));
 
 export default function StationDashboard() {
   const { data: session, status } = useSession();
@@ -18,256 +49,495 @@ export default function StationDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
-    if (status === "loading") return;
+    // Wait for session to load
+    if (status === "loading") {
+      return;
+    }
 
+    // Not authenticated
     if (!session) {
       router.push("/login");
+      setIsLoading(false);
       return;
     }
 
+    // Owner should not be here
     if (session.user?.role === "owner") {
       router.push("/ev-owner-dashboard");
+      setIsLoading(false);
       return;
     }
 
-    const fetchData = async () => {
+    // Fetch operator profile
+    const fetchOperatorProfile = async () => {
       try {
-        const res = await fetch("/api/operator/check");
-        const data = await res.json();
+        const response = await fetch("/api/operator/check");
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Operator check failed:", errorData);
+          router.push("/login");
+          return;
+        }
+
+        const data = await response.json();
 
         if (!data.exists) {
+          // No operator profile, redirect to onboarding
           router.push("/operator-onboarding");
           return;
         }
 
+        // Operator exists, display dashboard
         setOperatorData(data);
 
-        const historyRes = await fetch("/api/charging/history");
-        const history = await historyRes.json();
+        // Fetch charging history
+        const historyResponse = await fetch("/api/charging/history");
+        const historyData = await historyResponse.json();
 
-        setSettlements(history.sessions || []);
-        setTotalKwh(history.totalKwh || 0);
-        setTotalRevenue(history.totalRevenue || 0);
+        if (historyResponse.ok) {
+          setSettlements(historyData.sessions || []);
+          setTotalKwh(historyData.totalKwh || 0);
+          setTotalRevenue(historyData.totalRevenue || 0);
+        }
 
         setIsLoading(false);
 
+        // Setup WebSocket for live updates
         if (!socketRef.current) {
           socketRef.current = io(
-            process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
+            process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001",
+            {
+              reconnection: true,
+              reconnectionDelay: 1000,
+              reconnectionDelayMax: 5000,
+              reconnectionAttempts: 5,
+              transports: ["websocket", "polling"],
+            }
           );
 
           socketRef.current.on("connect", () => {
+            // Emit operator ID to register for events
+            const operatorProfileId = data.id;
             socketRef.current.emit("register-operator", {
-              operatorId: data.id,
+              operatorId: operatorProfileId,
             });
           });
 
-          socketRef.current.on("meter-reading", (m) => {
+          socketRef.current.on("meter-reading", (meterData) => {
+            // If this is a new session, add it to ongoing sessions
             setOngoingSessions((prev) => {
-              const exists = prev.some((s) => s.sessionId === m.sessionId);
-              if (!exists) {
+              const sessionExists = prev.some(
+                (s) => s.sessionId === meterData.sessionId
+              );
+
+              if (!sessionExists) {
+                // New session, add it
                 return [
                   {
-                    sessionId: m.sessionId,
-                    vehicleReg: m.vehicleReg,
-                    totalKwh: m.totalKwh || 0,
-                    totalCost: m.totalCost || 0,
-                    duration: m.secondsElapsed || 0,
-                    chargePercentage: m.chargePercentage || 0,
-                    currentPower: m.currentPower || 0,
+                    sessionId: meterData.sessionId,
+                    vehicleReg: meterData.vehicleReg,
+                    totalKwh: meterData.totalKwh || 0,
+                    totalCost: meterData.totalCost || 0,
+                    duration: meterData.secondsElapsed || 0,
+                    chargePercentage: meterData.chargePercentage || 0,
+                    initialBatteryPercent: meterData.initialBatteryPercent || 0,
+                    currentPower: meterData.currentPower || 0,
                   },
                   ...prev,
                 ];
               }
-              return prev.map((s) =>
-                s.sessionId === m.sessionId
-                  ? { ...s, ...m }
-                  : s
-              );
+
+              // Update existing session
+              const updated = prev.map((session) => {
+                if (session.sessionId === meterData.sessionId) {
+                  return {
+                    ...session,
+                    totalKwh: meterData.totalKwh,
+                    totalCost: meterData.totalCost,
+                    duration: meterData.secondsElapsed,
+                    chargePercentage: meterData.chargePercentage,
+                    initialBatteryPercent: meterData.initialBatteryPercent,
+                    currentPower: meterData.currentPower,
+                  };
+                }
+                return session;
+              });
+              return updated;
             });
           });
 
-          socketRef.current.on("session-completed", (c) => {
+          socketRef.current.on("session-completed", (completedSession) => {
+            console.log("Session completed:", completedSession);
+            // Move completed session from ongoing to settlements
             setOngoingSessions((prev) =>
-              prev.filter((s) => s.sessionId !== c.sessionId)
+              prev.filter((s) => s.sessionId !== completedSession.sessionId)
             );
-            setSettlements((prev) => [{ ...c, status: "completed" }, ...prev]);
+            setSettlements((prev) => [
+              { ...completedSession, status: "completed" },
+              ...prev,
+            ]);
+          });
+
+          socketRef.current.on("disconnect", () => {
+            console.log("WebSocket disconnected");
+          });
+
+          socketRef.current.on("connect_error", (error) => {
+            console.error("WebSocket connection error:", error);
           });
         }
-      } catch {
+      } catch (error) {
+        console.error("Error fetching operator profile:", error);
+        // On error, redirect to onboarding to be safe
         router.push("/operator-onboarding");
       }
     };
 
-    fetchData();
-    return () => socketRef.current?.disconnect();
+    fetchOperatorProfile();
+
+    // Cleanup WebSocket on unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
   }, [session, status, router]);
 
   if (isLoading) {
-    return (
-      <div style={{ padding: "60px", textAlign: "center", color: "#9ca3af" }}>
-        Loading dashboard…
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
-  if (!operatorData) return null;
-
-  const glassBox = {
-    border: "1px solid #1f2937",
-    borderRadius: "14px",
-    padding: "20px",
-    background:
-      "linear-gradient(145deg, rgba(15,23,42,0.6), rgba(15,23,42,0.3))",
-    backdropFilter: "blur(10px)",
-  };
+  if (!operatorData) {
+    return null;
+  }
 
   return (
-    <div
-      style={{
-        padding: "24px",
-        paddingTop: "80px",
-        maxWidth: "1100px",
-        margin: "0 auto",
-        color: "#e5e7eb",
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "24px",
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: "26px", fontWeight: "700" }}>
-            Welcome, Station Operator
-          </h1>
-          <p style={{ color: "#9ca3af", marginTop: "4px" }}>
-            Monitor sessions and revenue in real time
-          </p>
-        </div>
-
-        <button
-          onClick={() => signOut({ redirectTo: "/login" })}
-          style={{
-            padding: "10px 18px",
-            background: "#0f766e",
-            color: "#ecfeff",
-            borderRadius: "10px",
-            fontWeight: "600",
-          }}
-        >
-          Logout
-        </button>
-      </div>
-
-      {/* Station Details */}
-      <div style={{ ...glassBox, marginBottom: "28px" }}>
-        <h2 style={{ marginBottom: "14px" }}>Station Details</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-          <div>
-            <p><strong>Name:</strong> {operatorData.stationName}</p>
-            <p><strong>Address:</strong> {operatorData.stationAddress || "N/A"}</p>
-          </div>
-          <div>
-            <p><strong>Power:</strong> {operatorData.chargerPower} kW</p>
-            <p><strong>Rate:</strong> ₹{operatorData.ratePerKwh} / kWh</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "20px",
-          marginBottom: "32px",
-        }}
-      >
-        <div style={glassBox}>
-          <h3 style={{ color: "#9ca3af" }}>Total Energy Delivered</h3>
-          <p style={{ fontSize: "28px", fontWeight: "700", color: "#5eead4" }}>
-            {totalKwh.toFixed(2)} kWh
-          </p>
-        </div>
-
-        <div style={glassBox}>
-          <h3 style={{ color: "#9ca3af" }}>Total Revenue</h3>
-          <p style={{ fontSize: "28px", fontWeight: "700", color: "#60a5fa" }}>
-            ₹{totalRevenue.toFixed(2)}
-          </p>
-        </div>
-      </div>
-
-      {/* Previous Sessions */}
-      <h2 style={{ marginBottom: "12px" }}>Previous Charging Sessions</h2>
-      <div style={{ ...glassBox, padding: "0" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid #1f2937" }}>
-              {["Vehicle", "Energy", "Amount", "Duration", "Date", "Status"].map(
-                (h) => (
-                  <th
-                    key={h}
-                    style={{
-                      padding: "14px",
-                      textAlign: "left",
-                      color: "#9ca3af",
-                      fontSize: "13px",
-                    }}
-                  >
-                    {h}
-                  </th>
-                )
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {settlements.map((s) => (
-              <tr
-                key={s.id}
-                style={{
-                  borderBottom: "1px solid #1f2937",
-                }}
-              >
-                <td style={{ padding: "14px" }}>{s.vehicleReg}</td>
-                <td style={{ padding: "14px" }}>
-                  {(s.totalKwh || 0).toFixed(2)}
-                </td>
-                <td style={{ padding: "14px" }}>
-                  ₹{(s.totalCost || 0).toFixed(2)}
-                </td>
-                <td style={{ padding: "14px" }}>
-                  {Math.floor((s.duration || 0) / 60)} min
-                </td>
-                <td style={{ padding: "14px" }}>
-                  {new Date(s.createdAt).toLocaleString("en-IN")}
-                </td>
-                <td style={{ padding: "14px" }}>
-                  <span
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: "999px",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      background:
-                        s.status === "completed"
-                          ? "#064e3b"
-                          : "#1e3a8a",
-                      color: "#d1fae5",
-                    }}
-                  >
-                    {s.status}
+    <div className="min-h-screen bg-gradient-to-b from-background-200 to-background-100/20">
+      {/* Main Content */}
+      <div className="px-4 sm:px-6 md:px-8 py-8 max-w-7xl mx-auto mt-16">
+        {/* Station Details Card */}
+        <Card className="bg-background-100/30 border border-primary/20 mb-8">
+          <CardHeader className="flex gap-3 border-b border-primary/10 bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-4">
+            <div className="flex items-center gap-2">
+              <FiZap className="text-primary text-xl" />
+              <h2 className="text-xl font-bold text-primary font-conthrax">
+                Station Information
+              </h2>
+            </div>
+          </CardHeader>
+          <CardBody className="gap-6 px-6 py-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <p className="text-sm text-foreground/60 uppercase tracking-wide">
+                  Station Name
+                </p>
+                <p className="text-lg font-semibold text-primary font-conthrax">
+                  {operatorData.stationName}
+                </p>
+                <p className="text-sm text-foreground/70 mt-3">
+                  <span className="text-foreground/50">Address:</span>{" "}
+                  <span className="text-foreground">
+                    {operatorData.stationAddress || "Not provided"}
                   </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </p>
+              </div>
+              <div className="space-y-3">
+                <p className="text-sm text-foreground/60 uppercase tracking-wide">
+                  Charging Parameters
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    <span className="text-foreground/60">Charger Power:</span>{" "}
+                    <span className="font-semibold text-secondary font-conthrax">
+                      {operatorData.chargerPower} kW
+                    </span>
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-foreground/60">Rate per kWh:</span>{" "}
+                    <span className="font-semibold text-secondary font-conthrax">
+                      ₹{operatorData.ratePerKwh}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        {/* Metrics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Total Energy Delivered */}
+          <Card className="bg-gradient-to-br from-primary/15 to-secondary/10 border border-primary/30">
+            <CardBody className="gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-foreground/60 uppercase tracking-wide mb-2">
+                    Total Energy Delivered
+                  </p>
+                  <p className="text-4xl font-bold text-primary font-conthrax">
+                    {(totalKwh || 0).toFixed(2)}
+                  </p>
+                  <p className="text-sm text-foreground/70 mt-1">kWh</p>
+                </div>
+                <FiZap className="text-primary/30 text-5xl" />
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Total Revenue */}
+          <Card className="bg-gradient-to-br from-secondary/15 to-primary/10 border border-secondary/30">
+            <CardBody className="gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-foreground/60 uppercase tracking-wide mb-2">
+                    Total Revenue
+                  </p>
+                  <p className="text-4xl font-bold text-secondary font-conthrax">
+                    ₹{(totalRevenue || 0).toFixed(2)}
+                  </p>
+                  <p className="text-sm text-foreground/70 mt-1">INR</p>
+                </div>
+                <FiTrendingUp className="text-secondary/30 text-5xl" />
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* Ongoing Sessions Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <FiActivity className="text-primary text-lg" />
+            <h2 className="text-2xl font-bold text-primary font-conthrax">
+              Live Charging Sessions
+            </h2>
+            {ongoingSessions.length > 0 && (
+              <Chip
+                className="bg-primary/20 text-primary font-semibold"
+                size="sm"
+              >
+                {ongoingSessions.length} Active
+              </Chip>
+            )}
+          </div>
+
+          {ongoingSessions.length === 0 ? (
+            <Card className="bg-background-100/30 border border-primary/20">
+              <CardBody className="py-16 text-center">
+                <p className="text-foreground/60">
+                  No active charging sessions
+                </p>
+              </CardBody>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {ongoingSessions.map((session) => (
+                <Card
+                  key={session.sessionId}
+                  className="bg-background-100/30 border-2 border-primary/40 hover:border-primary/60 transition-colors"
+                >
+                  <CardBody className="gap-4">
+                    {/* Header */}
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm text-foreground/60 uppercase tracking-wide">
+                          Vehicle
+                        </p>
+                        <p className="text-lg font-bold text-primary font-conthrax">
+                          {session.vehicleReg || "Unknown"}
+                        </p>
+                      </div>
+                      <Chip
+                        className="bg-primary/20 text-primary text-xs"
+                        size="sm"
+                      >
+                        LIVE
+                      </Chip>
+                    </div>
+
+                    {/* Metrics Grid */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-background-100/50 rounded-lg p-3">
+                        <p className="text-xs text-foreground/60 mb-1">
+                          Duration
+                        </p>
+                        <p className="text-sm font-semibold text-secondary font-conthrax">
+                          {Math.floor((session.duration || 0) / 60)}m{" "}
+                          {(session.duration || 0) % 60}s
+                        </p>
+                      </div>
+                      <div className="bg-background-100/50 rounded-lg p-3">
+                        <p className="text-xs text-foreground/60 mb-1">
+                          Energy
+                        </p>
+                        <p className="text-sm font-semibold text-secondary font-conthrax">
+                          {(session.totalKwh || 0).toFixed(2)} kWh
+                        </p>
+                      </div>
+                      <div className="bg-background-100/50 rounded-lg p-3">
+                        <p className="text-xs text-foreground/60 mb-1">Cost</p>
+                        <p className="text-sm font-semibold text-primary font-conthrax">
+                          ₹{(session.totalCost || 0).toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="bg-background-100/50 rounded-lg p-3">
+                        <p className="text-xs text-foreground/60 mb-1">Power</p>
+                        <p className="text-sm font-semibold text-secondary font-conthrax">
+                          {(session.currentPower || 0).toFixed(1)} kW
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Charge Progress */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-foreground/60">Battery</p>
+                        <p className="text-xs font-semibold text-primary font-conthrax">
+                          {Math.min(
+                            100,
+                            (session.initialBatteryPercent || 0) +
+                              (session.chargePercentage || 0)
+                          ).toFixed(0)}
+                          %
+                        </p>
+                      </div>
+                      <Progress
+                        value={Math.min(
+                          100,
+                          (session.initialBatteryPercent || 0) +
+                            (session.chargePercentage || 0)
+                        )}
+                        className="h-2"
+                        color="primary"
+                      />
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Previous Sessions Section */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <FiCheck className="text-primary text-lg" />
+            <h2 className="text-2xl font-bold text-primary font-conthrax">
+              Settlement History
+            </h2>
+            {settlements.length > 0 && (
+              <Chip
+                className="bg-secondary/20 text-secondary font-semibold"
+                size="sm"
+              >
+                {settlements.length} Sessions
+              </Chip>
+            )}
+          </div>
+
+          {settlements.length === 0 ? (
+            <Card className="bg-background-100/30 border border-primary/20">
+              <CardBody className="py-16 text-center">
+                <p className="text-foreground/60">No charging sessions yet</p>
+              </CardBody>
+            </Card>
+          ) : (
+            <Card className="bg-background-100/30 border border-primary/20">
+              <CardBody className="gap-0 p-0">
+                <div className="overflow-x-auto">
+                  <Table
+                    removeWrapper
+                    aria-label="Charging history table"
+                    classNames={{
+                      table: "text-sm",
+                      th: "bg-primary/10 text-primary font-semibold border-b border-primary/20 px-4 py-3 text-base",
+                      td: "border-b border-primary/10 px-4 py-3",
+                      tr: "hover:bg-primary/5 transition-colors",
+                    }}
+                  >
+                    <TableHeader>
+                      <TableColumn>Vehicle Reg</TableColumn>
+                      <TableColumn>Energy (kWh)</TableColumn>
+                      <TableColumn>Amount (₹)</TableColumn>
+                      <TableColumn>Duration (min)</TableColumn>
+                      <TableColumn>Date</TableColumn>
+                      <TableColumn>Status</TableColumn>
+                    </TableHeader>
+                    <TableBody>
+                      {settlements.map((settlement) => (
+                        <TableRow
+                          key={settlement.id}
+                          className="text-foreground"
+                        >
+                          <TableCell>
+                            <p className="font-semibold text-primary">
+                              {settlement.vehicleReg}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-semibold font-conthrax text-secondary">
+                              {(
+                                settlement.totalKwh ||
+                                settlement.kwh ||
+                                0
+                              ).toFixed(2)}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-semibold font-conthrax text-secondary">
+                              ₹
+                              {(
+                                settlement.totalCost ||
+                                settlement.amount ||
+                                0
+                              ).toFixed(2)}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-semibold font-conthrax">
+                              {Math.floor((settlement.duration || 0) / 60)}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <p className="text-sm text-foreground/70">
+                              {settlement.createdAt
+                                ? new Date(settlement.createdAt).toLocaleString(
+                                    "en-IN",
+                                    {
+                                      year: "numeric",
+                                      month: "2-digit",
+                                      day: "2-digit",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )
+                                : "N/A"}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              size="sm"
+                              className={
+                                settlement.status === "completed"
+                                  ? "bg-primary/20 text-primary"
+                                  : settlement.status === "settled"
+                                  ? "bg-secondary/20 text-secondary"
+                                  : "bg-foreground/10 text-foreground"
+                              }
+                            >
+                              <span className="capitalize font-semibold">
+                                {settlement.status || "pending"}
+                              </span>
+                            </Chip>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardBody>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -19,7 +19,13 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const { stationName, stationAddress, chargerPower, ratePerKwh } = body;
+    const {
+      stationName,
+      stationAddress,
+      chargerPower,
+      ratePerKwh,
+      walletAddress,
+    } = body;
 
     // Demo users cannot create profiles via API
     if (session.user.isDemo) {
@@ -59,6 +65,7 @@ export async function POST(req) {
       userId: session.user.id,
       stationName,
       stationAddress,
+      walletAddress,
       chargerPower: chargerPower || 7.4,
       ratePerKwh: ratePerKwh || 12,
     });
@@ -68,6 +75,7 @@ export async function POST(req) {
       userId: operator.userId.toString(),
       stationName: operator.stationName,
       stationAddress: operator.stationAddress,
+      walletAddress: operator.walletAddress,
       chargerPower: operator.chargerPower,
       ratePerKwh: operator.ratePerKwh,
       totalEnergyDelivered: operator.totalEnergyDelivered,
@@ -75,6 +83,18 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("Operator create error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+
+    // Handle validation errors
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors)
+        .map((err) => err.message)
+        .join(", ");
+      return Response.json({ error: messages }, { status: 400 });
+    }
+
+    return Response.json(
+      { error: error.message || "Internal server error" },
+      { status: 500 }
+    );
   }
 }

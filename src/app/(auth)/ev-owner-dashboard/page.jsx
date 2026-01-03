@@ -147,7 +147,8 @@ export default function EVOwnerDashboard() {
       ratePerKwh,
       7.4,
       operatorId,
-      session.user.name
+      session.user.name,
+      initialBatteryPercent
     );
   };
 

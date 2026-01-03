@@ -43,6 +43,7 @@ export default function ChargingSettlement({
   const [txHash, setTxHash] = useState(null);
   const [error, setError] = useState(null);
   const [sessionSaved, setSessionSaved] = useState(false);
+  const [operatorWalletAddress, setOperatorWalletAddress] = useState(null);
 
   // Ethers states
   const [walletBalance, setWalletBalance] = useState(null);
@@ -69,6 +70,27 @@ export default function ChargingSettlement({
 
     initNetwork();
   }, []);
+
+  // Fetch operator wallet address
+  useEffect(() => {
+    const fetchOperatorWallet = async () => {
+      try {
+        if (!operatorId) return;
+
+        const response = await fetch(`/api/operator/${operatorId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.walletAddress) {
+            setOperatorWalletAddress(data.walletAddress);
+          }
+        }
+      } catch (err) {
+        // Silent fail - wallet address is optional for some flows
+      }
+    };
+
+    fetchOperatorWallet();
+  }, [operatorId]);
 
   const handleSaveSession = async () => {
     try {
@@ -165,7 +187,8 @@ export default function ChargingSettlement({
         totalCost,
         totalKwh,
         durationInSeconds,
-        operatorId // Station address
+        operatorId, // Station address
+        operatorWalletAddress
       );
 
       if (!settlementResult.success) {
@@ -268,7 +291,7 @@ export default function ChargingSettlement({
                 <p className="text-xs text-foreground/60 mb-1">
                   Transaction Hash
                 </p>
-                <p className="text-xs font-mono text-primary break-all bg-background-100/30 p-2 rounded border border-primary/20">
+                <p className="text-sm font-mono text-primary break-all bg-background-100/30 p-2 rounded border border-primary/20">
                   {txHash}
                 </p>
               </div>
@@ -524,11 +547,21 @@ export default function ChargingSettlement({
             {/* Settlement Button */}
             <Button
               onClick={handleSettle}
-              disabled={isSettling || isSaving || !walletAvailable}
+              disabled={
+                isSettling ||
+                isSaving ||
+                !walletAvailable ||
+                !operatorWalletAddress
+              }
               className="w-full bg-gradient-to-r from-primary to-secondary text-background-200 font-semibold py-6 text-lg hover:shadow-lg hover:shadow-primary/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {!walletAvailable ? (
                 "❌ MetaMask Required to Settle"
+              ) : !operatorWalletAddress ? (
+                <>
+                  <Spinner size="sm" color="current" />
+                  Loading Station Info... ⏳
+                </>
               ) : isSaving ? (
                 <>
                   <Spinner size="sm" color="current" />

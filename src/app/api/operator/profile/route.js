@@ -64,6 +64,7 @@ export async function GET(req) {
       totalEnergyDelivered: operator.totalEnergyDelivered,
       totalRevenue: operator.totalRevenue,
       chargingSessions: operator.chargingSessions,
+      walletAddress: operator.walletAddress || "",
     });
   } catch (error) {
     console.error("Operator profile GET error:", error);
