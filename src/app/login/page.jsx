@@ -3,14 +3,18 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input, Button, Card, CardBody } from "@heroui/react";
+import { Input, Button, Card, CardBody, Image } from "@heroui/react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("owner@example.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("password123");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleEmailClick = (selectedEmail) => {
+    setEmail(selectedEmail);
+  };
 
   const handleDemoLogin = async (e) => {
     e.preventDefault();
@@ -55,7 +59,7 @@ export default function LoginPage() {
     <section className="relative min-h-screen flex flex-col items-center justify-center px- sm:px-6 py-20 lg:py-24 overflow-hidden">
       {/* Darker gradient background */}
       <div className="absolute inset-0 bg-gradient-to-b from-background-200 via-background-100/30 to-background-200 pointer-events-none"></div>
-      
+
       <div className="max-w-6xl mx-auto w-full space-y-6 px-8 relative z-10">
         {/* Heading Section */}
         <div className="text-center space-y-2">
@@ -82,7 +86,9 @@ export default function LoginPage() {
 
               {/* Demo Login Form */}
               <form onSubmit={handleDemoLogin} className="space-y-4">
-                <h2 className="text-xl font-bold text-foreground">Demo Login</h2>
+                <h2 className="text-xl font-bold text-foreground">
+                  Demo Login
+                </h2>
 
                 <Input
                   type="email"
@@ -96,7 +102,26 @@ export default function LoginPage() {
                     mainWrapper: "text-foreground",
                   }}
                   variant="bordered"
-                  description="Try: owner@example.com or operator@example.com"
+                  description={
+                    <div className="flex gap-2 flex-wrap items-center">
+                      <span>Try: </span>
+                      <button
+                        type="button"
+                        onClick={() => handleEmailClick("owner@example.com")}
+                        className="bg-primary/20 text-primary hover:bg-primary/40 font-semibold cursor-pointer transition-colors px-2 py-1 rounded"
+                      >
+                        owner@example.com
+                      </button>
+                      <span>or</span>
+                      <button
+                        type="button"
+                        onClick={() => handleEmailClick("operator@example.com")}
+                        className="bg-primary/20 text-primary hover:bg-primary/40 font-semibold cursor-pointer transition-colors px-2 py-1 rounded"
+                      >
+                        operator@example.com
+                      </button>
+                    </div>
+                  }
                 />
 
                 <Input
@@ -117,10 +142,10 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-primary to-primary/80 text-background-200 font-semibold text-lg py-6 hover:shadow-lg hover:shadow-primary/50 transition-all duration-200"
+                  className="w-full bg-gradient-to-r from-primary to-primary/80 text-background-200 font-semibold sm:text-lg text-md py-6 hover:shadow-lg hover:shadow-primary/50 transition-all duration-200"
                   radius="full"
                 >
-                  {isLoading ? "Signing in..." : "Sign In with Demo"}
+                  {isLoading ? "Signing in..." : "Sign In with Demo Account"}
                 </Button>
               </form>
 
@@ -138,8 +163,15 @@ export default function LoginPage() {
                 variant="bordered"
                 className="w-full border-2 border-primary/40 text-foreground font-semibold text-lg py-6 hover:bg-primary/10 transition-all duration-200 group"
                 radius="full"
+                startContent={
+                  <Image
+                    src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Google_Favicon_2025.svg"
+                    alt="Google"
+                    width={25}
+                    height={25}
+                  />
+                }
               >
-                <span>🔗</span>
                 {isLoading ? "Signing in..." : "Continue with Google"}
               </Button>
 
