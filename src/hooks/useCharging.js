@@ -13,6 +13,8 @@ export function useCharging() {
   const [currentPower, setCurrentPower] = useState(0);
   const [chargePercentage, setChargePercentage] = useState(0);
   const [error, setError] = useState(null);
+  const [chargingSettings, setChargingSettings] = useState(null);
+  const [autoStopReason, setAutoStopReason] = useState(null);
 
   const [socketReady, setSocketReady] = useState(false);
   const socketRef = useRef(null);
@@ -58,7 +60,8 @@ export function useCharging() {
     chargerPower,
     operatorId,
     ownerName,
-    initialBatteryPercent = 0
+    initialBatteryPercent = 0,
+    settings = null
   ) => {
     try {
       setError(null);
@@ -75,12 +78,17 @@ export function useCharging() {
       setTotalKwh(0);
       setTotalCost(0);
       setChargePercentage(0);
+      setChargingSettings(settings);
+      setAutoStopReason(null);
 
       socketRef.current.off("meter-reading");
       socketRef.current.off("charging-started");
 
+      let currentSessionId = null;
+
       socketRef.current.once("charging-started", (data) => {
         console.log("[Hook] Charging started:", data.sessionId);
+        currentSessionId = data.sessionId;
         setSessionId(data.sessionId);
       });
 
@@ -90,6 +98,43 @@ export function useCharging() {
         setTotalCost(meterData.totalCost);
         setCurrentPower(meterData.currentPower);
         setChargePercentage(meterData.chargePercentage);
+
+        const totalBatteryPercent =
+          initialBatteryPercent + meterData.chargePercentage;
+
+        if (totalBatteryPercent >= 100) {
+          setAutoStopReason("Maximum battery capacity (100%) reached");
+          socketRef.current.emit("stop-charging", {
+            sessionId: currentSessionId,
+          });
+          setIsCharging(false);
+          return;
+        }
+
+        if (settings && settings.mode === "percentage") {
+          if (totalBatteryPercent >= settings.targetBatteryPercent) {
+            setAutoStopReason(
+              `Target battery percentage (${settings.targetBatteryPercent}%) reached`
+            );
+            socketRef.current.emit("stop-charging", {
+              sessionId: currentSessionId,
+            });
+            setIsCharging(false);
+          }
+        }
+
+        if (settings && settings.mode === "time") {
+          const elapsedMinutes = meterData.secondsElapsed / 60;
+          if (elapsedMinutes >= settings.durationMinutes) {
+            setAutoStopReason(
+              `Charging duration (${settings.durationMinutes} min) completed`
+            );
+            socketRef.current.emit("stop-charging", {
+              sessionId: currentSessionId,
+            });
+            setIsCharging(false);
+          }
+        }
       });
 
       socketRef.current.emit("start-charging", {
@@ -227,5 +272,7 @@ export function useCharging() {
     stopCharging,
     saveSession,
     resumeCharging,
+    autoStopReason,
+    chargingSettings,
   };
 }

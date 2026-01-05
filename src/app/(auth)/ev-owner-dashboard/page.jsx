@@ -58,6 +58,9 @@ export default function EVOwnerDashboard() {
   const [pendingSession, setPendingSession] = useState(null);
   const [loadingPending, setLoadingPending] = useState(true);
   const [isSettling, setIsSettling] = useState(false);
+  const [chargingMode, setChargingMode] = useState("manual");
+  const [targetBatteryPercent, setTargetBatteryPercent] = useState(80);
+  const [chargingDuration, setChargingDuration] = useState(10);
 
   useEffect(() => {
     if (session && session.user?.role === "operator") {
@@ -129,9 +132,24 @@ export default function EVOwnerDashboard() {
     }
   }, [session]);
 
+  useEffect(() => {
+    if (!isCharging && chargingData.autoStopReason) {
+      setShowSettlement(true);
+    }
+  }, [isCharging, chargingData.autoStopReason]);
+
   const handleStartCharging = async () => {
     if (!operatorId) {
       alert("Please select a charging station");
+      return;
+    }
+    if (
+      chargingMode === "percentage" &&
+      targetBatteryPercent <= initialBatteryPercent
+    ) {
+      alert(
+        `Target battery (${targetBatteryPercent}%) must be higher than current battery (${initialBatteryPercent}%)`
+      );
       return;
     }
     await startCharging(
@@ -142,7 +160,13 @@ export default function EVOwnerDashboard() {
       7.4,
       operatorId,
       session.user.name,
-      initialBatteryPercent
+      initialBatteryPercent,
+      {
+        mode: chargingMode,
+        targetBatteryPercent:
+          chargingMode === "percentage" ? targetBatteryPercent : null,
+        durationMinutes: chargingMode === "time" ? chargingDuration : null,
+      }
     );
   };
 
@@ -286,6 +310,124 @@ export default function EVOwnerDashboard() {
                 </p>
               </div>
 
+              <div className="space-y-4 border-t border-primary/10 pt-6">
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-3 block">
+                    Charging Mode
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <Button
+                      onClick={() => setChargingMode("manual")}
+                      className={`py-4 font-semibold transition-all ${
+                        chargingMode === "manual"
+                          ? "bg-primary text-background-200"
+                          : "bg-background-200/50 border border-primary/20 text-foreground hover:bg-primary/10"
+                      }`}
+                    >
+                      Manual
+                    </Button>
+                    <Button
+                      onClick={() => setChargingMode("percentage")}
+                      className={`py-4 font-semibold transition-all ${
+                        chargingMode === "percentage"
+                          ? "bg-primary text-background-200"
+                          : "bg-background-200/50 border border-primary/20 text-foreground hover:bg-primary/10"
+                      }`}
+                    >
+                      By %
+                    </Button>
+                    <Button
+                      onClick={() => setChargingMode("time")}
+                      className={`py-4 font-semibold transition-all ${
+                        chargingMode === "time"
+                          ? "bg-primary text-background-200"
+                          : "bg-background-200/50 border border-primary/20 text-foreground hover:bg-primary/10"
+                      }`}
+                    >
+                      By Time
+                    </Button>
+                  </div>
+                </div>
+
+                {chargingMode === "percentage" && (
+                  <div className="space-y-2 bg-background-200/30 p-4 rounded-lg border border-primary/20">
+                    <Input
+                      type="number"
+                      label="Target Battery Percentage (%)"
+                      min={Math.ceil(initialBatteryPercent) + 1}
+                      max="100"
+                      value={targetBatteryPercent.toString()}
+                      onChange={(e) =>
+                        setTargetBatteryPercent(
+                          Math.min(
+                            100,
+                            Math.max(
+                              Math.ceil(initialBatteryPercent) + 1,
+                              parseFloat(e.target.value)
+                            )
+                          )
+                        )
+                      }
+                      className="w-full"
+                      classNames={{
+                        input:
+                          "bg-background-100/50 text-foreground placeholder-foreground/50",
+                        inputWrapper:
+                          "bg-background-100/50 border border-primary/20",
+                      }}
+                    />
+                    <p className="text-xs text-foreground/60">
+                      Charging will automatically stop when battery reaches{" "}
+                      {targetBatteryPercent}% (current: {initialBatteryPercent}
+                      %)
+                    </p>
+                  </div>
+                )}
+
+                {chargingMode === "time" && (
+                  <div className="space-y-2 bg-background-200/30 p-4 rounded-lg border border-primary/20">
+                    <Select
+                      label="Charging Duration (Minutes)"
+                      selectedKeys={new Set([chargingDuration.toString()])}
+                      onSelectionChange={(keys) =>
+                        setChargingDuration(parseInt(Array.from(keys)[0]))
+                      }
+                      className="w-full"
+                      classNames={{
+                        trigger:
+                          "bg-background-100/50 border border-primary/20 text-foreground hover:bg-background-100/50",
+                        popoverContent:
+                          "bg-background-100 border border-primary/20",
+                        value: "text-foreground font-semibold",
+                        innerWrapper: "text-foreground",
+                      }}
+                    >
+                      {[5, 10, 15, 20, 30, 45, 60].map((duration) => (
+                        <SelectItem
+                          key={duration}
+                          value={duration.toString()}
+                          textValue={`${duration} minutes`}
+                        >
+                          {duration} minutes
+                        </SelectItem>
+                      ))}
+                    </Select>
+                    <p className="text-xs text-foreground/60">
+                      Charging will automatically stop after {chargingDuration}{" "}
+                      minutes
+                    </p>
+                  </div>
+                )}
+
+                {chargingMode === "manual" && (
+                  <div className="bg-background-200/30 p-4 rounded-lg border border-primary/20">
+                    <p className="text-sm text-foreground/70">
+                      Start and stop charging manually whenever you want
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <Button
                 onClick={handleStartCharging}
                 disabled={pendingSession !== null}
@@ -316,6 +458,10 @@ export default function EVOwnerDashboard() {
               <ChargingTimer
                 {...chargingData}
                 initialBatteryPercent={initialBatteryPercent}
+                chargingMode={chargingMode}
+                targetBatteryPercent={targetBatteryPercent}
+                durationMinutes={chargingDuration}
+                autoStopReason={chargingData.autoStopReason}
               />
               <Button
                 onClick={handleStopCharging}

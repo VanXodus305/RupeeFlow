@@ -16,6 +16,10 @@ export default function ChargingTimer({
   currentPower,
   chargePercentage,
   initialBatteryPercent = 0,
+  chargingMode = "manual",
+  targetBatteryPercent = null,
+  durationMinutes = null,
+  autoStopReason = null,
 }) {
   const minutes = Math.floor(secondsUsed / 60);
   const seconds = secondsUsed % 60;
@@ -171,6 +175,97 @@ export default function ChargingTimer({
               </div>
             </div>
           </div>
+
+          {/* Auto-Stop Information */}
+          {(chargingMode === "percentage" || chargingMode === "time") && (
+            <div className="mt-4 bg-gradient-to-r from-secondary/20 to-primary/20 border border-secondary/30 rounded-lg p-3 md:p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+                <p className="text-sm font-semibold text-foreground">
+                  Auto-Stop Settings
+                </p>
+              </div>
+
+              {chargingMode === "percentage" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-foreground/60 mb-1">
+                      Target Battery
+                    </p>
+                    <p className="text-lg font-bold text-secondary">
+                      {targetBatteryPercent}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-foreground/60 mb-1">
+                      Current Battery
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      {(initialBatteryPercent + chargePercentage).toFixed(1)}%
+                    </p>
+                  </div>
+                  <Progress
+                    size="sm"
+                    value={Math.min(
+                      targetBatteryPercent,
+                      initialBatteryPercent + chargePercentage
+                    )}
+                    maxValue={targetBatteryPercent}
+                    className="col-span-2"
+                    classNames={{
+                      indicator: "bg-gradient-to-r from-secondary to-primary",
+                      track: "bg-background-100/20",
+                    }}
+                  />
+                </div>
+              )}
+
+              {chargingMode === "time" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-foreground/60 mb-1">
+                      Duration Limit
+                    </p>
+                    <p className="text-lg font-bold text-secondary">
+                      {durationMinutes} min
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-foreground/60 mb-1">
+                      Elapsed Time
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      {Math.floor(secondsUsed / 60)} min
+                    </p>
+                  </div>
+                  <Progress
+                    size="sm"
+                    value={Math.min(
+                      100,
+                      (secondsUsed / 60 / durationMinutes) * 100
+                    )}
+                    maxValue={100}
+                    className="col-span-2"
+                    classNames={{
+                      indicator: "bg-gradient-to-r from-secondary to-primary",
+                      track: "bg-background-100/20",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {autoStopReason && (
+            <div className="mt-4 bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 rounded-lg p-3 md:p-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-primary animate-pulse"></div>
+                <p className="text-sm font-semibold text-foreground">
+                  {autoStopReason}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Live Stats Bar */}
           <div className="flex gap-3 mt-4 text-xs">
