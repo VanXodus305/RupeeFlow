@@ -6,7 +6,7 @@
 [![React](https://img.shields.io/badge/React-18+-blue?logo=react&style=flat-square)](https://reactjs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.1-38B2AC?logo=tailwind-css&style=flat-square)](https://tailwindcss.com/)
 [![Polygon](https://img.shields.io/badge/Polygon-Amoy%20Testnet-8247E5?logo=polygon&style=flat-square)](https://polygon.technology/)
-[![ethers.js](https://img.shields.io/badge/ethers.js-v6.16.0-F16822?logo=ethereum&style=flat-square)](https://docs.ethers.org/)
+[![Ethers](https://img.shields.io/badge/ethers-%232535A0.svg?style=flat-square&logo=ethers&logoColor=white)](https://docs.ethers.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Green?logo=mongodb&style=flat-square)](https://www.mongodb.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
@@ -14,9 +14,7 @@
 
 The future of EV charging is here. RupeeFlow brings transparent, secure, and efficient charging settlements powered by blockchain technology.
 
-[Demo](#-quick-start) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Installation](#-installation) • [Documentation](#-documentation)
-
-</div>
+[Demo](https://rupee-flow-v1.vercel.app) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Installation](#-installation)
 
 ---
 
@@ -26,12 +24,12 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 
 ### Why RupeeFlow?
 
-✅ **Transparent Settlements** - All transactions recorded on blockchain  
-✅ **Instant Payments** - Real-time settlement with MetaMask  
-✅ **Secure & Trustless** - No intermediaries, cryptographic security  
-✅ **Real-time Monitoring** - Live meter readings and session tracking  
-✅ **Mobile-First Design** - Works seamlessly on all devices  
-✅ **Operator Dashboard** - Full control and analytics for station operators  
+✅ **Transparent Settlements** - All transactions recorded on blockchain
+✅ **Instant Payments** - Real-time settlement with MetaMask
+✅ **Secure & Trustless** - No intermediaries, cryptographic security
+✅ **Real-time Monitoring** - Live meter readings and session tracking
+✅ **Mobile-First Design** - Works seamlessly on all devices
+✅ **Operator Dashboard** - Full control and analytics for station operators
 
 ---
 
@@ -43,56 +41,62 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 <tr>
 <td>
 
-- 📱 **Find & Book Charging Stations**
-  - Real-time availability
-  - Location-based search
-  - Operator ratings & reviews
+- 🔌 **Start & Stop Charging**
 
-- ⚡ **Live Charging Sessions**
+  - One-tap charging initiation
   - Real-time meter readings
-  - Current power consumption
-  - Battery charge percentage tracking
-  - Session duration & energy metrics
-  - Cost estimation in MATIC & INR
+  - Battery percentage tracking
+  - Live power monitoring
 
-- 💳 **Instant Blockchain Settlement**
-  - MetaMask wallet integration
-  - One-click settlement
-  - Transaction hash tracking
-  - PolygonScan verification
+- ⏱️ **Flexible Charging Modes**
 
-- 📊 **Charging History**
-  - Complete session records
+  - Manual control mode
+  - Auto-stop by percentage
+  - Time-based charging
+  - Safety cutoff at 100%
+
+- 💳 **Instant Settlement**
+
+  - Blockchain-based payments
+  - MetaMask integration
+  - Real-time cost calculation
+  - MATIC to INR conversion
+
+- 📊 **Session History**
+  - Complete charging records
+  - Energy consumption details
   - Cost breakdown
-  - Settlement status
-  - Downloadable records
+  - Settlement status tracking
 
 </td>
 <td>
 
-- 🔐 **Secure Authentication**
-  - NextAuth.js integration
-  - Google OAuth support
-  - Email/password login
-  - Session management
+- 🎯 **Smart Charging Features**
 
-- 💰 **Smart Cost Tracking**
-  - Real-time pricing
-  - Gas fee estimation
-  - MATIC to INR conversion
-  - Transparent billing
+  - Target battery optimization
+  - Cost prediction
+  - Charging analytics
+  - Performance metrics
 
-- 📱 **MetaMask Mobile Support**
-  - Deep linking integration
-  - Automatic wallet detection
-  - Mobile app integration
-  - One-tap transaction signing
+- 🔐 **Security**
 
-- ⚠️ **Smart Wallet Warnings**
-  - MetaMask installation check
-  - Mobile app detection
-  - Device-specific guidance
-  - Non-intrusive alerts
+  - Wallet encryption
+  - Cryptographic signing
+  - Transaction verification
+  - Data privacy
+
+- 📱 **Mobile Friendly**
+
+  - Responsive design
+  - MetaMask mobile support
+  - Touch-optimized UI
+  - Offline capability
+
+- 🌍 **Multi-Station Support**
+  - Station discovery
+  - Rate comparison
+  - Operator ratings
+  - Location tracking
 
 </td>
 </tr>
@@ -100,7 +104,12 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 
 ### 🏢 **For Station Operators**
 
+<table>
+<tr>
+<td>
+
 - 📝 **Operator Onboarding**
+
   - Profile creation & verification
   - Station setup wizard
   - Rate configuration
@@ -112,10 +121,25 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
   - Session management
   - Performance analytics
 
+</td>
+<td>
+
 - 💳 **Settlement Management**
+
   - Payment receipt tracking
   - Transaction verification
   - Revenue reconciliation
+  - Settlement history
+
+- 🔧 **Station Management**
+  - Multiple charger setup
+  - Live availability status
+  - Maintenance scheduling
+  - Performance reporting
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -124,48 +148,48 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 <div align="center">
 
 ### Frontend
+
 ![Next.js](https://img.shields.io/badge/-Next.js-black?logo=next.js&logoColor=white&style=for-the-badge)
 ![React](https://img.shields.io/badge/-React-61DAFB?logo=react&logoColor=black&style=for-the-badge)
-![Tailwind CSS](https://img.shields.io/badge/-Tailwind%20CSS-06B6D4?logo=tailwind-css&logoColor=white&style=for-the-badge)
-![HeroUI](https://img.shields.io/badge/-HeroUI-FF3B00?logo=react&logoColor=white&style=for-the-badge)
+![Tailwind CSS](https://img.shields.io/badge/-Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=white&style=for-the-badge)
+![HeroUI](https://img.shields.io/badge/-HeroUI-000000?logo=heroui&logoColor=white&style=for-the-badge)
 
 ### Blockchain & Web3
-![ethers.js](https://img.shields.io/badge/-ethers.js-F16822?logo=ethereum&logoColor=white&style=for-the-badge)
+
+![Ethers](https://img.shields.io/badge/ethers-%232535A0.svg?style=for-the-badge&logo=ethers&logoColor=white)
 ![MetaMask](https://img.shields.io/badge/-MetaMask-F6851B?logo=metamask&logoColor=white&style=for-the-badge)
 ![Polygon](https://img.shields.io/badge/-Polygon-8247E5?logo=polygon&logoColor=white&style=for-the-badge)
 ![Solidity](https://img.shields.io/badge/-Solidity-363636?logo=solidity&logoColor=white&style=for-the-badge)
-![Remix IDE](https://img.shields.io/badge/-Remix%20IDE-000000?logo=ethereum&logoColor=white&style=for-the-badge)
-
+![Remix IDE](https://img.shields.io/badge/-Remix%20IDE-1E90FF?logo=remix-ide&logoColor=white&style=for-the-badge)
 
 ### Backend & Database
+
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white&style=for-the-badge)
 ![MongoDB](https://img.shields.io/badge/-MongoDB-47A248?logo=mongodb&logoColor=white&style=for-the-badge)
 ![Express](https://img.shields.io/badge/-Express-000000?logo=express&logoColor=white&style=for-the-badge)
 ![Socket.io](https://img.shields.io/badge/-Socket.io-010101?logo=socket.io&logoColor=white&style=for-the-badge)
 
-
 </div>
 
 ### **Core Technologies**
 
-| Component | Technology | Version |
-|-----------|-----------|---------|
-| **Framework** | Next.js with Turbopack | 15.4.8 |
-| **Runtime** | Node.js | 18+ |
-| **UI Library** | HeroUI (headless) | Latest |
-| **Styling** | Tailwind CSS | 3.4.1 |
-| **State Management** | React Hooks | - |
-| **Web3 Library** | ethers.js | v6.16.0 |
-| **Smart Contracts** | Solidity | 0.8.x |
-| **Blockchain** | Polygon Amoy Testnet | Chain ID: 80002 |
-| **Database** | MongoDB | - |
-| **ODM** | Mongoose | - |
-| **Real-time** | Socket.io | - |
-| **Authentication** | NextAuth.js | - |
-| **Icons** | React Icons | - |
+| Component            | Technology             | Version         |
+| -------------------- | ---------------------- | --------------- |
+| **Framework**        | Next.js with Turbopack | 15.4.8          |
+| **Runtime**          | Node.js                | 18+             |
+| **UI Library**       | HeroUI (headless)      | Latest          |
+| **Styling**          | Tailwind CSS           | 3.4.1           |
+| **State Management** | React Hooks            | -               |
+| **Web3 Library**     | ethers.js              | v6.16.0         |
+| **Smart Contracts**  | Solidity               | 0.8.x           |
+| **Blockchain**       | Polygon Amoy Testnet   | Chain ID: 80002 |
+| **Database**         | MongoDB                | -               |
+| **ODM**              | Mongoose               | -               |
+| **Real-time**        | Socket.io              | -               |
+| **Authentication**   | NextAuth.js            | -               |
+| **Icons**            | React Icons            | -               |
 
 ---
-
 
 ## 📋 Project Structure
 
@@ -229,19 +253,22 @@ RupeeFlow/
 ## 🚀 Installation
 
 ### Prerequisites
-- ✅ Node.js 18+ 
+
+- ✅ Node.js 18+
 - ✅ npm or yarn
 - ✅ MongoDB instance
 - ✅ MetaMask browser extension
 - ✅ Polygon Amoy testnet setup
 
 ### Step 1: Clone the Repository
+
 ```bash
 git clone https://github.com/yourusername/rupeeflow.git
 cd rupeeflow
 ```
 
 ### Step 2: Install Dependencies
+
 ```bash
 # Install main dependencies
 npm install
@@ -271,6 +298,7 @@ cd ..
 #### Using Remix IDE (Recommended)
 
 **Step 1: Open Remix IDE**
+
 ```
 1. Navigate to https://remix.ethereum.org/
 2. Create a new file: contracts/RupeeFlow.sol
@@ -278,6 +306,7 @@ cd ..
 ```
 
 **Step 2: Compile Contract**
+
 ```
 1. Go to Solidity Compiler (left sidebar)
 2. Select compiler version: 0.8.19 or compatible
@@ -286,6 +315,7 @@ cd ..
 ```
 
 **Step 3: Deploy to Polygon Amoy**
+
 ```
 1. Go to Deploy & Run Transactions (left sidebar)
 2. Select Environment: "Injected Provider - MetaMask"
@@ -298,6 +328,7 @@ cd ..
 ```
 
 **Step 4: Get Contract Address**
+
 ```
 1. Copy the contract address from deployment receipt
 2. Update environment variable: NEXT_PUBLIC_RUPEEFLOW_ADDRESS
@@ -305,6 +336,7 @@ cd ..
 ```
 
 **Step 5: Verify Contract (Optional)**
+
 ```
 1. Go to https://amoy.polygonscan.com/
 2. Search for deployed contract address
@@ -335,11 +367,13 @@ npx hardhat run scripts/deploy.js --network amoy
 ## 🔌 API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/[...nextauth]` - NextAuth.js endpoints
 - `POST /api/auth/credentials-signin` - Credentials login
 - `POST /api/auth/google-signin` - Google OAuth
 
 ### Charging Operations
+
 - `POST /api/charging/start` - Start charging session
 - `POST /api/charging/stop` - Stop charging session
 - `POST /api/charging/save-session` - Save session to DB
@@ -348,11 +382,13 @@ npx hardhat run scripts/deploy.js --network amoy
 - `GET /api/charging/ongoing` - Get active sessions
 
 ### User Management
+
 - `GET /api/user/profile` - Get user profile
 - `GET /api/user/profile/[id]` - Get specific user
 - `PUT /api/user/profile` - Update user profile
 
 ### Operator Management
+
 - `POST /api/operator/create` - Register new operator
 - `GET /api/operator/list` - List all operators
 - `GET /api/operator/profile` - Get operator profile
@@ -364,6 +400,7 @@ npx hardhat run scripts/deploy.js --network amoy
 ## 🎯 Key Features in Detail
 
 ### ⚡ Real-Time Meter Readings
+
 - Live WebSocket updates via Socket.io
 - Battery percentage tracking
 - Energy consumption (kWh) monitoring
@@ -371,6 +408,7 @@ npx hardhat run scripts/deploy.js --network amoy
 - Session duration tracking
 
 ### 💰 Smart Settlement System
+
 - Automatic cost calculation
 - Gas fee estimation
 - MATIC to INR conversion
@@ -378,6 +416,7 @@ npx hardhat run scripts/deploy.js --network amoy
 - Receipt generation
 
 ### 🔐 Security Features
+
 - MetaMask wallet integration
 - Transaction signing required
 - Session validation
@@ -385,12 +424,14 @@ npx hardhat run scripts/deploy.js --network amoy
 - Blockchain verification
 
 ### 📱 Mobile Optimization
+
 - MetaMask Mobile deep linking
 - Responsive design (Mobile-first)
 - Touch-optimized UI
 - Fast load times with Turbopack
 
 ### 🎨 User Experience
+
 - Animated transitions
 - Loading states with spinners
 - Error handling with user-friendly messages
@@ -401,15 +442,14 @@ npx hardhat run scripts/deploy.js --network amoy
 
 ## 📊 Performance Optimizations
 
-✅ **Batched State Updates** - Reduced re-renders by 80%  
-✅ **React.memo() Components** - Prevented unnecessary renders  
-✅ **Socket.io Optimization** - Efficient real-time updates  
-✅ **Turbopack** - Lightning-fast builds and HMR  
-✅ **Image Optimization** - Automatic Next.js optimization  
-✅ **CSS Optimization** - Tailwind purge for minimal bundle  
+✅ **Batched State Updates** - Reduced re-renders by 80%
+✅ **React.memo() Components** - Prevented unnecessary renders
+✅ **Socket.io Optimization** - Efficient real-time updates
+✅ **Turbopack** - Lightning-fast builds and HMR
+✅ **Image Optimization** - Automatic Next.js optimization
+✅ **CSS Optimization** - Tailwind purge for minimal bundle
 
 ---
-
 
 ## 🤝 Contributing
 
@@ -421,20 +461,22 @@ We love contributions! Please follow these steps:
 4. **Push** to the branch (`git push origin feature/amazing-feature`)
 5. **Open** a Pull Request
 
-
 ## 🐛 Troubleshooting
 
 ### MetaMask Connection Issues
+
 - ✅ Ensure MetaMask is installed and unlocked
 - ✅ Switch to Polygon Amoy testnet (Chain ID: 80002)
 - ✅ Add test MATIC from [faucet](https://faucet.polygon.technology/)
 
 ### Database Connection Errors
+
 - ✅ Verify MongoDB URI is correct
 - ✅ Check network access in MongoDB Atlas
 - ✅ Ensure IP whitelist includes your address
 
 ### Transaction Failures
+
 - ✅ Check sufficient MATIC balance for gas
 - ✅ Verify RPC endpoint is working
 - ✅ Check transaction gas limit
@@ -464,8 +506,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Built with ❤️ for the EV Revolution
 
 ⭐ **If you find this project useful, please consider giving it a star!**
-
-
 
 **Made by the RupeeFlow Team**
 
