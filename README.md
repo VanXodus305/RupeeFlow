@@ -130,10 +130,12 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 ![HeroUI](https://img.shields.io/badge/-HeroUI-FF3B00?logo=react&logoColor=white&style=for-the-badge)
 
 ### Blockchain & Web3
-![Ethereum](https://img.shields.io/badge/-Ethereum-3C3C3D?logo=ethereum&logoColor=white&style=for-the-badge)
 ![ethers.js](https://img.shields.io/badge/-ethers.js-F16822?logo=ethereum&logoColor=white&style=for-the-badge)
 ![MetaMask](https://img.shields.io/badge/-MetaMask-F6851B?logo=metamask&logoColor=white&style=for-the-badge)
 ![Polygon](https://img.shields.io/badge/-Polygon-8247E5?logo=polygon&logoColor=white&style=for-the-badge)
+![Solidity](https://img.shields.io/badge/-Solidity-363636?logo=solidity&logoColor=white&style=for-the-badge)
+![Remix IDE](https://img.shields.io/badge/-Remix%20IDE-000000?logo=ethereum&logoColor=white&style=for-the-badge)
+
 
 ### Backend & Database
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white&style=for-the-badge)
@@ -141,10 +143,6 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 ![Express](https://img.shields.io/badge/-Express-000000?logo=express&logoColor=white&style=for-the-badge)
 ![Socket.io](https://img.shields.io/badge/-Socket.io-010101?logo=socket.io&logoColor=white&style=for-the-badge)
 
-### Additional Tools
-![NextAuth.js](https://img.shields.io/badge/-NextAuth.js-000000?logo=nextauth.js&logoColor=white&style=for-the-badge)
-![Mongoose](https://img.shields.io/badge/-Mongoose-880000?logo=mongodb&logoColor=white&style=for-the-badge)
-![Solidity](https://img.shields.io/badge/-Solidity-363636?logo=solidity&logoColor=white&style=for-the-badge)
 
 </div>
 
@@ -168,25 +166,6 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 
 ---
 
-## 🎨 Design System
-
-- **Color Palette**
-  - Primary: `#1fb5a8` (Teal)
-  - Secondary: `#d4e6a0` (Light Green)
-  - Background-100: `#1a3a48` (Dark Blue)
-  - Background-200: `#050e14` (Darker Blue)
-
-- **Typography**
-  - Headings: Conthrax Font (Bold, Distinctive)
-  - Body: System Fonts
-  - Numbers: Conthrax Font (Special emphasis)
-
-- **Responsive Design**
-  - Mobile-first approach
-  - Breakpoints: sm (640px), md (768px), lg (1024px)
-  - Fully responsive on all devices
-
----
 
 ## 📋 Project Structure
 
@@ -273,56 +252,6 @@ npm install
 cd ..
 ```
 
-### Step 3: Environment Setup
-Create a `.env.local` file in the root directory:
-
-```env
-# Database
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/rupeeflow
-
-# NextAuth Configuration
-NEXTAUTH_SECRET=your_secret_key_here
-NEXTAUTH_URL=http://localhost:3000
-
-# OAuth Providers
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-# Blockchain Configuration
-NEXT_PUBLIC_POLYGON_AMOY_RPC=https://rpc-amoy.polygon.technology
-NEXT_PUBLIC_CONTRACT_ADDRESS=0x...
-NEXT_PUBLIC_CHAIN_ID=80002
-
-# API Configuration
-NEXT_PUBLIC_API_URL=http://localhost:3000/api
-```
-
-Create `server/.env`:
-```env
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/rupeeflow
-PORT=3001
-```
-
-### Step 4: Run the Application
-
-**Terminal 1 - Frontend (Next.js):**
-```bash
-npm run dev
-# App runs on http://localhost:3000
-```
-
-**Terminal 2 - Backend Server:**
-```bash
-cd server
-npm run dev
-# Server runs on http://localhost:3001
-```
-
-### Step 5: Access the Application
-- 🏠 Homepage: http://localhost:3000
-- 👤 Login: http://localhost:3000/login
-- 📊 Dashboard: http://localhost:3000/ev-owner-dashboard (after login)
-
 ---
 
 ## 🔐 Smart Contract
@@ -339,7 +268,61 @@ npm run dev
 
 ### Deployment
 
+#### Using Remix IDE (Recommended)
+
+**Step 1: Open Remix IDE**
+```
+1. Navigate to https://remix.ethereum.org/
+2. Create a new file: contracts/RupeeFlow.sol
+3. Copy the entire RupeeFlow.sol contract code
+```
+
+**Step 2: Compile Contract**
+```
+1. Go to Solidity Compiler (left sidebar)
+2. Select compiler version: 0.8.19 or compatible
+3. Click "Compile RupeeFlow.sol"
+4. Ensure no compilation errors
+```
+
+**Step 3: Deploy to Polygon Amoy**
+```
+1. Go to Deploy & Run Transactions (left sidebar)
+2. Select Environment: "Injected Provider - MetaMask"
+3. Ensure MetaMask is connected to Polygon Amoy testnet
+4. Chain ID should be: 80002
+5. Select "RupeeFlow" contract from dropdown
+6. Click "Deploy"
+7. Approve MetaMask transaction
+8. Wait for confirmation
+```
+
+**Step 4: Get Contract Address**
+```
+1. Copy the contract address from deployment receipt
+2. Update environment variable: NEXT_PUBLIC_RUPEEFLOW_ADDRESS
+3. Verify on PolygonScan: https://amoy.polygonscan.com/
+```
+
+**Step 5: Verify Contract (Optional)**
+```
+1. Go to https://amoy.polygonscan.com/
+2. Search for deployed contract address
+3. Click "Verify and Publish"
+4. Select Solidity compiler version: 0.8.19
+5. Paste contract source code
+6. Click "Verify and Publish"
+```
+
+#### Using Hardhat (Alternative)
+
 ```bash
+# Install Hardhat
+npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox
+
+# Initialize Hardhat project
+npx hardhat init
+
 # Compile contract
 npx hardhat compile
 
@@ -427,30 +410,6 @@ npx hardhat run scripts/deploy.js --network amoy
 
 ---
 
-## 🧪 Testing
-
-```bash
-# Run tests
-npm run test
-
-# Generate coverage report
-npm run test:coverage
-
-# Watch mode
-npm run test:watch
-```
-
----
-
-## 📚 Documentation
-
-- 📖 [Quick Start Guide](./docs/QUICK_START_RUPEEFLOW.md)
-- 🏗️ [Build Guide](./docs/BUILD_GUIDE.md)
-- 🚀 [Deployment Guide](./docs/DEPLOY_CONTRACT.md)
-- ✅ [Implementation Checklist](./docs/IMPLEMENTATION_CHECKLIST_RUPEEFLOW.md)
-- 📊 [Settlement Comparison](./docs/SETTLEMENT_COMPARISON.md)
-
----
 
 ## 🤝 Contributing
 
@@ -462,15 +421,6 @@ We love contributions! Please follow these steps:
 4. **Push** to the branch (`git push origin feature/amazing-feature`)
 5. **Open** a Pull Request
 
-### Development Guidelines
-
-- Follow the existing code style
-- Write meaningful commit messages
-- Add comments for complex logic
-- Test your changes locally
-- Update documentation as needed
-
----
 
 ## 🐛 Troubleshooting
 
@@ -497,25 +447,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 🙏 Acknowledgments
-
-- 🏛️ [Polygon](https://polygon.technology/) for the blockchain infrastructure
-- 🦊 [MetaMask](https://metamask.io/) for Web3 integration
-- ⚡ [Next.js](https://nextjs.org/) for the amazing framework
-- 🎨 [HeroUI](https://heroui.com/) for beautiful components
-- 🌊 [Tailwind CSS](https://tailwindcss.com/) for styling
-
----
-
-## 📞 Support & Contact
-
-- 📧 Email: support@rupeeflow.io
-- 💬 Discord: [Join our community](#)
-- 🐦 Twitter: [@RupeeFlow](#)
-- 📱 Telegram: [@RupeeFlow](#)
-
----
-
 ## 🚀 Roadmap
 
 - [ ] Multi-chain support (Ethereum, Arbitrum, Optimism)
@@ -534,7 +465,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ⭐ **If you find this project useful, please consider giving it a star!**
 
-[Report Bug](../../issues) • [Request Feature](../../issues) • [Documentation](./docs)
+
 
 **Made by the RupeeFlow Team**
 
