@@ -141,7 +141,7 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 ![React](https://img.shields.io/badge/-react-61DAFB?logo=react&logoColor=black&style=for-the-badge)
 ![Tailwind CSS](https://img.shields.io/badge/-Tailwind%20CSS-06B6D4?logo=tailwind-css&logoColor=white&style=for-the-badge)
 ![HeroUI](https://img.shields.io/badge/-HeroUI-black?logo=heroui&logoColor=white&style=for-the-badge)
-![Framer Motion](https://img.shields.io/badge/-Framer%20Motion-0055FF?logo=framer&logoColor=white&style=for-the-badge)
+![Motion](https://img.shields.io/badge/Motion-%23FFF312?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgMzQgMTIiPjxwYXRoIGZpbGw9IiMwMDAwMDAiIGQ9Ik0gMTIuODM4IDAgTCA2LjEyIDExLjk4OSBMIDAgMTEuOTg5IEwgNS4yNDUgMi42MjggQyA2LjA1OSAxLjE3NiA4LjA4OCAwIDkuNzc4IDAgWiBNIDI3Ljg0NiAyLjk5NyBDIDI3Ljg0NiAxLjM0MiAyOS4yMTYgMCAzMC45MDYgMCBDIDMyLjU5NiAwIDMzLjk2NiAxLjM0MiAzMy45NjYgMi45OTcgQyAzMy45NjYgNC42NTMgMzIuNTk2IDUuOTk1IDMwLjkwNiA1Ljk5NSBDIDI5LjIxNiA1Ljk5NSAyNy44NDYgNC42NTMgMjcuODQ2IDIuOTk3IFogTSAxMy45ODUgMCBMIDIwLjEwNSAwIEwgMTMuMzg3IDExLjk4OSBMIDcuMjY3IDExLjk4OSBaIE0gMjEuMjE0IDAgTCAyNy4zMzQgMCBMIDIyLjA4OCA5LjM2MiBDIDIxLjI3NSAxMC44MTMgMTkuMjQ2IDExLjk4OSAxNy41NTYgMTEuOTg5IEwgMTQuNDk2IDExLjk4OSBaIj48L3BhdGg+PC9zdmc+&style=for-the-badge)
 
 ### Blockchain & Web3
 
