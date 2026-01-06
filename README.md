@@ -43,7 +43,58 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 <tr>
 <td>
 
+- 🔌 **Start & Stop Charging**
+
+  - One-tap charging initiation
+  - Real-time meter readings
+  - Battery percentage tracking
+  - Live power monitoring
+
+- ⏱️ **Flexible Charging Modes**
+
+  - Manual control mode
+  - Auto-stop by percentage
+  - Time-based charging
+  - Safety cutoff at 100%
+
+- 💳 **Instant Settlement**
+  - Blockchain-based payments
+  - MetaMask integration
+  - Real-time cost calculation
+  - MATIC to INR conversion
+
+</td>
+<td>
+
+- 📊 **Session History**
+
+  - Complete charging records
+  - Energy consumption details
+  - Cost breakdown
+  - Settlement status tracking
+
+- 🎯 **Smart Charging Features**
+
+  - Target battery optimization
+  - Cost prediction
+  - Charging analytics
+  - Performance metrics
+
+- 🌍 **Multi-Station Support**
+  - Station discovery
+  - Rate comparison
+  - Operator ratings
+  - Location tracking
+
+</td>
+</tr>
+</table>
+
 ### 🏢 **For Station Operators**
+
+<table>
+<tr>
+<td>
 
 - 📝 **Operator Onboarding**
 
@@ -51,17 +102,32 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
   - Station setup wizard
   - Rate configuration
   - Charging capacity management
-- 📈 **Dashboard Analytics**
 
+- 📈 **Dashboard Analytics**
   - Real-time operational metrics
   - Revenue tracking
   - Session management
   - Performance analytics
+
+</td>
+<td>
+
 - 💳 **Settlement Management**
 
   - Payment receipt tracking
   - Transaction verification
   - Revenue reconciliation
+  - Settlement history
+
+- 🔧 **Station Management**
+  - Multiple charger setup
+  - Live availability status
+  - Maintenance scheduling
+  - Performance reporting
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -83,7 +149,7 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 ![MetaMask](https://img.shields.io/badge/MetaMask-orange?logo=data:image/svg%2bxml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogOS4wMyBCdWlsZCAwKSAgLS0+CjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiCgkgdmlld0JveD0iMCAwIDE0MiAxMzYuODc4IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAxNDIgMTM2Ljg3ODsiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8cGF0aCBzdHlsZT0iZmlsbDojRkY1QzE2OyIgZD0iTTEzMi42ODIsMTMyLjE5MmwtMzAuNTgzLTkuMTA2bC0yMy4wNjMsMTMuNzg3bC0xNi4wOTItMC4wMDdsLTIzLjA3Ny0xMy43OGwtMzAuNTY5LDkuMTA2TDAsMTAwLjgwMQoJbDkuMjk5LTM0LjgzOUwwLDM2LjUwN0w5LjI5OSwwbDQ3Ljc2NiwyOC41MzhoMjcuODVMMTMyLjY4MiwwbDkuMjk5LDM2LjUwN2wtOS4yOTksMjkuNDU1bDkuMjk5LDM0LjgzOUwxMzIuNjgyLDEzMi4xOTIKCUwxMzIuNjgyLDEzMi4xOTJ6Ii8+CjxwYXRoIHN0eWxlPSJmaWxsOiNGRjVDMTY7IiBkPSJNOS4zMDUsMGw0Ny43NjcsMjguNTU4bC0xLjg5OSwxOS41OTlMOS4zMDUsMHogTTM5Ljg3NSwxMDAuODE0bDIxLjAxNywxNi4wMWwtMjEuMDE3LDYuMjYxCglDMzkuODc1LDEyMy4wODUsMzkuODc1LDEwMC44MTQsMzkuODc1LDEwMC44MTR6IE01OS4yMTIsNzQuMzQ1bC00LjAzOS0yNi4xNzRMMjkuMzE3LDY1Ljk3bC0wLjAxNC0wLjAwN3YwLjAxM2wwLjA4LDE4LjMyMQoJbDEwLjQ4NS05Ljk1MUw1OS4yMTIsNzQuMzQ1TDU5LjIxMiw3NC4zNDV6IE0xMzIuNjgyLDBMODQuOTE1LDI4LjU1OGwxLjg5MywxOS41OTlMMTMyLjY4MiwweiBNMTAyLjExMywxMDAuODE0bC0yMS4wMTgsMTYuMDEKCWwyMS4wMTgsNi4yNjFWMTAwLjgxNHogTTExMi42NzgsNjUuOTc1aDAuMDA3SDExMi42Nzh2LTAuMDEzbC0wLjAwNiwwLjAwN0w4Ni44MTUsNDguMTcxbC00LjAzOSwyNi4xNzRoMTkuMzM2bDEwLjQ5Miw5Ljk1CglDMTEyLjYwNCw4NC4yOTUsMTEyLjY3OCw2NS45NzUsMTEyLjY3OCw2NS45NzV6Ii8+CjxwYXRoIHN0eWxlPSJmaWxsOiNFMzQ4MDc7IiBkPSJNMzkuODY4LDEyMy4wODVsLTMwLjU2OSw5LjEwNkwwLDEwMC44MTRoMzkuODY4QzM5Ljg2OCwxMDAuODE0LDM5Ljg2OCwxMjMuMDg1LDM5Ljg2OCwxMjMuMDg1egoJIE01OS4yMDUsNzQuMzM4bDUuODM5LDM3Ljg0bC04LjA5My0yMS4wNEwyOS4zNyw4NC4yOTVsMTAuNDkxLTkuOTU2aDE5LjM0NEw1OS4yMDUsNzQuMzM4eiBNMTAyLjExMiwxMjMuMDg1bDMwLjU3LDkuMTA2CglsOS4yOTktMzEuMzc4aC0zOS44NjlDMTAyLjExMiwxMDAuODE0LDEwMi4xMTIsMTIzLjA4NSwxMDIuMTEyLDEyMy4wODV6IE04Mi43NzYsNzQuMzM4bC01LjgzOSwzNy44NGw4LjA5Mi0yMS4wNGwyNy41ODMtNi44NDMKCWwtMTAuNDk4LTkuOTU2SDgyLjc3NlY3NC4zMzh6Ii8+CjxwYXRoIHN0eWxlPSJmaWxsOiNGRjhENUQ7IiBkPSJNMCwxMDAuODAxbDkuMjk5LTM0LjgzOWgxOS45OTdsMC4wNzMsMTguMzI3bDI3LjU4NCw2Ljg0M2w4LjA5MiwyMS4wMzlsLTQuMTYsNC42MzNsLTIxLjAxNy0xNi4wMUgwCglWMTAwLjgwMXogTTE0MS45ODEsMTAwLjgwMWwtOS4yOTktMzQuODM5aC0xOS45OThsLTAuMDczLDE4LjMyN2wtMjcuNTgyLDYuODQzbC04LjA5MywyMS4wMzlsNC4xNTksNC42MzNsMjEuMDE4LTE2LjAxaDM5Ljg2OAoJVjEwMC44MDF6IE04NC45MTUsMjguNTM4aC0yNy44NWwtMS44OTEsMTkuNTk5bDkuODcyLDY0LjAxM2gxMS44OTFsOS44NzgtNjQuMDEzTDg0LjkxNSwyOC41Mzh6Ii8+CjxwYXRoIHN0eWxlPSJmaWxsOiM2NjE4MDA7IiBkPSJNOS4yOTksMEwwLDM2LjUwN2w5LjI5OSwyOS40NTVoMTkuOTk3bDI1Ljg3LTE3LjgwNEw5LjI5OSwweiBNNTMuNDI2LDgxLjkzOGgtOS4wNTlsLTQuOTMyLDQuODM1CglsMTcuNTI0LDQuMzQ0bC0zLjUzMy05LjE4NlY4MS45Mzh6IE0xMzIuNjgyLDBsOS4yOTksMzYuNTA3bC05LjI5OSwyOS40NTVoLTE5Ljk5OEw4Ni44MTUsNDguMTU4TDEzMi42ODIsMHogTTg4LjU2OCw4MS45MzhoOS4wNzIKCWw0LjkzMiw0Ljg0MWwtMTcuNTQ0LDQuMzUzbDMuNTQtOS4yMDFWODEuOTM4eiBNNzkuMDI5LDEyNC4zODVsMi4wNjctNy41NjdsLTQuMTYtNC42MzNoLTExLjlsLTQuMTU5LDQuNjMzbDIuMDY2LDcuNTY3Ii8+CjxwYXRoIHN0eWxlPSJmaWxsOiNDMEM0Q0Q7IiBkPSJNNzkuMDI5LDEyNC4zODR2MTIuNDk1SDYyLjk0NXYtMTIuNDk1TDc5LjAyOSwxMjQuMzg0TDc5LjAyOSwxMjQuMzg0eiIvPgo8cGF0aCBzdHlsZT0iZmlsbDojRTdFQkY2OyIgZD0iTTM5Ljg3NSwxMjMuMDcybDIzLjA4MywxMy44di0xMi40OTVsLTIuMDY3LTcuNTY2QzYwLjg5MSwxMTYuODExLDM5Ljg3NSwxMjMuMDcyLDM5Ljg3NSwxMjMuMDcyegoJIE0xMDIuMTEzLDEyMy4wNzJsLTIzLjA4NCwxMy44di0xMi40OTVsMi4wNjctNy41NjZDODEuMDk2LDExNi44MTEsMTAyLjExMywxMjMuMDcyLDEwMi4xMTMsMTIzLjA3MnoiLz4KPC9zdmc+Cg==&style=for-the-badge)
 ![Polygon](https://img.shields.io/badge/-Polygon%20Amoy-8247E5?logo=polygon&logoColor=white&style=for-the-badge)
 ![Solidity](https://img.shields.io/badge/-Solidity-363636?logo=solidity&logoColor=white&style=for-the-badge)
-![Remix IDE](https://img.shields.io/badge/Remix-blue?logo=data:image/svg%2bxml;base64,PHN2ZyBpZD0iRWJlbmVfMiIgY2xhc3M9IiIgZGF0YS1uYW1lPSJFYmVuZSAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDUgMTAwIj48cGF0aCBmaWxsPSJ3aGl0ZSIgZD0iTTkxLjg0LDM1YS4wOS4wOSwwLDAsMS0uMS0uMDcsNDEsNDEsMCwwLDAtNzkuNDgsMCwuMDkuMDksMCwwLDEtLjEuMDdDOS40NSwzNSwxLDM1LjM1LDEsNDIuNTNjMCw4LjU2LDEsMTYsNiwyMC4zMiwyLjE2LDEuODUsNS44MSwyLjMsOS4yNywyLjIyYTQ0LjQsNDQuNCwwLDAsMCw2LjQ1LS42OC4wOS4wOSwwLDAsMCwuMDYtLjE1QTM0LjgxLDM0LjgxLDAsMCwxLDE3LDQ1YzAtLjEsMC0uMjEsMC0uMzFhMzUsMzUsMCwwLDEsNzAsMGMwLC4xLDAsLjIxLDAsLjMxYTM0LjgxLDM0LjgxLDAsMCwxLTUuNzgsMTkuMjQuMDkuMDksMCwwLDAsLjA2LjE1LDQ0LjQsNDQuNCwwLDAsMCw2LjQ1LjY4YzMuNDYuMDgsNy4xMS0uMzcsOS4yNy0yLjIyLDUtNC4yNyw2LTExLjc2LDYtMjAuMzJDMTAzLDM1LjM1LDk0LjU1LDM1LDkxLjg0LDM1WiI+PC9wYXRoPjxwYXRoIGZpbGw9IndoaXRlIiBkPSJNNTIsNzQsMjUuNCw2NS4xM2EuMS4xLDAsMCwwLS4xLjE3TDUxLjkzLDkxLjkzYS4xLjEsMCwwLDAsLjE0LDBMNzguNyw2NS4zYS4xLjEsMCwwLDAtLjEtLjE3TDUyLDc0QS4wNi4wNiwwLDAsMSw1Miw3NFoiPjwvcGF0aD48cGF0aCBmaWxsPSJ3aGl0ZSIgZD0iTTc1LjY4LDQ2LjksODIsNDVhLjA5LjA5LDAsMCwwLC4wOC0uMDksMjkuOTEsMjkuOTEsMCwwLDAtLjg3LTYuOTQuMTEuMTEsMCwwLDAtLjA5LS4wOGwtNi40My0uNThhLjEuMSwwLDAsMS0uMDYtLjE4bDQuNzgtNC4xOGEuMTMuMTMsMCwwLDAsMC0uMTIsMzAuMTksMzAuMTksMCwwLDAtMy42NS02LjA3LjA5LjA5LDAsMCwwLS4xMSwwbC01LjkxLDJhLjEuMSwwLDAsMS0uMTItLjE0TDcyLjE5LDIzYS4xMS4xMSwwLDAsMCwwLS4xMiwyOS44NiwyOS44NiwwLDAsMC01Ljg0LTQuMTMuMDkuMDksMCwwLDAtLjExLDBsLTQuNDcsNC4xM2EuMS4xLDAsMCwxLS4xNy0uMDdsLjA5LTZhLjEuMSwwLDAsMC0uMDctLjEsMzAuNTQsMzAuNTQsMCwwLDAtNy0xLjQ3LjEuMSwwLDAsMC0uMS4wN2wtMi4zOCw1LjU0YS4xLjEsMCwwLDEtLjE4LDBsLTIuMzctNS41NGEuMTEuMTEsMCwwLDAtLjExLS4wNiwzMCwzMCwwLDAsMC03LDEuNDguMTIuMTIsMCwwLDAtLjA3LjFsLjA4LDYuMDVhLjA5LjA5LDAsMCwxLS4xNi4wN0wzNy44LDE4Ljc2YS4xMS4xMSwwLDAsMC0uMTIsMCwyOS43NSwyOS43NSwwLDAsMC01LjgzLDQuMTMuMTEuMTEsMCwwLDAsMCwuMTJsMi41OSw1LjZhLjExLjExLDAsMCwxLS4xMy4xNGwtNS45LTJhLjExLjExLDAsMCwwLS4xMiwwLDMwLjIzLDMwLjIzLDAsMCwwLTMuNjIsNi4wOC4xMS4xMSwwLDAsMCwwLC4xMmw0Ljc5LDQuMTlhLjEuMSwwLDAsMS0uMDYuMTdMMjMsMzcuOTFhLjEuMSwwLDAsMC0uMDkuMDdBMjkuOSwyOS45LDAsMCwwLDIyLDQ0LjkyYS4xLjEsMCwwLDAsLjA3LjFMMjguNCw0N2EuMS4xLDAsMCwxLDAsLjE4bC01Ljg0LDMuMjZhLjE2LjE2LDAsMCwwLDAsLjExLDMwLjE3LDMwLjE3LDAsMCwwLDIuMSw2Ljc2Yy4zMi43MS42NywxLjQsMSwyLjA4YS4xLjEsMCwwLDAsLjA2LDBMNTIsNjguMTZINTJsMjYuMzQtOC43OGEuMS4xLDAsMCwwLC4wNi0uMDUsMzAuNDgsMzAuNDgsMCwwLDAsMy4xMS04Ljg4LjEuMSwwLDAsMC0uMDUtLjExbC01LjgzLTMuMjZBLjEuMSwwLDAsMSw3NS42OCw0Ni45WiI+PC9wYXRoPjwvc3ZnPg==&style=for-the-badge)
+![Remix IDE](https://img.shields.io/badge/Remix%20IDE-blue?logo=data:image/svg%2bxml;base64,PHN2ZyBpZD0iRWJlbmVfMiIgY2xhc3M9IiIgZGF0YS1uYW1lPSJFYmVuZSAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDUgMTAwIj48cGF0aCBmaWxsPSJ3aGl0ZSIgZD0iTTkxLjg0LDM1YS4wOS4wOSwwLDAsMS0uMS0uMDcsNDEsNDEsMCwwLDAtNzkuNDgsMCwuMDkuMDksMCwwLDEtLjEuMDdDOS40NSwzNSwxLDM1LjM1LDEsNDIuNTNjMCw4LjU2LDEsMTYsNiwyMC4zMiwyLjE2LDEuODUsNS44MSwyLjMsOS4yNywyLjIyYTQ0LjQsNDQuNCwwLDAsMCw2LjQ1LS42OC4wOS4wOSwwLDAsMCwuMDYtLjE1QTM0LjgxLDM0LjgxLDAsMCwxLDE3LDQ1YzAtLjEsMC0uMjEsMC0uMzFhMzUsMzUsMCwwLDEsNzAsMGMwLC4xLDAsLjIxLDAsLjMxYTM0LjgxLDM0LjgxLDAsMCwxLTUuNzgsMTkuMjQuMDkuMDksMCwwLDAsLjA2LjE1LDQ0LjQsNDQuNCwwLDAsMCw2LjQ1LjY4YzMuNDYuMDgsNy4xMS0uMzcsOS4yNy0yLjIyLDUtNC4yNyw2LTExLjc2LDYtMjAuMzJDMTAzLDM1LjM1LDk0LjU1LDM1LDkxLjg0LDM1WiI+PC9wYXRoPjxwYXRoIGZpbGw9IndoaXRlIiBkPSJNNTIsNzQsMjUuNCw2NS4xM2EuMS4xLDAsMCwwLS4xLjE3TDUxLjkzLDkxLjkzYS4xLjEsMCwwLDAsLjE0LDBMNzguNyw2NS4zYS4xLjEsMCwwLDAtLjEtLjE3TDUyLDc0QS4wNi4wNiwwLDAsMSw1Miw3NFoiPjwvcGF0aD48cGF0aCBmaWxsPSJ3aGl0ZSIgZD0iTTc1LjY4LDQ2LjksODIsNDVhLjA5LjA5LDAsMCwwLC4wOC0uMDksMjkuOTEsMjkuOTEsMCwwLDAtLjg3LTYuOTQuMTEuMTEsMCwwLDAtLjA5LS4wOGwtNi40My0uNThhLjEuMSwwLDAsMS0uMDYtLjE4bDQuNzgtNC4xOGEuMTMuMTMsMCwwLDAsMC0uMTIsMzAuMTksMzAuMTksMCwwLDAtMy42NS02LjA3LjA5LjA5LDAsMCwwLS4xMSwwbC01LjkxLDJhLjEuMSwwLDAsMS0uMTItLjE0TDcyLjE5LDIzYS4xMS4xMSwwLDAsMCwwLS4xMiwyOS44NiwyOS44NiwwLDAsMC01Ljg0LTQuMTMuMDkuMDksMCwwLDAtLjExLDBsLTQuNDcsNC4xM2EuMS4xLDAsMCwxLS4xNy0uMDdsLjA5LTZhLjEuMSwwLDAsMC0uMDctLjEsMzAuNTQsMzAuNTQsMCwwLDAtNy0xLjQ3LjEuMSwwLDAsMC0uMS4wN2wtMi4zOCw1LjU0YS4xLjEsMCwwLDEtLjE4LDBsLTIuMzctNS41NGEuMTEuMTEsMCwwLDAtLjExLS4wNiwzMCwzMCwwLDAsMC03LDEuNDguMTIuMTIsMCwwLDAtLjA3LjFsLjA4LDYuMDVhLjA5LjA5LDAsMCwxLS4xNi4wN0wzNy44LDE4Ljc2YS4xMS4xMSwwLDAsMC0uMTIsMCwyOS43NSwyOS43NSwwLDAsMC01LjgzLDQuMTMuMTEuMTEsMCwwLDAsMCwuMTJsMi41OSw1LjZhLjExLjExLDAsMCwxLS4xMy4xNGwtNS45LTJhLjExLjExLDAsMCwwLS4xMiwwLDMwLjIzLDMwLjIzLDAsMCwwLTMuNjIsNi4wOC4xMS4xMSwwLDAsMCwwLC4xMmw0Ljc5LDQuMTlhLjEuMSwwLDAsMS0uMDYuMTdMMjMsMzcuOTFhLjEuMSwwLDAsMC0uMDkuMDdBMjkuOSwyOS45LDAsMCwwLDIyLDQ0LjkyYS4xLjEsMCwwLDAsLjA3LjFMMjguNCw0N2EuMS4xLDAsMCwxLDAsLjE4bC01Ljg0LDMuMjZhLjE2LjE2LDAsMCwwLDAsLjExLDMwLjE3LDMwLjE3LDAsMCwwLDIuMSw2Ljc2Yy4zMi43MS42NywxLjQsMSwyLjA4YS4xLjEsMCwwLDAsLjA2LDBMNTIsNjguMTZINTJsMjYuMzQtOC43OGEuMS4xLDAsMCwwLC4wNi0uMDUsMzAuNDgsMzAuNDgsMCwwLDAsMy4xMS04Ljg4LjEuMSwwLDAsMC0uMDUtLjExbC01LjgzLTMuMjZBLjEuMSwwLDAsMSw3NS42OCw0Ni45WiI+PC9wYXRoPjwvc3ZnPg==&style=for-the-badge)
 
 ### Backend & Database
 
@@ -96,8 +162,8 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 
 ### **Core Technologies**
 
-| Component                  | Technology             | Version         |
-| -------------------------- | ---------------------- | --------------- |
+| Component            | Technology             | Version         |
+| -------------------- | ---------------------- | --------------- |
 | **Framework**        | Next.js with Turbopack | 15.4.8          |
 | **Runtime**          | Node.js                | 18+             |
 | **UI Library**       | HeroUI (headless)      | Latest          |
