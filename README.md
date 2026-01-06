@@ -14,7 +14,7 @@
 
 The future of EV charging is here. RupeeFlow brings transparent, secure, and efficient charging settlements powered by blockchain technology.
 
-[Demo](https://rupee-flow-v1.vercel.app) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Installation](#-installation) • [Documentation](#-documentation)
+[Demo](https://rupee-flow-v1.vercel.app) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Installation](#-installation)
 
 </div>
 
