@@ -52,6 +52,7 @@ export default function EVOwnerDashboard() {
   const [showHistory, setShowHistory] = useState(false);
   const [sessionSettled, setSessionSettled] = useState(false);
   const [operatorId, setOperatorId] = useState(null);
+  const [operatorIdForSocket, setOperatorIdForSocket] = useState(null);
   const [ratePerKwh, setRatePerKwh] = useState(12);
   const [availableOperators, setAvailableOperators] = useState([]);
   const [chargingHistory, setChargingHistory] = useState([]);
@@ -77,6 +78,7 @@ export default function EVOwnerDashboard() {
           setAvailableOperators(data);
           if (data.length > 0) {
             setOperatorId(data[0]._id);
+            setOperatorIdForSocket(data[0].operatorId);
             setRatePerKwh(data[0].ratePerKwh || 12);
           }
         }
@@ -89,6 +91,10 @@ export default function EVOwnerDashboard() {
       fetchOperators();
     }
   }, [session]);
+
+  const getSelectedStation = () => {
+    return availableOperators.find((op) => op._id === operatorId);
+  };
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -158,7 +164,7 @@ export default function EVOwnerDashboard() {
       batteryCapacity,
       ratePerKwh,
       7.4,
-      operatorId,
+      operatorIdForSocket,
       session.user.name,
       initialBatteryPercent,
       {
@@ -166,7 +172,8 @@ export default function EVOwnerDashboard() {
         targetBatteryPercent:
           chargingMode === "percentage" ? targetBatteryPercent : null,
         durationMinutes: chargingMode === "time" ? chargingDuration : null,
-      }
+      },
+      getSelectedStation()?.stationName
     );
   };
 
@@ -229,10 +236,11 @@ export default function EVOwnerDashboard() {
                   if (selectedId) {
                     setOperatorId(selectedId);
                     const selected = availableOperators.find(
-                      (op) => op._id === selectedId
+                      (station) => station._id === selectedId
                     );
                     if (selected) {
                       setRatePerKwh(selected.ratePerKwh || 12);
+                      setOperatorIdForSocket(selected.operatorId);
                     }
                   }
                 }}
@@ -245,13 +253,14 @@ export default function EVOwnerDashboard() {
                   innerWrapper: "text-foreground",
                 }}
               >
-                {availableOperators.map((op) => (
+                {availableOperators.map((station) => (
                   <SelectItem
-                    key={op._id}
-                    value={op._id}
-                    textValue={op.stationName}
+                    key={station._id}
+                    value={station._id}
+                    textValue={station.stationName}
                   >
-                    {op.stationName} - ₹{op.ratePerKwh}/kWh ({op.chargerPower}
+                    {station.stationName} - ₹{station.ratePerKwh}/kWh (
+                    {station.chargerPower}
                     kW)
                   </SelectItem>
                 ))}
@@ -480,8 +489,11 @@ export default function EVOwnerDashboard() {
                 {...chargingData}
                 sessionId={pendingSession?.sessionId || sessionId}
                 operatorId={
-                  pendingSession?.operatorId || savedOperatorId || operatorId
+                  pendingSession?.operatorId ||
+                  operatorIdForSocket ||
+                  savedOperatorId
                 }
+                stationId={pendingSession?.stationId || operatorId}
                 vehicleReg={pendingSession?.vehicleReg || vehicleReg}
                 batteryCapacity={
                   pendingSession?.batteryCapacity || batteryCapacity
@@ -555,6 +567,7 @@ export default function EVOwnerDashboard() {
                     <TableColumn className="text-primary">
                       Vehicle Reg
                     </TableColumn>
+                    <TableColumn className="text-primary">Station</TableColumn>
                     <TableColumn className="text-primary">
                       Energy (kWh)
                     </TableColumn>
@@ -571,6 +584,11 @@ export default function EVOwnerDashboard() {
                     {chargingHistory.map((session) => (
                       <TableRow key={session.id}>
                         <TableCell>{session.vehicleReg}</TableCell>
+                        <TableCell>
+                          <span className="text-secondary font-semibold">
+                            {session.stationName}
+                          </span>
+                        </TableCell>
                         <TableCell>{session.totalKwh.toFixed(2)} kWh</TableCell>
                         <TableCell>₹{session.totalCost.toFixed(2)}</TableCell>
                         <TableCell>

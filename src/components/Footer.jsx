@@ -19,13 +19,19 @@ const GlobalFooter = () => {
 
           <div className="flex gap-6 sm:gap-12">
             <Link
-              href="#features"
+              href="/#features"
               className="text-foreground/70 hover:text-primary transition-colors duration-200 text-sm sm:text-base font-medium"
             >
               Features
             </Link>
             <Link
-              href="#about"
+              href="/#how-it-works"
+              className="text-foreground/70 hover:text-primary transition-colors duration-200 text-sm sm:text-base font-medium"
+            >
+              How It Works
+            </Link>
+            <Link
+              href="/#about"
               className="text-foreground/70 hover:text-primary transition-colors duration-200 text-sm sm:text-base font-medium"
             >
               About

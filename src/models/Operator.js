@@ -7,11 +7,6 @@ const operatorSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    stationName: {
-      type: String,
-      required: true,
-    },
-    stationAddress: String,
     walletAddress: {
       type: String,
       required: [true, "Wallet address is required"],
@@ -24,14 +19,6 @@ const operatorSchema = new mongoose.Schema(
           "Invalid Ethereum wallet address format (must be 0x followed by 40 hex characters)",
       },
     },
-    chargerPower: {
-      type: Number,
-      default: 7.4,
-    },
-    ratePerKwh: {
-      type: Number,
-      default: 12,
-    },
     totalEnergyDelivered: {
       type: Number,
       default: 0,
@@ -40,6 +27,12 @@ const operatorSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    stations: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Station",
+      },
+    ],
     chargingSessions: [
       {
         type: mongoose.Schema.Types.ObjectId,

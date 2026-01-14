@@ -15,6 +15,7 @@ export async function POST(req) {
     const {
       sessionId,
       operatorId,
+      stationId,
       totalKwh,
       totalCost,
       duration,
@@ -30,6 +31,7 @@ export async function POST(req) {
       sessionId,
       evOwnerId: session.user.id,
       operatorId,
+      stationId,
       vehicleReg,
       batteryCapacity,
       totalKwh,

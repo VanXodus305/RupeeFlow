@@ -36,13 +36,19 @@ export function initializeSocketHandlers(io) {
 
         meterData.ownerName = data.ownerName || "Unknown User";
         meterData.vehicleReg = session.vehicleReg;
+        meterData.stationName = data.stationName;
 
         socket.emit("meter-reading", meterData);
 
         if (data.operatorId && operatorSockets.has(data.operatorId)) {
           const operatorIds = operatorSockets.get(data.operatorId);
           operatorIds.forEach((opSocketId) => {
-            io.to(opSocketId).emit("meter-reading", meterData);
+            io.to(opSocketId).emit("meter-reading", {
+              ...meterData,
+              ownerName: data.ownerName || "Unknown User",
+              vehicleReg: session.vehicleReg,
+              stationName: data.stationName,
+            });
           });
         }
       }, config.METER_UPDATE_INTERVAL);
@@ -73,12 +79,21 @@ export function initializeSocketHandlers(io) {
           return;
         }
 
+        meterData.ownerName = data.ownerName || "Unknown User";
+        meterData.vehicleReg = session.vehicleReg;
+        meterData.stationName = data.stationName;
+
         socket.emit("meter-reading", meterData);
 
         if (data.operatorId && operatorSockets.has(data.operatorId)) {
           const operatorIds = operatorSockets.get(data.operatorId);
           operatorIds.forEach((opSocketId) => {
-            io.to(opSocketId).emit("meter-reading", meterData);
+            io.to(opSocketId).emit("meter-reading", {
+              ...meterData,
+              ownerName: data.ownerName || "Unknown User",
+              vehicleReg: session.vehicleReg,
+              stationName: data.stationName,
+            });
           });
         }
       }, config.METER_UPDATE_INTERVAL);

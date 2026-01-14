@@ -17,6 +17,11 @@ const chargingSessionSchema = new mongoose.Schema(
       ref: "Operator",
       required: true,
     },
+    stationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Station",
+      required: true,
+    },
     vehicleReg: String,
     batteryCapacity: Number,
     totalKwh: {
@@ -35,16 +40,21 @@ const chargingSessionSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    chargerPower: {
+      type: Number,
+      default: 7.4,
+    },
+    ratePerKwh: {
+      type: Number,
+      required: true,
+      default: 12,
+    },
     status: {
       type: String,
       enum: ["active", "completed", "settled"],
       default: "active",
     },
     transactionHash: String,
-    ratePerKwh: {
-      type: Number,
-      default: 12,
-    },
   },
   { timestamps: true }
 );

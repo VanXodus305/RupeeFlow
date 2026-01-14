@@ -41,6 +41,7 @@ export async function GET(req) {
       }
 
       sessions = await ChargingSession.find({ operatorId: operator._id })
+        .populate("stationId", "stationName")
         .sort({ createdAt: -1 })
         .lean();
 
@@ -52,7 +53,9 @@ export async function GET(req) {
       } else {
         sessions = await ChargingSession.find({
           evOwnerId: session.user.id,
-        }).sort({ createdAt: -1 });
+        })
+          .populate("stationId", "stationName")
+          .sort({ createdAt: -1 });
 
         totalKwh = sessions.reduce((sum, s) => sum + (s.totalKwh || 0), 0);
         totalRevenue = sessions.reduce((sum, s) => sum + (s.totalCost || 0), 0);
@@ -63,6 +66,7 @@ export async function GET(req) {
       id: s._id.toString(),
       sessionId: s.sessionId || s._id.toString(),
       vehicleReg: s.vehicleReg || "N/A",
+      stationName: s.stationId?.stationName || "N/A",
       totalKwh: parseFloat((s.totalKwh || 0).toFixed(2)),
       totalCost: parseFloat((s.totalCost || 0).toFixed(2)),
       duration: s.duration || 0,

@@ -29,6 +29,7 @@ export default function ChargingSettlement({
   chargePercentage,
   sessionId,
   operatorId,
+  stationId,
   vehicleReg,
   batteryCapacity,
   ratePerKwh,
@@ -95,7 +96,17 @@ export default function ChargingSettlement({
         throw new Error("Operator ID not available");
       }
 
-      await saveSession(operatorId, vehicleReg, batteryCapacity, ratePerKwh);
+      if (!stationId) {
+        throw new Error("Station ID not available");
+      }
+
+      await saveSession(
+        operatorId,
+        vehicleReg,
+        batteryCapacity,
+        ratePerKwh,
+        stationId
+      );
       setSessionSaved(true);
 
       console.log("Session saved to database:", {
@@ -379,7 +390,7 @@ export default function ChargingSettlement({
                   <FiCheck className="text-primary text-lg flex-shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-foreground">
-                      ✅ Session Saved
+                      Session Saved
                     </p>
                     <p className="text-xs text-foreground/60">
                       Your charging session has been recorded in the system

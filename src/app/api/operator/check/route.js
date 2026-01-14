@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 import Operator from "@/models/Operator";
+import Station from "@/models/Station";
 import mongoose from "mongoose";
 
 export async function GET(req) {
@@ -17,18 +18,24 @@ export async function GET(req) {
 
     if (session.user.isDemo) {
       operator = await Operator.findOne({
-        stationName: "Demo Charging Station",
-      });
+        userId: session.user.id,
+      }).populate("stations");
 
       if (!operator) {
         return Response.json({
           exists: true,
           id: "demo-operator-profile",
           userId: session.user.id,
-          stationName: "Demo Charging Station",
-          stationAddress: "123 Main Street, Demo City",
-          chargerPower: 7.4,
-          ratePerKwh: 12,
+          walletAddress: "0x" + "0".repeat(40),
+          stations: [
+            {
+              _id: "demo-station-1",
+              stationName: "Demo Charging Station",
+              stationAddress: "123 Main Street, Demo City",
+              chargerPower: 7.4,
+              ratePerKwh: 12,
+            },
+          ],
           totalEnergyDelivered: 0,
           totalRevenue: 0,
         });
@@ -38,7 +45,9 @@ export async function GET(req) {
         return Response.json({ exists: false });
       }
 
-      operator = await Operator.findOne({ userId: session.user.id });
+      operator = await Operator.findOne({ userId: session.user.id }).populate(
+        "stations"
+      );
 
       if (!operator) {
         return Response.json({ exists: false });
@@ -49,10 +58,8 @@ export async function GET(req) {
       exists: true,
       id: operator._id.toString(),
       userId: operator.userId ? operator.userId.toString() : operator.userId,
-      stationName: operator.stationName,
-      stationAddress: operator.stationAddress,
-      chargerPower: operator.chargerPower,
-      ratePerKwh: operator.ratePerKwh,
+      walletAddress: operator.walletAddress,
+      stations: operator.stations || [],
       totalEnergyDelivered: operator.totalEnergyDelivered || 0,
       totalRevenue: operator.totalRevenue || 0,
     });

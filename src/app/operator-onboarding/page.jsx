@@ -4,19 +4,24 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Input, Button, Card, CardBody, CardHeader } from "@heroui/react";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 
 export default function OperatorOnboardingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [formData, setFormData] = useState({
-    stationName: "",
-    stationAddress: "",
-    walletAddress: "",
-    chargerPower: 7.4,
-    ratePerKwh: 12,
-  });
+  const [walletAddress, setWalletAddress] = useState("");
+  const [stations, setStations] = useState([
+    {
+      id: 1,
+      stationName: "",
+      stationAddress: "",
+      chargerPower: 7.4,
+      ratePerKwh: 12,
+    },
+  ]);
+  const [nextStationId, setNextStationId] = useState(2);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -46,17 +51,42 @@ export default function OperatorOnboardingPage() {
     checkOperatorExists();
   }, [session, status, router]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
+  const handleStationChange = (id, field, value) => {
+    setStations((prev) =>
+      prev.map((station) =>
+        station.id === id
+          ? {
+              ...station,
+              [field]:
+                field === "stationName" || field === "stationAddress"
+                  ? value
+                  : parseFloat(value),
+            }
+          : station
+      )
+    );
+  };
+
+  const addStation = () => {
+    setStations((prev) => [
       ...prev,
-      [name]:
-        name === "stationName" ||
-        name === "stationAddress" ||
-        name === "walletAddress"
-          ? value
-          : parseFloat(value),
-    }));
+      {
+        id: nextStationId,
+        stationName: "",
+        stationAddress: "",
+        chargerPower: 7.4,
+        ratePerKwh: 12,
+      },
+    ]);
+    setNextStationId((prev) => prev + 1);
+  };
+
+  const removeStation = (id) => {
+    if (stations.length > 1) {
+      setStations((prev) => prev.filter((station) => station.id !== id));
+    } else {
+      setError("You must have at least one station");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -64,16 +94,22 @@ export default function OperatorOnboardingPage() {
     setIsLoading(true);
     setError("");
 
-    if (!formData.walletAddress) {
+    if (!walletAddress) {
       setError("Wallet address is required");
       setIsLoading(false);
       return;
     }
 
-    if (!/^0x[a-fA-F0-9]{40}$/.test(formData.walletAddress)) {
+    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
       setError(
         "Invalid wallet address format. Must be 0x followed by 40 hex characters"
       );
+      setIsLoading(false);
+      return;
+    }
+
+    if (stations.some((s) => !s.stationName.trim())) {
+      setError("All station names are required");
       setIsLoading(false);
       return;
     }
@@ -82,7 +118,10 @@ export default function OperatorOnboardingPage() {
       const response = await fetch("/api/operator/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          walletAddress,
+          stations,
+        }),
       });
 
       if (!response.ok) {
@@ -113,16 +152,16 @@ export default function OperatorOnboardingPage() {
     <section className="relative min-h-screen flex items-center justify-center px-4 py-24 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-background-200 via-background-100/30 to-background-200 pointer-events-none" />
 
-      <div className="relative z-10 w-full max-w-2xl">
+      <div className="relative z-10 w-full max-w-4xl">
         <div className="text-center mb-10">
           <h1
             className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent"
             style={{ fontFamily: "Conthrax, sans-serif" }}
           >
-            Station Onboarding
+            Operator Onboarding
           </h1>
           <p className="mt-3 text-foreground/70">
-            Configure your charging station to start accepting sessions
+            Set up your charging company and stations
           </p>
         </div>
 
@@ -135,91 +174,164 @@ export default function OperatorOnboardingPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <Input
-                label="Station Name"
-                name="stationName"
-                value={formData.stationName}
-                onChange={handleChange}
-                placeholder="Demo Charging Station"
-                isRequired
-                variant="bordered"
-                classNames={{
-                  label: "text-foreground/80 font-medium",
-                  input: "text-foreground",
-                  inputWrapper:
-                    "border-primary/30 hover:border-primary/50 bg-background/40",
-                }}
-              />
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Wallet Address Section */}
+              <div className="border-b border-primary/10 pb-6">
+                <h2 className="text-lg font-semibold text-foreground mb-4">
+                  Account Details
+                </h2>
 
-              <Input
-                label="Station Address"
-                name="stationAddress"
-                value={formData.stationAddress}
-                onChange={handleChange}
-                placeholder="123 Main Street, City"
-                variant="bordered"
-                classNames={{
-                  label: "text-foreground/80 font-medium",
-                  input: "text-foreground",
-                  inputWrapper:
-                    "border-primary/30 hover:border-primary/50 bg-background/40",
-                }}
-              />
+                <div className="space-y-4">
+                  <Input
+                    label="Wallet Address"
+                    value={walletAddress}
+                    onChange={(e) => setWalletAddress(e.target.value)}
+                    placeholder="0x..."
+                    isRequired
+                    description="Your Ethereum wallet address for receiving settlements"
+                    variant="bordered"
+                    classNames={{
+                      label: "text-foreground/80 font-medium",
+                      input: "text-foreground font-mono text-sm",
+                      inputWrapper:
+                        "border-primary/30 hover:border-primary/50 bg-background/40",
+                      description: "text-foreground/60 text-xs",
+                    }}
+                  />
+                </div>
+              </div>
 
-              <Input
-                label="Wallet Address"
-                name="walletAddress"
-                value={formData.walletAddress}
-                onChange={handleChange}
-                placeholder="0x..."
-                isRequired
-                description="Your Ethereum wallet address for receiving settlements"
-                variant="bordered"
-                classNames={{
-                  label: "text-foreground/80 font-medium",
-                  input: "text-foreground font-mono text-sm",
-                  inputWrapper:
-                    "border-primary/30 hover:border-primary/50 bg-background/40",
-                  description: "text-foreground/60 text-xs",
-                }}
-              />
+              {/* Charging Stations */}
+              <div className="border-b border-primary/10 pb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Charging Stations
+                  </h2>
+                  <Button
+                    isIconOnly
+                    className="bg-primary/20 text-primary hover:bg-primary/30 transition-colors"
+                    onClick={addStation}
+                  >
+                    <FiPlus size={20} />
+                  </Button>
+                </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  type="number"
-                  label="Charger Power (kW)"
-                  name="chargerPower"
-                  value={formData.chargerPower.toString()}
-                  onChange={handleChange}
-                  step="0.1"
-                  min="0.1"
-                  variant="bordered"
-                  classNames={{
-                    label: "text-foreground/80 font-medium",
-                    input: "text-foreground",
-                    inputWrapper:
-                      "border-secondary/30 hover:border-secondary/50 bg-background/40",
-                  }}
-                />
+                <div className="space-y-6">
+                  {stations.map((station, index) => (
+                    <Card
+                      key={station.id}
+                      className="bg-background-200/30 border border-secondary/20"
+                    >
+                      <CardBody className="space-y-4 p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-base font-semibold text-foreground">
+                            Station {index + 1}
+                          </h3>
+                          {stations.length > 1 && (
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              className="bg-danger/10 text-danger hover:bg-danger/20 transition-colors"
+                              onClick={() => removeStation(station.id)}
+                            >
+                              <FiTrash2 size={16} />
+                            </Button>
+                          )}
+                        </div>
 
-                <Input
-                  type="number"
-                  label="Rate per kWh (₹)"
-                  name="ratePerKwh"
-                  value={formData.ratePerKwh.toString()}
-                  onChange={handleChange}
-                  step="0.1"
-                  min="0.1"
-                  startContent={<span className="text-foreground/50">₹</span>}
-                  variant="bordered"
-                  classNames={{
-                    label: "text-foreground/80 font-medium",
-                    input: "text-foreground",
-                    inputWrapper:
-                      "border-secondary/30 hover:border-secondary/50 bg-background/40",
-                  }}
-                />
+                        <Input
+                          label="Station Name"
+                          value={station.stationName}
+                          onChange={(e) =>
+                            handleStationChange(
+                              station.id,
+                              "stationName",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Station Name"
+                          isRequired
+                          variant="bordered"
+                          classNames={{
+                            label: "text-foreground/80 font-medium",
+                            input: "text-foreground",
+                            inputWrapper:
+                              "border-secondary/30 hover:border-secondary/50 bg-background/40",
+                          }}
+                        />
+
+                        <Input
+                          label="Station Address"
+                          value={station.stationAddress}
+                          onChange={(e) =>
+                            handleStationChange(
+                              station.id,
+                              "stationAddress",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Street Address"
+                          variant="bordered"
+                          classNames={{
+                            label: "text-foreground/80 font-medium",
+                            input: "text-foreground",
+                            inputWrapper:
+                              "border-secondary/30 hover:border-secondary/50 bg-background/40",
+                          }}
+                        />
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <Input
+                            type="number"
+                            label="Charger Power (kW)"
+                            value={station.chargerPower.toString()}
+                            onChange={(e) =>
+                              handleStationChange(
+                                station.id,
+                                "chargerPower",
+                                e.target.value
+                              )
+                            }
+                            step="0.1"
+                            min="0.1"
+                            variant="bordered"
+                            classNames={{
+                              label: "text-foreground/80 font-medium",
+                              input: "text-foreground",
+                              inputWrapper:
+                                "border-secondary/30 hover:border-secondary/50 bg-background/40",
+                            }}
+                          />
+
+                          <Input
+                            type="number"
+                            label="Rate per kWh (₹)"
+                            value={station.ratePerKwh.toString()}
+                            onChange={(e) =>
+                              handleStationChange(
+                                station.id,
+                                "ratePerKwh",
+                                e.target.value
+                              )
+                            }
+                            step="0.1"
+                            min="0.1"
+                            startContent={
+                              <span className="text-foreground/50">₹</span>
+                            }
+                            variant="bordered"
+                            classNames={{
+                              label: "text-foreground/80 font-medium",
+                              input: "text-foreground",
+                              inputWrapper:
+                                "border-secondary/30 hover:border-secondary/50 bg-background/40",
+                            }}
+                          />
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </div>
               </div>
 
               <Button
@@ -228,7 +340,7 @@ export default function OperatorOnboardingPage() {
                 radius="full"
                 className="w-full bg-gradient-to-r from-primary to-secondary text-background-200 font-semibold text-lg py-6 hover:shadow-lg hover:shadow-primary/40 transition-all"
               >
-                {isLoading ? "Creating Station..." : "Create Station"}
+                {isLoading ? "Creating Operator Profile..." : "Complete Setup"}
               </Button>
             </form>
           </CardBody>

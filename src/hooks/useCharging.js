@@ -61,7 +61,8 @@ export function useCharging() {
     operatorId,
     ownerName,
     initialBatteryPercent = 0,
-    settings = null
+    settings = null,
+    stationName = null
   ) => {
     try {
       setError(null);
@@ -145,6 +146,7 @@ export function useCharging() {
         chargerPower,
         operatorId,
         ownerName,
+        stationName,
         initialBatteryPercent,
       });
 
@@ -185,7 +187,8 @@ export function useCharging() {
     operatorId,
     vehicleReg,
     batteryCapacity,
-    ratePerKwh
+    ratePerKwh,
+    stationId
   ) => {
     try {
       if (!sessionId) {
@@ -198,6 +201,7 @@ export function useCharging() {
         body: JSON.stringify({
           sessionId,
           operatorId,
+          stationId,
           vehicleReg,
           batteryCapacity,
           totalKwh: Number(totalKwh),

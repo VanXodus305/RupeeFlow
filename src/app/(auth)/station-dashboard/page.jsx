@@ -31,7 +31,7 @@ import {
 } from "react-icons/fi";
 
 const LoadingSpinner = memo(() => (
-  <div className="flex items-center justify-center py-16">
+  <div className="flex items-center justify-center py-16 mt-20">
     <Spinner label="Loading dashboard..." color="primary" />
   </div>
 ));
@@ -125,6 +125,7 @@ export default function StationDashboard() {
                   {
                     sessionId: meterData.sessionId,
                     vehicleReg: meterData.vehicleReg,
+                    stationName: meterData.stationName,
                     totalKwh: meterData.totalKwh || 0,
                     totalCost: meterData.totalCost || 0,
                     duration: meterData.secondsElapsed || 0,
@@ -200,54 +201,75 @@ export default function StationDashboard() {
     <div className="min-h-screen bg-gradient-to-b from-background-200 to-background-100/20">
       {/* Main Content */}
       <div className="px-4 sm:px-6 md:px-8 py-8 max-w-7xl mx-auto mt-16">
-        {/* Station Details Card */}
-        <Card className="bg-background-100/30 border border-primary/20 mb-8">
-          <CardHeader className="flex gap-3 border-b border-primary/10 bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-4">
-            <div className="flex items-center gap-2">
-              <FiZap className="text-primary text-xl" />
-              <h2 className="text-xl font-bold text-primary font-conthrax">
-                Station Information
-              </h2>
+        {/* Stations Overview */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <FiZap className="text-primary text-lg" />
+            <h2 className="text-2xl font-bold text-primary font-conthrax">
+              Your Charging Stations
+            </h2>
+            {operatorData?.stations?.length > 0 && (
+              <Chip
+                className="bg-primary/20 text-primary font-semibold"
+                size="sm"
+              >
+                {operatorData.stations.length} Total
+              </Chip>
+            )}
+          </div>
+
+          {!operatorData?.stations || operatorData.stations.length === 0 ? (
+            <Card className="bg-background-100/30 border border-primary/20">
+              <CardBody className="py-16 text-center">
+                <p className="text-foreground/60">No charging stations found</p>
+              </CardBody>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {operatorData.stations.map((station) => (
+                <Card
+                  key={station._id}
+                  className="bg-gradient-to-br from-background-100/50 to-background-200/30 border border-primary/20"
+                >
+                  <CardHeader className="flex gap-2 border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-primary"></div>
+                      <h3 className="text-lg font-bold text-primary font-conthrax">
+                        {station.stationName}
+                      </h3>
+                    </div>
+                  </CardHeader>
+                  <CardBody className="gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-foreground/60">Address</p>
+                      <p className="text-foreground">
+                        {station.stationAddress || "Not provided"}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-foreground/60 mb-1">
+                          Charger Power
+                        </p>
+                        <p className="text-lg font-semibold text-secondary font-conthrax">
+                          {station.chargerPower} kW
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-foreground/60 mb-1">
+                          Rate per kWh
+                        </p>
+                        <p className="text-lg font-semibold text-secondary font-conthrax">
+                          ₹{station.ratePerKwh}
+                        </p>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
             </div>
-          </CardHeader>
-          <CardBody className="gap-6 px-6 py-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <p className="text-sm text-foreground/60 uppercase tracking-wide">
-                  Station Name
-                </p>
-                <p className="text-lg font-semibold text-primary font-conthrax">
-                  {operatorData.stationName}
-                </p>
-                <p className="text-sm text-foreground/70 mt-3">
-                  <span className="text-foreground/50">Address:</span>{" "}
-                  <span className="text-foreground">
-                    {operatorData.stationAddress || "Not provided"}
-                  </span>
-                </p>
-              </div>
-              <div className="space-y-3">
-                <p className="text-sm text-foreground/60 uppercase tracking-wide">
-                  Charging Parameters
-                </p>
-                <div className="space-y-2">
-                  <p className="text-sm">
-                    <span className="text-foreground/60">Charger Power:</span>{" "}
-                    <span className="font-semibold text-secondary font-conthrax">
-                      {operatorData.chargerPower} kW
-                    </span>
-                  </p>
-                  <p className="text-sm">
-                    <span className="text-foreground/60">Rate per kWh:</span>{" "}
-                    <span className="font-semibold text-secondary font-conthrax">
-                      ₹{operatorData.ratePerKwh}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+          )}
+        </div>
 
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -322,7 +344,7 @@ export default function StationDashboard() {
                 >
                   <CardBody className="gap-4">
                     {/* Header */}
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between mb-2">
                       <div>
                         <p className="text-sm text-foreground/60 uppercase tracking-wide">
                           Vehicle
@@ -338,6 +360,18 @@ export default function StationDashboard() {
                         LIVE
                       </Chip>
                     </div>
+
+                    {/* Station Name */}
+                    {session.stationName && (
+                      <div className="bg-secondary/10 rounded-lg p-3 border border-secondary/20">
+                        <p className="text-xs text-foreground/60 mb-1">
+                          Station
+                        </p>
+                        <p className="text-sm font-semibold text-secondary font-conthrax">
+                          {session.stationName}
+                        </p>
+                      </div>
+                    )}
 
                     {/* Metrics Grid */}
                     <div className="grid grid-cols-2 gap-3">
@@ -441,6 +475,7 @@ export default function StationDashboard() {
                   >
                     <TableHeader>
                       <TableColumn>Vehicle Reg</TableColumn>
+                      <TableColumn>Station</TableColumn>
                       <TableColumn>Energy (kWh)</TableColumn>
                       <TableColumn>Amount (₹)</TableColumn>
                       <TableColumn>Duration (min)</TableColumn>
@@ -456,6 +491,11 @@ export default function StationDashboard() {
                           <TableCell>
                             <p className="font-semibold text-primary">
                               {settlement.vehicleReg}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-semibold text-secondary">
+                              {settlement.stationName}
                             </p>
                           </TableCell>
                           <TableCell>
