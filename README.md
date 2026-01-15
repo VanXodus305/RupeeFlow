@@ -7,7 +7,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.1-38B2AC?logo=tailwind-css&style=flat-square)](https://tailwindcss.com/)
 [![Polygon](https://img.shields.io/badge/Polygon-Amoy%20Testnet-8247E5?logo=polygon&style=flat-square)](https://polygon.technology/)
 [![Ethers](https://img.shields.io/badge/ethers-%232535A0.svg?style=flat-square&logo=ethers&logoColor=white)](https://docs.ethers.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Green?logo=mongodb&style=flat-square)](https://www.mongodb.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Green?logo=mongodb&style=flat-square&logoColor=white)](https://www.mongodb.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 ### 🚀 Revolutionary Blockchain-Powered EV Charging Network for India
@@ -26,12 +26,14 @@ RupeeFlow is a cutting-edge decentralized EV charging platform that leverages bl
 
 ### Why RupeeFlow?
 
-✅ **Transparent Settlements** - All transactions recorded on blockchain
-✅ **Instant Payments** - Real-time settlement with MetaMask
-✅ **Secure & Trustless** - No intermediaries, cryptographic security
-✅ **Real-time Monitoring** - Live meter readings and session tracking
-✅ **Mobile-First Design** - Works seamlessly on all devices
-✅ **Operator Dashboard** - Full control and analytics for station operators
+
+- ✅ **Transparent Settlements** - All transactions recorded on blockchain
+- ✅ **Instant Payments** - Real-time settlement with MetaMask
+- ✅ **Secure & Trustless** - No intermediaries, cryptographic security
+- ✅ **Real-time Monitoring** - Live meter readings and session tracking
+- ✅ **Mobile-First Design** - Works seamlessly on all devices
+- ✅ **Operator Dashboard** - Full control and analytics for station operators
+
 
 ---
 

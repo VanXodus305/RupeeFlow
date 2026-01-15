@@ -19,6 +19,12 @@ import {
   TableRow,
   TableCell,
   Spinner,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Input,
 } from "@heroui/react";
 import {
   FiLogOut,
@@ -28,6 +34,9 @@ import {
   FiClock,
   FiActivity,
   FiCheck,
+  FiEdit2,
+  FiPlus,
+  FiX,
 } from "react-icons/fi";
 
 const LoadingSpinner = memo(() => (
@@ -47,6 +56,15 @@ export default function StationDashboard() {
   const [ongoingSessions, setOngoingSessions] = useState([]);
   const [totalKwh, setTotalKwh] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStationId, setEditingStationId] = useState(null);
+  const [formData, setFormData] = useState({
+    stationName: "",
+    stationAddress: "",
+    chargerPower: "",
+    ratePerKwh: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (status === "loading") {
@@ -191,6 +209,93 @@ export default function StationDashboard() {
     };
   }, [session, status, router]);
 
+  const openAddModal = () => {
+    setEditingStationId(null);
+    setFormData({
+      stationName: "",
+      stationAddress: "",
+      chargerPower: "",
+      ratePerKwh: "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (station) => {
+    setEditingStationId(station._id);
+    setFormData({
+      stationName: station.stationName,
+      stationAddress: station.stationAddress,
+      chargerPower: station.chargerPower.toString(),
+      ratePerKwh: station.ratePerKwh.toString(),
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingStationId(null);
+    setFormData({
+      stationName: "",
+      stationAddress: "",
+      chargerPower: "",
+      ratePerKwh: "",
+    });
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveStation = async () => {
+    if (
+      !formData.stationName ||
+      !formData.stationAddress ||
+      !formData.chargerPower ||
+      !formData.ratePerKwh
+    ) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const endpoint = editingStationId
+        ? `/api/operator/update-station/${editingStationId}`
+        : "/api/operator/add-station";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          stationName: formData.stationName,
+          stationAddress: formData.stationAddress,
+          chargerPower: parseFloat(formData.chargerPower),
+          ratePerKwh: parseFloat(formData.ratePerKwh),
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setOperatorData(data.operator);
+        handleCloseModal();
+      } else {
+        const error = await response.json();
+        alert(error.message || "Failed to save station");
+      }
+    } catch (error) {
+      console.error("Error saving station:", error);
+      alert("Error saving station");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -223,7 +328,16 @@ export default function StationDashboard() {
           {!operatorData?.stations || operatorData.stations.length === 0 ? (
             <Card className="bg-background-100/30 border border-primary/20">
               <CardBody className="py-16 text-center">
-                <p className="text-foreground/60">No charging stations found</p>
+                <p className="text-foreground/60 mb-4">
+                  No charging stations found
+                </p>
+                <Button
+                  color="primary"
+                  onClick={openAddModal}
+                  startContent={<FiPlus />}
+                >
+                  Add Your First Station
+                </Button>
               </CardBody>
             </Card>
           ) : (
@@ -231,15 +345,23 @@ export default function StationDashboard() {
               {operatorData.stations.map((station) => (
                 <Card
                   key={station._id}
-                  className="bg-gradient-to-br from-background-100/50 to-background-200/30 border border-primary/20"
+                  className="bg-gradient-to-br from-background-100/50 to-background-200/30 border border-primary/20 relative group"
                 >
-                  <CardHeader className="flex gap-2 border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent">
+                  <CardHeader className="flex items-center justify-between border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-primary"></div>
                       <h3 className="text-lg font-bold text-primary font-conthrax">
                         {station.stationName}
                       </h3>
                     </div>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      className="bg-primary/20 hover:bg-primary/30 text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => openEditModal(station)}
+                    >
+                      <FiEdit2 size={16} />
+                    </Button>
                   </CardHeader>
                   <CardBody className="gap-4">
                     <div className="space-y-2">
@@ -269,6 +391,26 @@ export default function StationDashboard() {
                   </CardBody>
                 </Card>
               ))}
+
+              {/* Add New Station Card */}
+              <button
+                onClick={openAddModal}
+                className="bg-gradient-to-br from-background-100/50 to-background-200/30 border-2 border-dashed border-primary/40 hover:border-primary/60 transition-colors cursor-pointer flex items-center justify-center rounded-lg p-6 hover:bg-gradient-to-br hover:from-background-100/70 hover:to-background-200/50"
+              >
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <FiPlus size={24} className="text-primary" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-lg font-bold text-primary font-conthrax mb-1">
+                      Add New Station
+                    </h3>
+                    <p className="text-sm text-foreground/60">
+                      Create a new charging station
+                    </p>
+                  </div>
+                </div>
+              </button>
             </div>
           )}
         </div>
@@ -566,6 +708,113 @@ export default function StationDashboard() {
           )}
         </div>
       </div>
+
+      {/* Add/Edit Station Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onOpenChange={handleCloseModal}
+        size="md"
+        backdrop="blur"
+        classNames={{
+          backdrop: "bg-background/80 backdrop-opacity-40",
+          base: "bg-background-100 border border-primary/20",
+          closeButton: "text-foreground/60 hover:text-foreground",
+        }}
+      >
+        <ModalContent>
+          <ModalHeader className="border-b border-primary/10">
+            <div className="flex items-center gap-2">
+              {editingStationId ? (
+                <>
+                  <FiEdit2 className="text-primary" />
+                  <span className="font-conthrax">Edit Station</span>
+                </>
+              ) : (
+                <>
+                  <FiPlus className="text-primary" />
+                  <span className="font-conthrax">Add New Station</span>
+                </>
+              )}
+            </div>
+          </ModalHeader>
+          <ModalBody className="gap-4 py-6">
+            <Input
+              label="Station Name"
+              placeholder="e.g., Station 1"
+              name="stationName"
+              value={formData.stationName}
+              onChange={handleInputChange}
+              variant="bordered"
+              className="text-foreground"
+              classNames={{
+                input: "bg-background-200/30 text-foreground",
+                label: "text-foreground/70",
+              }}
+            />
+            <Input
+              label="Station Address"
+              placeholder="e.g., 34, Park Street"
+              name="stationAddress"
+              value={formData.stationAddress}
+              onChange={handleInputChange}
+              variant="bordered"
+              className="text-foreground"
+              classNames={{
+                input: "bg-background-200/30 text-foreground",
+                label: "text-foreground/70",
+              }}
+            />
+            <Input
+              label="Charger Power (kW)"
+              placeholder="e.g., 7.4"
+              name="chargerPower"
+              type="number"
+              step="0.1"
+              value={formData.chargerPower}
+              onChange={handleInputChange}
+              variant="bordered"
+              className="text-foreground"
+              classNames={{
+                input: "bg-background-200/30 text-foreground",
+                label: "text-foreground/70",
+              }}
+            />
+            <Input
+              label="Rate per kWh (₹)"
+              placeholder="e.g., 12"
+              name="ratePerKwh"
+              type="number"
+              step="0.1"
+              value={formData.ratePerKwh}
+              onChange={handleInputChange}
+              variant="bordered"
+              className="text-foreground"
+              classNames={{
+                input: "bg-background-200/30 text-foreground",
+                label: "text-foreground/70",
+              }}
+            />
+          </ModalBody>
+          <ModalFooter className="border-t border-primary/10">
+            <Button
+              color="default"
+              variant="light"
+              onPress={handleCloseModal}
+              className="text-foreground"
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              onClick={handleSaveStation}
+              isLoading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              {editingStationId ? "Update Station" : "Add Station"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
