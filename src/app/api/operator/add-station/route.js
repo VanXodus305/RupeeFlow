@@ -1,12 +1,11 @@
-import { connectToDatabase } from "@/lib/mongodb";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../[...nextauth]/route";
+import connectDB from "@/lib/mongodb";
+import { auth } from "@/auth";
 import Operator from "@/models/Operator";
 import Station from "@/models/Station";
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session || session.user.role !== "operator") {
       return new Response(JSON.stringify({ message: "Unauthorized" }), {
@@ -14,7 +13,7 @@ export async function POST(request) {
       });
     }
 
-    await connectToDatabase();
+    await connectDB();
 
     const { stationName, stationAddress, chargerPower, ratePerKwh } =
       await request.json();
