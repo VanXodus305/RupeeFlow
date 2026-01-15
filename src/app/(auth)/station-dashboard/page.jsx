@@ -89,9 +89,11 @@ export default function StationDashboard() {
 
         if (historyResponse.ok) {
           setSettlements(historyData.sessions || []);
-          setTotalKwh(historyData.totalKwh || 0);
-          setTotalRevenue(historyData.totalRevenue || 0);
         }
+
+        // Use operator's totals from the check endpoint
+        setTotalKwh(data.totalEnergyDelivered || 0);
+        setTotalRevenue(data.totalRevenue || 0);
 
         setIsLoading(false);
 

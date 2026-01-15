@@ -435,12 +435,17 @@ export default function ChargingSettlement({
 
                 <div className="flex-1">
                   {walletBalance ? (
-                    <p className="text-sm text-foreground">
-                      <span className="font-semibold">
-                        {walletBalance.balance}
-                      </span>{" "}
-                      MATIC
-                    </p>
+                    <div className="space-y-2">
+                      <p className="text-sm text-foreground">
+                        <span className="font-semibold">
+                          {walletBalance.balance}
+                        </span>{" "}
+                        MATIC
+                      </p>
+                      <p className="text-xs text-foreground/60">
+                        ≈ ₹{(walletBalance.balance * 65).toFixed(2)} INR
+                      </p>
+                    </div>
                   ) : (
                     <p className="text-xs text-foreground/60">
                       Click to verify your balance before settlement

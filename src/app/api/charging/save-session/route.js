@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 import ChargingSession from "@/models/ChargingSession";
 import Operator from "@/models/Operator";
+import Station from "@/models/Station";
 
 export async function POST(req) {
   try {
@@ -42,8 +43,21 @@ export async function POST(req) {
       status: "completed",
     });
 
+    // Update Operator with metrics
     const operator = await Operator.findByIdAndUpdate(
       operatorId,
+      {
+        $inc: {
+          totalEnergyDelivered: totalKwh,
+          totalRevenue: totalCost,
+        },
+      },
+      { new: true }
+    );
+
+    // Update Station with session info
+    const station = await Station.findByIdAndUpdate(
+      stationId,
       {
         $inc: {
           totalEnergyDelivered: totalKwh,
@@ -62,6 +76,10 @@ export async function POST(req) {
       operatorStats: {
         totalEnergyDelivered: operator.totalEnergyDelivered,
         totalRevenue: operator.totalRevenue,
+      },
+      stationStats: {
+        totalEnergyDelivered: station.totalEnergyDelivered,
+        totalRevenue: station.totalRevenue,
       },
     });
   } catch (error) {

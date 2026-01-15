@@ -33,12 +33,6 @@ const operatorSchema = new mongoose.Schema(
         ref: "Station",
       },
     ],
-    chargingSessions: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "ChargingSession",
-      },
-    ],
   },
   { timestamps: true }
 );

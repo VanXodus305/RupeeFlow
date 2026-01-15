@@ -66,10 +66,21 @@ export async function estimateGasFees() {
       throw new Error("Unable to fetch gas price from network");
     }
 
-    const gasPrice = feeData.maxFeePerGas || feeData.gasPrice;
+    // Use maxFeePerGas for EIP-1559, otherwise use gasPrice
+    let gasPrice = feeData.maxFeePerGas || feeData.gasPrice;
+
+    // Apply a 1.5x multiplier to ensure transaction acceptance
+    gasPrice = (gasPrice * BigInt(150)) / BigInt(100);
+
+    // Set a minimum gas price of 50 Gwei to avoid "coalesce" errors
+    const minGasPrice = ethers.parseUnits("50", "gwei");
+    if (gasPrice < minGasPrice) {
+      gasPrice = minGasPrice;
+    }
+
     const gasPriceInGwei = ethers.formatUnits(gasPrice, "gwei");
 
-    const estimatedGasUnits = ethers.toBigInt("150000");
+    const estimatedGasUnits = ethers.toBigInt("200000");
     const estimatedGasWei = gasPrice * estimatedGasUnits;
     const estimatedGasInMatic = ethers.formatEther(estimatedGasWei);
 
