@@ -252,6 +252,19 @@ export async function settleChargingDirect(
     const energyInWei = BigInt(Math.floor(totalKwh * 100));
     const durationInSeconds = BigInt(Math.floor(duration));
 
+    // Get current fee data with safety margins
+    const feeData = await provider.getFeeData();
+    let gasPrice = feeData.maxFeePerGas || feeData.gasPrice;
+    
+    // Apply 2x multiplier for safety (increased from 1.5x)
+    gasPrice = (gasPrice * BigInt(200)) / BigInt(100);
+    
+    // Set minimum of 100 Gwei to prevent coalesce errors (increased from 50 Gwei)
+    const minGasPrice = ethers.parseUnits("100", "gwei");
+    if (gasPrice < minGasPrice) {
+      gasPrice = minGasPrice;
+    }
+
     const tx = await contract.settleCharging(
       userAddress,
       stationEthAddress,
@@ -260,6 +273,8 @@ export async function settleChargingDirect(
       durationInSeconds,
       {
         gasLimit: ethers.toBigInt("500000"),
+        maxFeePerGas: gasPrice,
+        maxPriorityFeePerGas: ethers.parseUnits("30", "gwei"), // Priority fee for miners
       }
     );
 
