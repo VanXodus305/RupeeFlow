@@ -19,7 +19,15 @@ import {
   Chip,
   Spinner,
 } from "@heroui/react";
-import { FiCheck, FiAlertCircle, FiZap, FiTrendingUp } from "react-icons/fi";
+import {
+  FiCheck,
+  FiAlertCircle,
+  FiZap,
+  FiTrendingUp,
+  FiDownload,
+} from "react-icons/fi";
+import UPIPaymentModal from "./UPIPaymentModal";
+import jsPDF from "jspdf";
 
 export default function ChargingSettlement({
   totalCost,
@@ -45,6 +53,8 @@ export default function ChargingSettlement({
   const [error, setError] = useState(null);
   const [sessionSaved, setSessionSaved] = useState(false);
   const [operatorWalletAddress, setOperatorWalletAddress] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState(null); // "crypto" or "upi"
+  const [isUPIModalOpen, setIsUPIModalOpen] = useState(false);
 
   const [walletBalance, setWalletBalance] = useState(null);
   const [gasEstimate, setGasEstimate] = useState(null);
@@ -105,7 +115,7 @@ export default function ChargingSettlement({
         vehicleReg,
         batteryCapacity,
         ratePerKwh,
-        stationId
+        stationId,
       );
       setSessionSaved(true);
 
@@ -137,7 +147,7 @@ export default function ChargingSettlement({
 
       if (!accounts || accounts.length === 0) {
         throw new Error(
-          "No wallet accounts found. Please connect your wallet."
+          "No wallet accounts found. Please connect your wallet.",
         );
       }
 
@@ -176,10 +186,23 @@ export default function ChargingSettlement({
   };
 
   const handleSettle = async () => {
+    if (!paymentMethod) {
+      setError("Please select a payment method");
+      return;
+    }
+
+    // Save session first for both payment methods
     if (!isPendingSettlement && !sessionSaved && saveSession) {
       await handleSaveSession();
     }
 
+    if (paymentMethod === "upi") {
+      // Open UPI modal which will handle the flow
+      setIsUPIModalOpen(true);
+      return;
+    }
+
+    // Handle crypto payment (existing logic)
     try {
       setIsSettling(true);
       setError(null);
@@ -189,7 +212,7 @@ export default function ChargingSettlement({
         totalKwh,
         durationInSeconds,
         operatorId, // Station address
-        operatorWalletAddress
+        operatorWalletAddress,
       );
 
       if (!settlementResult.success) {
@@ -202,18 +225,18 @@ export default function ChargingSettlement({
 
       const markResult = await markSessionAsSettled(
         sessionId,
-        settlementResult.transactionHash
+        settlementResult.transactionHash,
       );
 
       if (!markResult.success) {
         console.warn(
           "Failed to mark session as settled in database:",
-          markResult.error
+          markResult.error,
         );
       }
 
       const statusResult = await checkTransactionStatus(
-        settlementResult.transactionHash
+        settlementResult.transactionHash,
       );
       if (statusResult.success) {
         setTxStatus(statusResult);
@@ -249,6 +272,146 @@ export default function ChargingSettlement({
       console.error("Settlement error:", err);
     } finally {
       setIsSettling(false);
+    }
+  };
+
+  const handleUPIPaymentConfirm = async (receivedTxHash) => {
+    try {
+      setIsSettling(true);
+      setError(null);
+
+      // For UPI, the transaction is already processed on the backend
+      // We just need to set the transaction hash and mark it
+      setTxHash(receivedTxHash);
+
+      // Mark session as settled with the returned hash
+      const markResult = await markSessionAsSettled(sessionId, receivedTxHash);
+
+      if (!markResult.success) {
+        console.warn(
+          "Failed to mark session as settled in database:",
+          markResult.error,
+        );
+      }
+
+      // Don't close modal here - let it show the receipt
+      // Modal will be closed by the user clicking close button on receipt
+
+      if (onSettled) {
+        onSettled();
+      }
+    } catch (err) {
+      console.error("UPI settlement error:", err);
+      setError(`Settlement failed: ${err.message}`);
+    } finally {
+      setIsSettling(false);
+    }
+  };
+
+  const downloadCryptoReceipt = () => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+
+      // Header
+      doc.setTextColor(0, 122, 255);
+      doc.setFontSize(24);
+      doc.setFont("helvetica", "bold");
+      doc.text("RUPEEFLOW", pageWidth / 2, margin + 10, { align: "center" });
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Receipt", margin, margin + 25);
+
+      // Divider
+      doc.setDrawColor(0, 122, 255);
+      doc.line(margin, margin + 30, pageWidth - margin, margin + 30);
+
+      let yPos = margin + 40;
+
+      // Transaction details
+      const details = [
+        ["Receipt ID:", `TX-${txHash?.slice(0, 16)}...`],
+        ["Date & Time:", new Date().toLocaleString()],
+        ["Payment Method:", "MetaMask (Crypto)"],
+        ["Vehicle Registration:", vehicleReg],
+        ["Charging Station:", operatorId],
+      ];
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      details.forEach(([label, value]) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(label, margin, yPos);
+        doc.setFont("helvetica", "normal");
+        doc.text(value, margin + 50, yPos);
+        yPos += 8;
+      });
+
+      // Divider
+      yPos += 5;
+      doc.setDrawColor(0, 122, 255);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+
+      // Charges breakdown
+      yPos += 10;
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Charges Breakdown", margin, yPos);
+      yPos += 8;
+
+      const charges = [
+        ["Energy Used:", `${totalKwh.toFixed(2)} kWh`],
+        ["Duration:", `${minutes}m ${seconds}s`],
+        ["Total Amount:", `Rs. ${totalCost.toFixed(2)}`],
+        ["Amount in MATIC:", `${maticAmount} MATIC`],
+      ];
+
+      doc.setFontSize(10);
+      charges.forEach(([label, value]) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(label, margin, yPos);
+        doc.setFont("helvetica", "normal");
+        doc.text(value, margin + 50, yPos);
+        yPos += 7;
+      });
+
+      // Divider
+      yPos += 5;
+      doc.setDrawColor(0, 122, 255);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+
+      // Blockchain info
+      yPos += 10;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text("Blockchain Details", margin, yPos);
+      yPos += 7;
+      doc.setFont("helvetica", "bold");
+      doc.text("Transaction Hash:", margin, yPos);
+      yPos += 5;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text(txHash, margin, yPos, { maxWidth: pageWidth - 2 * margin });
+      yPos += 15;
+
+      // Footer
+      doc.setTextColor(128, 128, 128);
+      doc.setFontSize(8);
+      doc.text(
+        "This receipt is an immutable record on the Polygon Amoy blockchain.",
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: "center" },
+      );
+
+      doc.save(`RupeeFlow_Receipt_Crypto_${txHash?.slice(0, 8)}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
     }
   };
 
@@ -290,15 +453,25 @@ export default function ChargingSettlement({
                 </p>
               </div>
 
-              <Button
-                as="a"
-                href={`https://amoy.polygonscan.com/tx/${txHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full bg-gradient-to-r from-primary to-secondary text-background-200 font-semibold hover:shadow-lg hover:shadow-primary/50 transition-all"
-              >
-                View on PolygonScan ↗️
-              </Button>
+              <div className="flex flex-col md:flex-row gap-2">
+                <Button
+                  as="a"
+                  href={`https://amoy.polygonscan.com/tx/${txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-gradient-to-r from-primary to-secondary text-background-200 font-semibold hover:shadow-lg hover:shadow-primary/50 transition-all"
+                >
+                  View on PolygonScan ↗️
+                </Button>
+
+                <Button
+                  onClick={downloadCryptoReceipt}
+                  className="flex-1 bg-primary/80 text-background-200 font-semibold hover:bg-primary transition-all"
+                  startContent={<FiDownload />}
+                >
+                  Download Receipt
+                </Button>
+              </div>
             </div>
           </CardBody>
         </Card>
@@ -400,8 +573,8 @@ export default function ChargingSettlement({
               </Card>
             )}
 
-            {/* Network Info */}
-            {networkInfo && (
+            {/* Network Info - Only show for Crypto payment */}
+            {paymentMethod === "crypto" && networkInfo && (
               <Card className="bg-gradient-to-r from-primary/15 to-secondary/15 border-2 border-primary/30 backdrop-blur-sm">
                 <CardBody className="py-4 px-5">
                   <div className="flex items-center gap-3">
@@ -422,86 +595,88 @@ export default function ChargingSettlement({
               </Card>
             )}
 
-            {/* Wallet Balance and Gas Estimation - Responsive Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Wallet Balance Section */}
-              <div className="bg-background-100/30 border border-primary/20 rounded-lg p-4 space-y-3 flex flex-col">
-                <div className="flex items-center gap-2">
-                  <FiZap className="text-secondary" />
-                  <p className="font-semibold text-foreground">
-                    Wallet Balance
-                  </p>
-                </div>
+            {/* Wallet Balance and Gas Estimation - Only show for Crypto payment */}
+            {paymentMethod === "crypto" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Wallet Balance Section */}
+                <div className="bg-background-100/30 border border-primary/20 rounded-lg p-4 space-y-3 flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <FiZap className="text-secondary" />
+                    <p className="font-semibold text-foreground">
+                      Wallet Balance
+                    </p>
+                  </div>
 
-                <div className="flex-1">
-                  {walletBalance ? (
-                    <div className="space-y-2">
-                      <p className="text-sm text-foreground">
-                        <span className="font-semibold">
-                          {walletBalance.balance}
-                        </span>{" "}
-                        MATIC
-                      </p>
+                  <div className="flex-1">
+                    {walletBalance ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-foreground">
+                          <span className="font-semibold">
+                            {walletBalance.balance}
+                          </span>{" "}
+                          MATIC
+                        </p>
+                        <p className="text-xs text-foreground/60">
+                          ≈ ₹{(walletBalance.balance * 65).toFixed(2)} INR
+                        </p>
+                      </div>
+                    ) : (
                       <p className="text-xs text-foreground/60">
-                        ≈ ₹{(walletBalance.balance * 65).toFixed(2)} INR
+                        Click to verify your balance before settlement
                       </p>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-foreground/60">
-                      Click to verify your balance before settlement
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={handleCheckWallet}
+                    disabled={isCheckingBalance}
+                    className="w-full bg-secondary/80 text-background-200 font-semibold hover:bg-secondary transition-all"
+                  >
+                    {isCheckingBalance ? "Checking..." : "Check Wallet Balance"}
+                  </Button>
+                </div>
+
+                {/* Gas Estimate Section */}
+                <div className="bg-background-100/30 border border-primary/20 rounded-lg p-4 space-y-3 flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <FiTrendingUp className="text-primary" />
+                    <p className="font-semibold text-foreground">
+                      Gas Estimation
                     </p>
-                  )}
-                </div>
+                  </div>
 
-                <Button
-                  onClick={handleCheckWallet}
-                  disabled={isCheckingBalance}
-                  className="w-full bg-secondary/80 text-background-200 font-semibold hover:bg-secondary transition-all"
-                >
-                  {isCheckingBalance ? "Checking..." : "Check Wallet Balance"}
-                </Button>
-              </div>
-
-              {/* Gas Estimate Section */}
-              <div className="bg-background-100/30 border border-primary/20 rounded-lg p-4 space-y-3 flex flex-col">
-                <div className="flex items-center gap-2">
-                  <FiTrendingUp className="text-primary" />
-                  <p className="font-semibold text-foreground">
-                    Gas Estimation
-                  </p>
-                </div>
-
-                <div className="flex-1">
-                  {gasEstimate ? (
-                    <div className="space-y-2 text-sm">
-                      <p className="text-foreground/80">
-                        <span className="font-semibold">Gas Price:</span>{" "}
-                        {gasEstimate.gasPrice} GWEI
+                  <div className="flex-1">
+                    {gasEstimate ? (
+                      <div className="space-y-2 text-sm">
+                        <p className="text-foreground/80">
+                          <span className="font-semibold">Gas Price:</span>{" "}
+                          {gasEstimate.gasPrice} GWEI
+                        </p>
+                        <p className="text-foreground/80">
+                          <span className="font-semibold">Est. Cost:</span>{" "}
+                          {gasEstimate.estimatedGasCostMatic} MATIC (~₹
+                          {(
+                            parseFloat(gasEstimate.estimatedGasCostMatic) * 50
+                          ).toFixed(2)}
+                          )
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-foreground/60">
+                        Click to estimate transaction cost
                       </p>
-                      <p className="text-foreground/80">
-                        <span className="font-semibold">Est. Cost:</span>{" "}
-                        {gasEstimate.estimatedGasCostMatic} MATIC (~₹
-                        {(
-                          parseFloat(gasEstimate.estimatedGasCostMatic) * 50
-                        ).toFixed(2)}
-                        )
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-foreground/60">
-                      Click to estimate transaction cost
-                    </p>
-                  )}
-                </div>
+                    )}
+                  </div>
 
-                <Button
-                  onClick={handleEstimateGas}
-                  className="w-full bg-primary/80 text-background-200 font-semibold hover:bg-primary transition-all"
-                >
-                  Estimate Gas Fees
-                </Button>
+                  <Button
+                    onClick={handleEstimateGas}
+                    className="w-full bg-primary/80 text-background-200 font-semibold hover:bg-primary transition-all"
+                  >
+                    Estimate Gas Fees
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Transaction Status Section */}
             {txStatus && (
@@ -543,46 +718,122 @@ export default function ChargingSettlement({
               </Card>
             )}
 
-            {/* Settlement Button */}
-            <Button
-              onClick={handleSettle}
-              disabled={
-                isSettling ||
-                isSaving ||
-                !walletAvailable ||
-                !operatorWalletAddress
-              }
-              className="w-full bg-gradient-to-r from-primary to-secondary text-background-200 font-semibold py-6 text-lg hover:shadow-lg hover:shadow-primary/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {!walletAvailable ? (
-                "❌ MetaMask Required to Settle"
-              ) : !operatorWalletAddress ? (
-                <>
-                  <Spinner size="sm" color="current" />
-                  Loading Station Info... ⏳
-                </>
-              ) : isSaving ? (
-                <>
-                  <Spinner size="sm" color="current" />
-                  Saving to Database... 💾
-                </>
-              ) : isSettling ? (
-                <>
-                  <Spinner size="sm" color="current" />
-                  Settling on MetaMask... 🦊
-                </>
-              ) : (
-                "Complete & Settle ✅"
-              )}
-            </Button>
+            {/* Payment Method Selection */}
+            {!paymentMethod && (
+              <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/30">
+                <CardHeader className="flex flex-col gap-2 border-b border-primary/20">
+                  <h3 className="text-lg font-bold text-foreground font-conthrax">
+                    Select Payment Method
+                  </h3>
+                  <p className="text-sm text-foreground/60">
+                    Choose how you want to settle this charging session
+                  </p>
+                </CardHeader>
+                <CardBody className="gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setPaymentMethod("upi")}
+                      className="p-4 rounded-lg border-2 border-primary/40 hover:border-primary/60 hover:bg-primary/10 transition-all text-left"
+                    >
+                      <p className="font-semibold text-foreground mb-1">
+                        💳 UPI Payment
+                      </p>
+                      <p className="text-xs text-foreground/60">
+                        Quick & Easy - Scan QR Code
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod("crypto")}
+                      className="p-4 rounded-lg border-2 border-secondary/40 hover:border-secondary/60 hover:bg-secondary/10 transition-all text-left"
+                    >
+                      <p className="font-semibold text-foreground mb-1">
+                        🦊 MetaMask/Crypto
+                      </p>
+                      <p className="text-xs text-foreground/60">
+                        Direct Blockchain Payment
+                      </p>
+                    </button>
+                  </div>
+                </CardBody>
+              </Card>
+            )}
 
-            <p className="text-xs text-foreground/60 text-center">
-              This will save your session and record on Polygon Amoy testnet
-              using your wallet
-            </p>
+            {/* Settlement Button - Only show when payment method selected */}
+            {paymentMethod && (
+              <>
+                <Button
+                  onClick={handleSettle}
+                  disabled={
+                    isSettling ||
+                    isSaving ||
+                    (paymentMethod === "crypto" && !walletAvailable) ||
+                    !operatorWalletAddress
+                  }
+                  className="w-full bg-gradient-to-r from-primary to-secondary text-background-200 font-semibold py-6 text-lg hover:shadow-lg hover:shadow-primary/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {!walletAvailable && paymentMethod === "crypto" ? (
+                    "❌ MetaMask Required to Settle"
+                  ) : !operatorWalletAddress ? (
+                    <>
+                      <Spinner size="sm" color="current" />
+                      Loading Station Info... ⏳
+                    </>
+                  ) : isSaving ? (
+                    <>
+                      <Spinner size="sm" color="current" />
+                      Saving to Database... 💾
+                    </>
+                  ) : isSettling ? (
+                    <>
+                      <Spinner size="sm" color="current" />
+                      {paymentMethod === "upi"
+                        ? "Processing UPI Payment... 💳"
+                        : "Settling on MetaMask... 🦊"}
+                    </>
+                  ) : (
+                    `Complete & Settle with ${
+                      paymentMethod === "upi" ? "UPI" : "MetaMask"
+                    } ✅`
+                  )}
+                </Button>
+
+                <p className="text-xs text-foreground/60 text-center">
+                  {paymentMethod === "upi"
+                    ? "Quick UPI payment with blockchain record"
+                    : "This will save your session and record on Polygon Amoy testnet"}
+                </p>
+
+                <Button
+                  variant="light"
+                  size="sm"
+                  onClick={() => {
+                    setPaymentMethod(null);
+                    setError(null);
+                  }}
+                  className="w-full text-foreground/60 hover:text-foreground"
+                >
+                  ← Change Payment Method
+                </Button>
+              </>
+            )}
           </CardBody>
         </Card>
       )}
+
+      {/* UPI Payment Modal */}
+      <UPIPaymentModal
+        isOpen={isUPIModalOpen}
+        onClose={() => setIsUPIModalOpen(false)}
+        totalCost={totalCost}
+        totalKwh={totalKwh}
+        duration={durationInSeconds}
+        vehicleReg={vehicleReg}
+        stationName={operatorId}
+        sessionId={sessionId}
+        operatorWalletAddress={operatorWalletAddress}
+        transactionHash={txHash || "Processing..."}
+        onConfirmPayment={handleUPIPaymentConfirm}
+      />
     </>
   );
 }
