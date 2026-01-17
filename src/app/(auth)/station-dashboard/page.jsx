@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
+import jsPDF from "jspdf";
 import {
   Card,
   CardBody,
@@ -37,6 +38,7 @@ import {
   FiEdit2,
   FiPlus,
   FiX,
+  FiDownload,
 } from "react-icons/fi";
 
 const LoadingSpinner = memo(() => (
@@ -124,7 +126,7 @@ export default function StationDashboard() {
               reconnectionDelayMax: 5000,
               reconnectionAttempts: 5,
               transports: ["websocket", "polling"],
-            }
+            },
           );
 
           socketRef.current.on("connect", () => {
@@ -137,7 +139,7 @@ export default function StationDashboard() {
           socketRef.current.on("meter-reading", (meterData) => {
             setOngoingSessions((prev) => {
               const sessionExists = prev.some(
-                (s) => s.sessionId === meterData.sessionId
+                (s) => s.sessionId === meterData.sessionId,
               );
 
               if (!sessionExists) {
@@ -178,7 +180,7 @@ export default function StationDashboard() {
           socketRef.current.on("session-completed", (completedSession) => {
             console.log("Session completed:", completedSession);
             setOngoingSessions((prev) =>
-              prev.filter((s) => s.sessionId !== completedSession.sessionId)
+              prev.filter((s) => s.sessionId !== completedSession.sessionId),
             );
             setSettlements((prev) => [
               { ...completedSession, status: "completed" },
@@ -208,6 +210,124 @@ export default function StationDashboard() {
       }
     };
   }, [session, status, router]);
+
+  const downloadReceiptOperator = (sessionData) => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+
+      // Header
+      doc.setTextColor(0, 122, 255);
+      doc.setFontSize(24);
+      doc.setFont("helvetica", "bold");
+      doc.text("RUPEEFLOW", pageWidth / 2, margin + 10, { align: "center" });
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Receipt", margin, margin + 25);
+
+      // Divider
+      doc.setDrawColor(0, 122, 255);
+      doc.line(margin, margin + 30, pageWidth - margin, margin + 30);
+
+      let yPos = margin + 40;
+
+      // Transaction details
+      const details = [
+        ["Receipt ID:", sessionData.sessionId],
+        [
+          "Date & Time:",
+          new Date(sessionData.createdAt).toLocaleString("en-IN"),
+        ],
+        [
+          "Payment Method:",
+          sessionData.transactionHash ? "Crypto/MetaMask" : "UPI",
+        ],
+        ["Vehicle Registration:", sessionData.vehicleReg],
+        ["Charging Station:", sessionData.stationName],
+      ];
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      details.forEach(([label, value]) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(label, margin, yPos);
+        doc.setFont("helvetica", "normal");
+        doc.text(value, margin + 50, yPos);
+        yPos += 8;
+      });
+
+      // Divider
+      yPos += 5;
+      doc.setDrawColor(0, 122, 255);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+
+      // Charges breakdown
+      yPos += 10;
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Charges Breakdown", margin, yPos);
+      yPos += 8;
+
+      const charges = [
+        ["Energy Delivered:", `${sessionData.totalKwh.toFixed(2)} kWh`],
+        [
+          "Duration:",
+          `${Math.floor((sessionData.duration || 0) / 60)}m ${(sessionData.duration || 0) % 60}s`,
+        ],
+        ["Revenue Earned:", `Rs. ${sessionData.totalCost.toFixed(2)}`],
+      ];
+
+      doc.setFontSize(10);
+      charges.forEach(([label, value]) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(label, margin, yPos);
+        doc.setFont("helvetica", "normal");
+        doc.text(value, margin + 50, yPos);
+        yPos += 7;
+      });
+
+      // Divider
+      yPos += 5;
+      doc.setDrawColor(0, 122, 255);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+
+      // Blockchain info (if available)
+      if (sessionData.transactionHash) {
+        yPos += 10;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("Blockchain Details", margin, yPos);
+        yPos += 7;
+        doc.setFont("helvetica", "bold");
+        doc.text("Transaction Hash:", margin, yPos);
+        yPos += 5;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text(sessionData.transactionHash, margin, yPos, {
+          maxWidth: pageWidth - 2 * margin,
+        });
+      }
+
+      // Footer
+      doc.setTextColor(128, 128, 128);
+      doc.setFontSize(8);
+      doc.text(
+        "This receipt is an immutable record on the Polygon Amoy blockchain.",
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: "center" },
+      );
+
+      doc.save(`RupeeFlow_Receipt_${sessionData.sessionId}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
+  };
 
   const openAddModal = () => {
     setEditingStationId(null);
@@ -558,7 +678,7 @@ export default function StationDashboard() {
                           {Math.min(
                             100,
                             (session.initialBatteryPercent || 0) +
-                              (session.chargePercentage || 0)
+                              (session.chargePercentage || 0),
                           ).toFixed(0)}
                           %
                         </p>
@@ -567,7 +687,7 @@ export default function StationDashboard() {
                         value={Math.min(
                           100,
                           (session.initialBatteryPercent || 0) +
-                            (session.chargePercentage || 0)
+                            (session.chargePercentage || 0),
                         )}
                         className="h-2"
                         color="primary"
@@ -625,6 +745,7 @@ export default function StationDashboard() {
                       <TableColumn>Duration (min)</TableColumn>
                       <TableColumn>Date</TableColumn>
                       <TableColumn>Status</TableColumn>
+                      <TableColumn>Action</TableColumn>
                     </TableHeader>
                     <TableBody>
                       {settlements.map((settlement) => (
@@ -677,7 +798,7 @@ export default function StationDashboard() {
                                       day: "2-digit",
                                       hour: "2-digit",
                                       minute: "2-digit",
-                                    }
+                                    },
                                   )
                                 : "N/A"}
                             </p>
@@ -689,14 +810,27 @@ export default function StationDashboard() {
                                 settlement.status === "completed"
                                   ? "bg-primary/20 text-primary"
                                   : settlement.status === "settled"
-                                  ? "bg-secondary/20 text-secondary"
-                                  : "bg-foreground/10 text-foreground"
+                                    ? "bg-secondary/20 text-secondary"
+                                    : "bg-foreground/10 text-foreground"
                               }
                             >
                               <span className="capitalize font-semibold">
                                 {settlement.status || "pending"}
                               </span>
                             </Chip>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              className="bg-primary/20 hover:bg-primary/40 text-primary"
+                              onClick={() =>
+                                downloadReceiptOperator(settlement)
+                              }
+                              title="Download Receipt"
+                            >
+                              <FiDownload size={16} />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}

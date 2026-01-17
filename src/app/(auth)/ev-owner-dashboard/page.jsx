@@ -9,6 +9,7 @@ import { useState } from "react";
 import ChargingTimer from "@/components/ChargingTimer";
 import ChargingSettlement from "@/components/ChargingSettlement";
 import WalletWarningBanner from "@/components/WalletWarningBanner";
+import jsPDF from "jspdf";
 import {
   Button,
   Input,
@@ -29,7 +30,7 @@ import {
   NavbarContent,
   NavbarItem,
 } from "@heroui/react";
-import { FiLogOut } from "react-icons/fi";
+import { FiLogOut, FiDownload } from "react-icons/fi";
 
 export default function EVOwnerDashboard() {
   const { data: session } = useSession();
@@ -138,6 +139,124 @@ export default function EVOwnerDashboard() {
     }
   }, [session]);
 
+  const downloadReceiptEVOwner = (sessionData) => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+
+      // Header
+      doc.setTextColor(0, 122, 255);
+      doc.setFontSize(24);
+      doc.setFont("helvetica", "bold");
+      doc.text("RUPEEFLOW", pageWidth / 2, margin + 10, { align: "center" });
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Receipt", margin, margin + 25);
+
+      // Divider
+      doc.setDrawColor(0, 122, 255);
+      doc.line(margin, margin + 30, pageWidth - margin, margin + 30);
+
+      let yPos = margin + 40;
+
+      // Transaction details
+      const details = [
+        ["Receipt ID:", sessionData.sessionId],
+        [
+          "Date & Time:",
+          new Date(sessionData.createdAt).toLocaleString("en-IN"),
+        ],
+        [
+          "Payment Method:",
+          sessionData.transactionHash ? "Crypto/MetaMask" : "UPI",
+        ],
+        ["Vehicle Registration:", sessionData.vehicleReg],
+        ["Charging Station:", sessionData.stationName],
+      ];
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      details.forEach(([label, value]) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(label, margin, yPos);
+        doc.setFont("helvetica", "normal");
+        doc.text(value, margin + 50, yPos);
+        yPos += 8;
+      });
+
+      // Divider
+      yPos += 5;
+      doc.setDrawColor(0, 122, 255);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+
+      // Charges breakdown
+      yPos += 10;
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Charges Breakdown", margin, yPos);
+      yPos += 8;
+
+      const charges = [
+        ["Energy Used:", `${sessionData.totalKwh.toFixed(2)} kWh`],
+        [
+          "Duration:",
+          `${Math.floor((sessionData.duration || 0) / 60)}m ${(sessionData.duration || 0) % 60}s`,
+        ],
+        ["Total Amount:", `Rs. ${sessionData.totalCost.toFixed(2)}`],
+      ];
+
+      doc.setFontSize(10);
+      charges.forEach(([label, value]) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(label, margin, yPos);
+        doc.setFont("helvetica", "normal");
+        doc.text(value, margin + 50, yPos);
+        yPos += 7;
+      });
+
+      // Divider
+      yPos += 5;
+      doc.setDrawColor(0, 122, 255);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+
+      // Blockchain info (if available)
+      if (sessionData.transactionHash) {
+        yPos += 10;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("Blockchain Details", margin, yPos);
+        yPos += 7;
+        doc.setFont("helvetica", "bold");
+        doc.text("Transaction Hash:", margin, yPos);
+        yPos += 5;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text(sessionData.transactionHash, margin, yPos, {
+          maxWidth: pageWidth - 2 * margin,
+        });
+      }
+
+      // Footer
+      doc.setTextColor(128, 128, 128);
+      doc.setFontSize(8);
+      doc.text(
+        "This receipt is an immutable record on the Polygon Amoy blockchain.",
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: "center" },
+      );
+
+      doc.save(`RupeeFlow_Receipt_${sessionData.sessionId}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
+  };
+
   useEffect(() => {
     if (!isCharging && chargingData.autoStopReason) {
       setShowSettlement(true);
@@ -154,7 +273,7 @@ export default function EVOwnerDashboard() {
       targetBatteryPercent <= initialBatteryPercent
     ) {
       alert(
-        `Target battery (${targetBatteryPercent}%) must be higher than current battery (${initialBatteryPercent}%)`
+        `Target battery (${targetBatteryPercent}%) must be higher than current battery (${initialBatteryPercent}%)`,
       );
       return;
     }
@@ -173,7 +292,7 @@ export default function EVOwnerDashboard() {
           chargingMode === "percentage" ? targetBatteryPercent : null,
         durationMinutes: chargingMode === "time" ? chargingDuration : null,
       },
-      getSelectedStation()?.stationName
+      getSelectedStation()?.stationName,
     );
   };
 
@@ -236,7 +355,7 @@ export default function EVOwnerDashboard() {
                   if (selectedId) {
                     setOperatorId(selectedId);
                     const selected = availableOperators.find(
-                      (station) => station._id === selectedId
+                      (station) => station._id === selectedId,
                     );
                     if (selected) {
                       setRatePerKwh(selected.ratePerKwh || 12);
@@ -302,7 +421,7 @@ export default function EVOwnerDashboard() {
                   value={initialBatteryPercent.toString()}
                   onChange={(e) =>
                     setInitialBatteryPercent(
-                      Math.min(100, Math.max(0, parseFloat(e.target.value)))
+                      Math.min(100, Math.max(0, parseFloat(e.target.value))),
                     )
                   }
                   className="w-full"
@@ -372,9 +491,9 @@ export default function EVOwnerDashboard() {
                             100,
                             Math.max(
                               Math.ceil(initialBatteryPercent) + 1,
-                              parseFloat(e.target.value)
-                            )
-                          )
+                              parseFloat(e.target.value),
+                            ),
+                          ),
                         )
                       }
                       className="w-full"
@@ -579,6 +698,7 @@ export default function EVOwnerDashboard() {
                       Date & Time
                     </TableColumn>
                     <TableColumn className="text-primary">Status</TableColumn>
+                    <TableColumn className="text-primary">Action</TableColumn>
                   </TableHeader>
                   <TableBody>
                     {chargingHistory.map((session) => (
@@ -604,7 +724,7 @@ export default function EVOwnerDashboard() {
                                   day: "2-digit",
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                }
+                                },
                               )
                             : "N/A"}
                         </TableCell>
@@ -616,12 +736,27 @@ export default function EVOwnerDashboard() {
                               session.status === "settled"
                                 ? "bg-primary/20 text-primary"
                                 : session.status === "completed"
-                                ? "bg-secondary/20 text-secondary"
-                                : "bg-foreground/20 text-foreground"
+                                  ? "bg-secondary/20 text-secondary"
+                                  : "bg-foreground/20 text-foreground"
                             }
                           >
-                            {session.status || "pending"}
+                            {session.status === "settled"
+                              ? "Settled"
+                              : session.status === "completed"
+                                ? "Completed"
+                                : "Pending"}
                           </Chip>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            className="bg-primary/20 hover:bg-primary/40 text-primary"
+                            onClick={() => downloadReceiptEVOwner(session)}
+                            title="Download Receipt"
+                          >
+                            <FiDownload size={16} />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
